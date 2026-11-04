@@ -1,0 +1,26 @@
+# Supabase CLI project config (used by `supabase link`, `supabase db push`, `supabase functions deploy`).
+project_id = "haulage-portal"
+
+[auth]
+site_url = "https://portal.example.co.uk"            # set to APP_URL
+additional_redirect_urls = ["http://localhost:5173"]
+enable_signup = false                                 # accounts are created by invitation only
+jwt_expiry = 3600
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true
+otp_expiry = 86400                                    # one-time sign-in links valid for 24 hours, single use
+
+# Each function checks the caller itself (user session, CRON_SECRET or the Xero OAuth state),
+# so gateway JWT checks are off — required for the Xero redirect and scheduled calls.
+[functions.invite-user]
+verify_jwt = false
+[functions.notify-outbox]
+verify_jwt = false
+[functions.xero]
+verify_jwt = false
+[functions.vigo-sync]
+verify_jwt = false
+[functions.import-file]
+verify_jwt = false

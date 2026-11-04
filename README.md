@@ -48,3 +48,7 @@ The demo is structured so the real build reuses its data model and screens rathe
 - **Multi-haulier from day one:** every table carries a `tenant_id` enforced by RLS, so the Clearpath roll-out is configuration, not a fork.
 
 Hosting costs at this scale are typically in the tens of pounds per month on standard Supabase/Vercel plans; confirm current pricing before quoting.
+
+## Production platform
+
+`platform/` contains the working system: the same screens running on Supabase (Postgres with row-level security, Auth, Storage, edge functions) and hosted on Vercel. It includes real sign-in, Xero and Vigo connections, CSV imports and customer email notifications. See [`platform/README.md`](platform/README.md) for the architecture, tests and go-live runbook.
