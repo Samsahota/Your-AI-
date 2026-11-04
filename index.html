@@ -2131,7 +2131,7 @@ function jobSharing(j) {
   const em = S().emails.filter(e => e.jobId === j.id);
   return `<div class="card"><div class="card-head"><h3>Customer access for ${esc(j.id)}</h3><span class="small muted">Per-job sharing only</span></div><div class="table-wrap"><table class="data cards"><thead><tr><th>Contact</th><th>Status</th><th>Show POD</th><th>Show invoice</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="card-pad"><div class="caveat">${icon('lock')}<div>A contact sees only the jobs shared with them — never other jobs, costs, margins or driver records. Invoice visibility is off by default and enabled per share.</div></div></div></div>
-    <div class="card mt16"><div class="card-head"><h3>Notifications for this job</h3><span class="pill plain">Simulated — no email is sent</span></div>${em.length ? table({ cards:true, cols:[{ key:'subject', label:'Email', render: e => esc(e.subject) }, { key:'to', label:'To', render: e => esc(contact(e.to).email) }, { key:'at', label:'Created', render: e => fmtDT(e.at) }, { key:'link', label:'One-time link', render: e => { const st = linkState(S().links.find(l => l.token === e.token)); return `<span class="pill ${st === 'valid' ? 'ok' : st === 'used' ? 'plain' : 'warn'}">${cap(st)}</span>`; } }, { key:'x', label:'', render: e => `<button class="btn btn-sm" data-act="previewEmail" data-id="${e.id}">Preview</button>` }], rows: em }) : '<div class="empty small"><p>No notifications yet. A delivery notification is created automatically when a shared job is completed.</p></div>'}</div>`;
+    <div class="card mt16"><div class="card-head"><h3>Notifications for this job</h3><span class="pill plain">${S().links.length || S().version !== 'live' ? 'Simulated — no email is sent' : 'Sent by email with a one-time link'}</span></div>${em.length ? table({ cards:true, cols:[{ key:'subject', label:'Email', render: e => esc(e.subject) }, { key:'to', label:'To', render: e => esc(contact(e.to).email) }, { key:'at', label:'Created', render: e => fmtDT(e.at) }, { key:'link', label: S().links.length || !S().emails.some(e => e.status) ? 'One-time link' : 'Status', render: e => { if (e.status) return `<span class="pill ${e.status === 'sent' ? 'ok' : e.status === 'failed' ? 'bad' : 'plain'}" title="${esc(e.error || '')}">${cap(e.status)}</span>`; const st = linkState(S().links.find(l => l.token === e.token)); return `<span class="pill ${st === 'valid' ? 'ok' : st === 'used' ? 'plain' : 'warn'}">${cap(st)}</span>`; } }, { key:'x', label:'', render: e => e.token ? `<button class="btn btn-sm" data-act="previewEmail" data-id="${e.id}">Preview</button>` : '' }], rows: em }) : '<div class="empty small"><p>No notifications yet. A delivery notification is created automatically when a shared job is completed.</p></div>'}</div>`;
 }
 function jobHistory(j) {
   const acts = S().actions.filter(a => a.recordId === j.id);
@@ -2749,6 +2749,7 @@ function done(r) {
   if (p === 'ops') { UI.crumb = { label:'Operations', href:'#/' + r.path }; UI.jobList = S().jobs.filter(j => r.parts[1] === 'pods' ? isDone(j) && (j.pod.status === 'missing' || j.invoice.status === 'pending') : j.date === TODAY).map(j => j.id); }
   if (p === 'overview' || p === 'dashboard') { UI.crumb = { label:'Dashboard', href:'#/dashboard' }; }
 }
+function onRoute() { render(); }   // replaced in the live build
 function rerender() { const y = window.scrollY; render(); window.scrollTo(0, y); }
 function go(href) { if (location.hash === href) rerender(); else location.hash = href; }
 function signOut() { document.querySelectorAll('.toast').forEach(t => t.remove()); document.getElementById('print-root').innerHTML = ''; Store.setSession(null); UI.navOpen = false; Modal.close(); location.hash = '#/signin'; render(); }
@@ -3061,7 +3062,7 @@ function bindEvents() {
   });
   document.addEventListener('change', e => { const a = e.target.dataset.actChange; if (a && CHANGE[a]) Promise.resolve().then(() => CHANGE[a](e.target)).catch(err => toast(err.message, 'err')); });
   document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); Promise.resolve().then(() => FORMS[f.dataset.form](f, new FormData(f))).catch(err => toast(err.message, 'err')); });
-  window.addEventListener('hashchange', () => { Modal.close(); UI.navOpen = false; render(); });
+  window.addEventListener('hashchange', () => { Modal.close(); UI.navOpen = false; onRoute(); });
   window.addEventListener('storage', e => { if (e.key === KEY) { Store.load(); rerender(); } });
 }
 

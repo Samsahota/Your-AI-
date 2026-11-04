@@ -141,7 +141,8 @@ test('Scene F: customer sees only shared jobs and permitted fields', async () =>
   assert.deepEqual(rows.map(r => r.job_id), ['TH-006', 'TODAY-05']);
   assert.ok(rows.every(r => r.invoice_amount === null), 'invoice hidden unless enabled');
   assert.ok(rows.find(r => r.job_id === 'TODAY-05').pod_path.endsWith('pod.jpg'));
-  for (const t of ['jobs', 'job_financials', 'customers', 'vehicles', 'drivers', 'invoices', 'actions']) assert.equal((await as(U.cust, `select count(*)::int n from ${t}`))[0].n, 0, t);
+  assert.deepEqual((await as(U.cust, `select id from customers`)).map(r => r.id), ['C01'], 'only their own company');
+  for (const t of ['jobs', 'job_financials', 'vehicles', 'drivers', 'invoices', 'actions']) assert.equal((await as(U.cust, `select count(*)::int n from ${t}`))[0].n, 0, t);
   assert.deepEqual((await as(U.cust, `select id from contacts`)).map(r => r.id), ['CT01']);
   assert.equal((await as(U.cust, `select count(*)::int n from activity_feed`))[0].n, 0);
   const T = (await as(U.paul, `select tenant_id from jobs where id='TODAY-05'`))[0].tenant_id;

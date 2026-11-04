@@ -122,7 +122,11 @@ async function loadCustomer(st) {
   await signPods(st.jobs.filter(j => j.pod.path).map(j => [j.id, j.pod.path]));
   return st;
 }
-async function reload() { Store.state = await loadState(); }
+async function reload() {
+  const { data: t } = await sb.from('tenants').select('*').single();
+  if (t) { TENANT = t; setBusinessDates(); }
+  Store.state = await loadState();
+}
 
 /* ---------- store & session ---------- */
 Store.save = () => {}; Store.savePods = () => {};

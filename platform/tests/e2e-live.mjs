@@ -26,6 +26,7 @@ async function signIn(email) {
   if (!(await p.$('#se'))) { await p.evaluate(() => signOut()); await wait(500); }
   await p.fill('#se', email); await p.fill('#sp', 'test-password'); await p.click('form[data-form=liveSignin] button[type=submit]'); await wait(1200);
 }
+async function submitModal() { await p.click('.modal button[type=submit]'); try { await p.waitForSelector('.modal-back', { state: 'detached', timeout: 8000 }); } catch (e) { throw new Error('Dialog stayed open: ' + await p.$eval('.modal', m => m.innerText.slice(0, 400)).catch(() => '?')); } await wait(300); }
 async function signOutUI() { await p.evaluate(() => signOut()); await wait(400); }
 
 try {
@@ -41,16 +42,16 @@ try {
   // Scene B
   await signOutUI(); await signIn('lisa.grant@transhaul.example');
   ok('B ops has no cash nav', !(await p.$eval('.nav', e => e.innerText)).includes('Customers'));
-  await go('#/job/TH-001'); await p.click('button.btn-primary[data-act=draftRecharge]'); await wait(200); await p.click('.modal button[type=submit]'); await wait(900);
+  await go('#/job/TH-001'); await p.click('button.btn-primary[data-act=draftRecharge]'); await wait(200); await submitModal();
   await go('#/job/TH-002'); await p.click('button.btn-primary[data-act=draftRecharge]'); await wait(200);
   await p.fill('.modal input[name=amount]', '90'); await p.click('.modal button[type=submit]'); await wait(700);
   ok('B over-limit recharge rejected by server', (await p.$eval('.m-err', e => e.innerText)).includes('cannot exceed'));
-  await p.fill('.modal input[name=amount]', '75'); await p.click('.modal button[type=submit]'); await wait(900);
+  await p.fill('.modal input[name=amount]', '75'); await submitModal();
   await go('#/ops/pods'); t = await text(); ok('B £255 possible recovery — draft only', t.includes('£255 possible recovery — draft only'));
   await go('#/job/TODAY-01'); await p.click('button[data-act=proposeCover]'); await wait(200);
   await p.click('.modal label[data-cand=D07]'); await p.click('.modal button[type=submit]'); await wait(700);
   ok('B D07 rejected', (await p.$eval('.m-err', e => e.innerText)).includes('not planning-eligible'));
-  await p.click('.modal label[data-cand=D12]'); await p.click('.modal button[type=submit]'); await wait(900);
+  await p.click('.modal label[data-cand=D12]'); await submitModal();
   await go('#/ops/today'); t = await text(); ok('B planned cover 20 / 21', t.includes('20 / 21'));
   // Scene C
   await signOutUI(); await signIn('transport@transhaul.example');
@@ -58,7 +59,7 @@ try {
   for (const h of ['#/dashboard', '#/ops/today', '#/ops/pods', '#/job/TH-001', '#/job/TH-001?tab=history', '#/fleet/compliance', '#/driver/D22']) { await go(h); if ((await p.evaluate(() => document.body.innerText)).includes('£')) leaks.push(h); }
   ok('C transport sees no £ (data withheld by database)', leaks.length === 0, leaks.join(' '));
   await go('#/driver/D22'); await p.click('button.btn-primary[data-act=followUp]'); await wait(200);
-  await p.fill('.modal textarea[name=note]', 'Licence seen. DVLA check booked.'); await p.click('.modal button[type=submit]'); await wait(900);
+  await p.fill('.modal textarea[name=note]', 'Licence seen. DVLA check booked.'); await submitModal();
   t = await text(); ok('C D22 follow-up recorded', t.includes('Follow-up recorded') && t.includes('not a DVLA licence check'));
   // Scene D
   await signOutUI(); await signIn('paul.dyer@transhaul.example'); t = await text();
@@ -88,7 +89,7 @@ try {
   await go('#/portal/job/TH-001'); t = await text(); ok('F typed URL for unshared job blocked', t.includes('Delivery not available') && !t.includes('Leeds'));
   // Administration
   await signOutUI(); await p.setViewportSize({ width: 1440, height: 900 }); await signIn('paul.dyer@transhaul.example');
-  await go('#/admin/team'); await p.click('button[data-act=userStatus][data-id="00000000-0000-4000-8000-000000000002"]'); await wait(200); await p.click('.modal button[type=submit]'); await wait(900);
+  await go('#/admin/team'); await p.click('button[data-act=userStatus][data-id="00000000-0000-4000-8000-000000000002"]'); await wait(200); await submitModal();
   await signOutUI(); await signIn('lisa.grant@transhaul.example'); t = await text(); ok('Suspended user cannot use the portal', t.includes('Account suspended'));
   await signOutUI(); await signIn('paul.dyer@transhaul.example'); await go('#/admin/team'); await p.click('button[data-act=userStatus][data-id="00000000-0000-4000-8000-000000000002"]'); await wait(900);
   await go('#/admin/costmodel'); await p.fill('#thr', '20'); await p.click('form[data-form=threshold] button'); await wait(900);

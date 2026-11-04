@@ -4,6 +4,10 @@
 // so the real row-level security and workflow functions decide every result.
 import http from 'node:http'; import fs from 'node:fs'; import path from 'node:path'; import pg from 'pg';
 
+// Match PostgREST's JSON: dates as 'YYYY-MM-DD', numerics as numbers.
+pg.types.setTypeParser(1082, v => v);
+pg.types.setTypeParser(1700, v => v === null ? null : parseFloat(v));
+
 export function startFakeSupabase({ port = 54400, pgUrl, staticDir, config }) {
   const pool = new pg.Pool({ connectionString: pgUrl, max: 8 });
   const files = new Map();
@@ -44,7 +48,7 @@ export function startFakeSupabase({ port = 54400, pgUrl, staticDir, config }) {
         const sql = `select public.${ident(fn)}(${names.map((k, i) => `${ident(k)} => $${i + 1}`).join(', ')}) as r`;
         const vals = names.map(k => args[k] !== null && typeof args[k] === 'object' ? JSON.stringify(args[k]) : args[k]);
         const r = await asUser(claims(req), cl => cl.query(sql, vals));
-        return send(res, 200, r.rows[0].r === null ? 'null' : r.rows[0].r);
+        return send(res, 200, JSON.stringify(r.rows[0].r));
       }
       if (u.pathname.startsWith('/rest/v1/')) {
         const table = u.pathname.split('/').pop(); const where = []; const vals = []; let order = ''; let limit = ''; let offset = '';
@@ -74,7 +78,16 @@ export function startFakeSupabase({ port = 54400, pgUrl, staticDir, config }) {
       if (up && req.method === 'POST') {
         const name = decodeURIComponent(up[1]); const body = await readBody(req);
         await asUser(claims(req), cl => cl.query(`insert into storage.objects (bucket_id, name, owner) values ('pods', $1, auth.uid())`, [name]));
-        files.set(name, { body, type: req.headers['content-type'] || 'image/jpeg' });
+        let file = body, type = req.headers['content-type'] || 'image/jpeg';
+        const bm = type.match(/boundary=(.+)$/);
+        if (bm) {   // multipart upload (what supabase-js sends for a Blob): take the part that carries a filename or content-type
+          const parts = body.toString('latin1').split('--' + bm[1]);
+          const part = parts.find(x => /filename=|Content-Type: image/i.test(x) && x.includes('\r\n\r\n'));
+          const i = part.indexOf('\r\n\r\n'); const head = part.slice(0, i);
+          type = (head.match(/Content-Type: ([^\r\n]+)/i) || [, 'image/jpeg'])[1];
+          file = Buffer.from(part.slice(i + 4).replace(/\r\n$/, ''), 'latin1');
+        }
+        files.set(name, { body: file, type });
         return send(res, 200, { Key: 'pods/' + name, Id: name });
       }
       if (u.pathname === '/storage/v1/object/sign/pods' && req.method === 'POST') {
@@ -82,7 +95,7 @@ export function startFakeSupabase({ port = 54400, pgUrl, staticDir, config }) {
         const out = await asUser(claims(req), async cl => {
           const r = await cl.query(`select name from storage.objects where bucket_id = 'pods' and name = any($1)`, [b.paths]);
           const ok = new Set(r.rows.map(x => x.name));
-          return b.paths.map(p => ok.has(p) ? { path: p, signedURL: `/object/sign/pods/${encodeURIComponent(p)}?token=test`, error: null } : { path: p, signedURL: null, error: 'Object not found' });
+          return b.paths.map(p => ok.has(p) ? { path: p, signedURL: `/object/sign/pods/${p}?token=test`, error: null } : { path: p, signedURL: null, error: 'Object not found' });
         });
         return send(res, 200, out);
       }

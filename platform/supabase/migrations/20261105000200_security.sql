@@ -81,7 +81,7 @@ grant select on tenants, profiles, customers, contacts, vehicles, drivers, drive
 
 create policy tenant_read on tenants for select to authenticated using (id = app.tenant());
 
-create policy staff_read on profiles for select to authenticated using (tenant_id = app.tenant() and (app.is_staff() or user_id = auth.uid()));
+create policy staff_read on profiles for select to authenticated using (user_id = auth.uid() or (tenant_id = app.tenant() and app.is_staff()));
 
 -- Operational records: staff in the tenant
 create policy staff_read on customers for select to authenticated using (tenant_id = app.tenant() and app.is_staff());
