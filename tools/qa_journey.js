@@ -39,13 +39,13 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await go('#/job/TH-001'); t = await text();
   ok('A unit costs', ['£2.79','£3.22','£35.38','£45.77'].every(s => t.includes(s)), t.match(/£\d\.\d\d|£\d\d\.\d\d/g)?.join(' '));
   // jobs list KPI links
-  await go('#/overview'); await p.click('a.kpi-link[data-arg=late]'); await p.waitForTimeout(200);
+  await go('#/dashboard'); await p.click('a.kpi-link[data-arg=late]'); await p.waitForTimeout(200);
   let rows = await p.$$eval('#jobs-results tbody tr', r => r.map(x => x.querySelector('.id').innerText));
   ok('A late filter → TH-001, TH-003', rows.join() === 'TH-001,TH-003', rows.join());
-  await go('#/overview'); await p.click('a.kpi-link[data-arg=flagged]'); await p.waitForTimeout(200);
+  await go('#/dashboard'); await p.click('a.kpi-link[data-arg=flagged]'); await p.waitForTimeout(200);
   rows = await p.$$eval('#jobs-results tbody tr', r => r.map(x => x.querySelector('.id').innerText));
   ok('A flagged → 3 jobs', rows.sort().join() === 'TH-001,TH-002,TH-003', rows.join());
-  await go('#/overview'); await p.click('a.kpi-link[data-arg=yesterday]'); await p.waitForTimeout(200);
+  await go('#/dashboard'); await p.click('a.kpi-link[data-arg=yesterday]'); await p.waitForTimeout(200);
   rows = await p.$$eval('#jobs-results tbody tr', r => r.length);
   ok('A delivered → 20 rows', rows === 20, rows);
   await p.fill('input[data-bind=q]', 'Leeds'); await p.waitForTimeout(150);
@@ -70,7 +70,7 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await go('#/cash/debtors'); t = await text(); ok('B ops denied cash', t.includes("isn't available for your role"));
   await go('#/job/TH-001'); await p.click('button.btn-primary[data-act=draftRecharge]'); await p.waitForTimeout(100);
   await p.click('.modal button[type=submit]'); await p.waitForTimeout(200);
-  await go('#/overview'); t = await text(); ok('B after 1 draft shows £180 not £255', t.includes('£180') && !t.includes('£255'));
+  await go('#/dashboard'); t = await text(); ok('B after 1 draft shows £180 not £255', t.includes('£180') && !t.includes('£255'));
   await go('#/job/TH-002'); await p.click('button.btn-primary[data-act=draftRecharge]'); await p.waitForTimeout(100);
   await p.fill('.modal textarea[name=note]', 'Waiting beyond free period, tolls at customer request, handling surcharge.');
   await p.click('.modal button[type=submit]'); await p.waitForTimeout(200);
@@ -97,7 +97,7 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   for (const h of pagesT) { await go(h); const tt = await p.evaluate(() => document.body.innerText); if (tt.includes('£')) leaks.push(h); }
   ok('C transport sees no £ on any page', leaks.length === 0, leaks.join(' '));
   await go('#/jobs'); t = await text(); ok('C transport denied Jobs & Margins', t.includes("isn't available"));
-  await go('#/overview'); await p.fill('#gsearch', 'TH-00'); await p.waitForTimeout(150);
+  await go('#/dashboard'); await p.fill('#gsearch', 'TH-00'); await p.waitForTimeout(150);
   t = await p.$eval('#gsearch-res', e => e.innerText); ok('C search no £', !t.includes('£') && t.includes('TH-001'));
   await go('#/driver/D22'); await p.click('button.btn-primary[data-act=followUp]'); await p.waitForTimeout(100);
   await p.fill('.modal textarea[name=note]', 'Driver presented licence; check code obtained. DVLA check booked for Monday.'); await p.click('.modal button[type=submit]'); await p.waitForTimeout(200);
@@ -107,7 +107,7 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await go('#/ops/pods');
   const [dl] = await Promise.all([p.waitForEvent('download'), p.click('button[data-act=exportPods]')]);
   const csv = fs.readFileSync(await dl.path(), 'utf8'); ok('C transport CSV has no value column', !csv.includes('Value') && !csv.includes('£'), csv.split('\n')[0]);
-  await go('#/overview'); await p.evaluate(() => { window.print = () => {}; }); await p.click('button[data-act=printReport]'); await p.waitForTimeout(150);
+  await go('#/dashboard'); await p.evaluate(() => { window.print = () => {}; }); await p.click('button[data-act=printReport]'); await p.waitForTimeout(150);
   t = await p.$eval('#print-root', e => e.innerText); ok('C print report has no £', !t.includes('£') && t.includes('Morning report'));
 
   // ---------- Scene D: Director again ----------
@@ -188,7 +188,7 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await signOut(); ok('Suspended account disabled on sign-in', await p.$('button.acct[data-id="U02"][disabled]') !== null);
   await p.click('button.acct:has-text("Jordan Reeves")'); await p.waitForTimeout(200); t = await text();
   ok('View-only: no £ by default', !(await p.evaluate(() => document.body.innerText)).includes('£'));
-  ok('View-only nav limited', (await p.$eval('.nav', e => e.innerText)).replace(/\s+/g,' ').trim() === 'Overview Fleet & Compliance');
+  ok('View-only nav limited', (await p.$eval('.nav', e => e.innerText)).replace(/\s+/g,' ').trim() === 'Dashboard Fleet & Compliance');
   await go('#/fleet/compliance'); ok('View-only has no action buttons', await p.$('button[data-act=followUp]') === null);
   await signOut(); await signIn('U01'); await go('#/admin/team'); await p.click('button[data-act=userStatus][data-id="U02"]'); await p.waitForTimeout(150);
   ok('Restore Lisa', await p.evaluate(() => user('U02').status) === 'active');

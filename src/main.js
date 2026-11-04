@@ -9,7 +9,7 @@ function parseRoute() {
   return { path: path || '', parts, q };
 }
 const OFFICE_ROUTES = [
-  ['overview', 'overview', viewOverview], ['jobs', 'jobs', viewJobs], ['job', ['jobs','operations'], viewJob],
+  ['dashboard', 'overview', viewOverview], ['overview', 'overview', viewOverview], ['jobs', 'jobs', viewJobs], ['job', ['jobs','operations'], viewJob],
   ['ops', 'operations', viewOps], ['cash', 'cash', viewCash], ['customer', 'cash', viewCustomer], ['invoice', 'cash', viewInvoice],
   ['fleet', 'fleet', viewFleet], ['vehicle', 'fleet', viewVehicle], ['driver', 'fleet', viewDriver], ['document', 'fleet', viewDocument],
   ['admin', 'admin', viewAdmin],
@@ -37,10 +37,10 @@ function render() {
     app.innerHTML = renderDriverApp(r); return done(r);
   }
   const def = OFFICE_ROUTES.find(x => x[0] === first);
-  if (!def) { location.replace('#/overview'); return; }
+  if (!def) { location.replace('#/dashboard'); return; }
   const need = Array.isArray(def[1]) ? def[1] : [def[1]];
   const allowed = need.some(n => n === 'cash' ? can('cash') : hasSection(n));
-  const section = { job: hasSection('jobs') ? (UI.crumb && UI.crumb.href.startsWith('#/ops') ? 'operations' : 'jobs') : 'operations', customer:'cash', invoice:'cash', vehicle:'fleet', driver:'fleet', document:'fleet', ops:'operations' }[first] || first;
+  const section = { job: hasSection('jobs') ? (UI.crumb && UI.crumb.href.startsWith('#/ops') ? 'operations' : 'jobs') : 'operations', customer:'cash', invoice:'cash', vehicle:'fleet', driver:'fleet', document:'fleet', ops:'operations', dashboard:'overview' }[first] || first;
   app.innerHTML = renderOffice({ section, view: () => allowed ? def[2](r) : denied() });
   done(r);
 }
@@ -56,7 +56,7 @@ function done(r) {
   const p = r.parts[0];
   if (p === 'jobs' && r.parts[1] !== 'model') UI.crumb = { label:'Jobs & Margins', href:'#/jobs' };
   if (p === 'ops') { UI.crumb = { label:'Operations', href:'#/' + r.path }; UI.jobList = S().jobs.filter(j => r.parts[1] === 'pods' ? isDone(j) && (j.pod.status === 'missing' || j.invoice.status === 'pending') : j.date === TODAY).map(j => j.id); }
-  if (p === 'overview') { UI.crumb = { label:'Overview', href:'#/overview' }; }
+  if (p === 'overview' || p === 'dashboard') { UI.crumb = { label:'Dashboard', href:'#/dashboard' }; }
 }
 function rerender() { const y = window.scrollY; render(); window.scrollTo(0, y); }
 function go(href) { if (location.hash === href) rerender(); else location.hash = href; }
@@ -172,7 +172,7 @@ function modalInvite() {
   Modal.open({ title:'Invite user', sub:'Invitation is simulated — no email is sent',
     body:`<div class="form-grid"><div class="field"><label for="in">Full name</label><input class="input" id="in" name="name" placeholder="e.g. Jordan Reeves"></div><div class="field"><label for="ie">Email address</label><input class="input" id="ie" name="email" type="email" placeholder="name@transhaul.example"></div></div>
       <div class="field"><label for="ir">Role</label><select class="select" id="ir" name="role"><option value="viewonly">View Only — explicit sections</option><option value="operations">Operations</option><option value="transport">Transport & Compliance</option><option value="director">Director</option></select></div>
-      <div id="vo-box"><div class="label small strong text-2">Sections this person can see (Overview is always included)</div>${secs.map(s => `<label class="check"><input type="checkbox" name="sec" value="${s.id}"><span>${s.label}</span></label>`).join('')}
+      <div id="vo-box"><div class="label small strong text-2">Sections this person can see (Dashboard is always included)</div>${secs.map(s => `<label class="check"><input type="checkbox" name="sec" value="${s.id}"><span>${s.label}</span></label>`).join('')}
       <label class="check" style="border-top:1px solid var(--line-2);margin-top:4px"><input type="checkbox" name="money" id="imoney"><span><b>Can view financial figures</b><div class="small muted">Off by default. Required for Customers & Cash.</div></span></label></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Send invitation</button>',
     onOpen: el => el.addEventListener('change', e => { if (e.target.name === 'role') el.querySelector('#vo-box').hidden = e.target.value !== 'viewonly'; if (e.target.value === 'cash' && e.target.checked) el.querySelector('#imoney').checked = true; if (e.target.id === 'imoney' && !e.target.checked) { const c = el.querySelector('input[value=cash]'); c.checked = false; } }),
@@ -239,7 +239,7 @@ const ACT = {
     const u = user(id); if (u.status === 'suspended') return toast('This account is suspended.', 'err');
     Store.setSession({ kind:'staff', userId:id });
     if (u.status === 'invited') { u.status = 'active'; log('Accepted invitation', 'user', u.id, 'Invited', 'Active'); Store.save(); }
-    UI.crumb = null; location.hash = u.role === 'driver' ? '#/driver-app' : '#/overview'; render();
+    UI.crumb = null; location.hash = u.role === 'driver' ? '#/driver-app' : '#/dashboard'; render();
   },
   signOut: () => signOut(),
   resetDemo: () => confirmModal('Reset demo?', 'This restores every record to the initial demonstration state and signs you out. Uploaded POD images are removed.', 'Reset demo', () => { Store.reset(); Object.assign(UI.jobs, { q:'', from:YESTERDAY, to:YESTERDAY, customer:'', vehicle:'', driver:'', dest:'', exc:'', sort:{ key:'id', dir:'asc' } }); saveUI(); UI.crumb = null; location.hash = '#/signin'; render(); toast('Demo reset to its initial state'); }, true),
@@ -400,7 +400,7 @@ function selfTest() {
 (function boot() {
   Store.load();
   bindEvents();
-  if (!location.hash) location.replace(Store.session ? '#/overview' : '#/signin');
+  if (!location.hash) location.replace(Store.session ? '#/dashboard' : '#/signin');
   render();
   selfTest();
 })();

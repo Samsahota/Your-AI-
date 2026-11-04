@@ -43,7 +43,7 @@ function renderOffice(route) {
     </div>
   </div>`;
 }
-function denied() { return `<div class="card card-pad-lg empty">${icon('lock')}<h4>This section isn't available for your role</h4><p class="muted">Access is set by the director in Administration.</p><p class="mt16"><a class="btn" href="#/overview">Back to Overview</a></p></div>`; }
+function denied() { return `<div class="card card-pad-lg empty">${icon('lock')}<h4>This section isn't available for your role</h4><p class="muted">Access is set by the director in Administration.</p><p class="mt16"><a class="btn" href="#/dashboard">Back to Dashboard</a></p></div>`; }
 function pageHead(title, sub, actions = '') { return `<div class="page-head"><div><h1>${title}</h1>${sub ? `<div class="sub">${sub}</div>` : ''}</div><div class="page-actions">${actions}</div></div>`; }
 function tabs(list, active) { return `<nav class="tabs" role="tablist">${list.map(t => `<a role="tab" class="tab ${t.id === active ? 'active' : ''}" href="${t.href}" aria-selected="${t.id === active}">${esc(t.label)}${t.count != null ? `<span class="count">${t.count}</span>` : ''}</a>`).join('')}</nav>`; }
 function crumbs(list) { return `<div class="crumbs">${list.map((c, i) => i < list.length - 1 ? `<a href="${c.href}">${esc(c.label)}</a>${icon('chevR')}` : `<span>${esc(c.label)}</span>`).join('')}</div>`; }

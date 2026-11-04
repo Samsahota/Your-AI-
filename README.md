@@ -8,18 +8,18 @@ All data is illustrative and fictional. No live systems are connected.
 | Account | Sees |
 |---|---|
 | Paul Dyer — Director | Everything, including Customers & Cash and Administration |
-| Lisa Grant — Operations Manager | Overview, Jobs & Margins, Operations (no debtors, Bibby or admin) |
-| Transport Manager — Transport & Compliance | Overview, Operations, Fleet & Compliance — no £ figures anywhere |
+| Lisa Grant — Operations Manager | Dashboard, Jobs & Margins, Operations (no debtors, Bibby or admin) |
+| Transport Manager — Transport & Compliance | Dashboard, Operations, Fleet & Compliance — no £ figures anywhere |
 | Driver D04 | Phone app: own jobs, walkaround, check-ins, POD |
 | Customer Contact | Phone portal: only jobs explicitly shared with them |
 
 The **Simulated customer mailbox** link on the sign-in screen shows delivery emails and one-time links (never actually sent).
 
 ## Demo journey (≈15 min)
-1. **Paul** — five morning questions on Overview → open TH-001 → £270 below planned contribution, £180 recharge candidate.
+1. **Paul** — five morning questions on the Dashboard → open TH-001 → £270 below planned contribution, £180 recharge candidate.
 2. **Lisa** — draft £180 (TH-001) and £75 (TH-002) recharges; open TODAY-01, compare D12/D07, propose D12 → cover 20/21.
 3. **Transport Manager** — open D22 → Record follow-up.
-4. **Paul** — Overview shows 1 uncovered, £255 draft recovery, D22 follow-up, activity by person.
+4. **Paul** — Dashboard shows 1 uncovered, £255 draft recovery, D22 follow-up, activity by person.
 5. **Driver D04** (narrow the browser or use a phone) — walkaround, depart, arrive, unload, complete, upload POD.
 6. **Mailbox** → open the TODAY-05 email → one-time link → customer sees TODAY-05 + TH-006 only; try `TH-011` to show it is blocked.
 7. **Paul** → Administration → Connections.
@@ -37,3 +37,14 @@ The **Simulated customer mailbox** link on the sign-in screen shows delivery ema
 QA: `node tools/qa_journey.js` (needs Playwright) runs the full journey with 99 checks.
 
 Role filtering in this offline demo runs in the browser and is illustrative only; production requires server-side role and tenant enforcement (e.g. Supabase Auth + Postgres RLS).
+
+## Path to production (kept deliberately small)
+The demo is structured so the real build reuses its data model and screens rather than starting again:
+
+- **One database, one app.** Each array in `src/seed.js` maps to one Postgres table (jobs, vehicles, drivers, invoices, actions, activity, shares…). Supabase provides Postgres, Auth (incl. one-time email links) and row-level security for the role rules in `can()` in `src/core.js`.
+- **Thin front end.** The views are plain render functions; they can move to a small Next.js app on Vercel without a component framework rewrite.
+- **Read-only, scheduled integrations.** Vigo (API), Xero (OAuth), Microsoft Graph (SharePoint) and file imports (Bibby, Tachomaster, Paragon) run as scheduled server jobs (n8n or Supabase functions) — no real-time sync, no writes back to source systems.
+- **Build order that earns value first:** Vigo jobs + POD status → cost model and Dashboard bands 1–3 & 5 → Xero/Bibby for band 4 → driver app → customer portal.
+- **Multi-haulier from day one:** every table carries a `tenant_id` enforced by RLS, so the Clearpath roll-out is configuration, not a fork.
+
+Hosting costs at this scale are typically in the tens of pounds per month on standard Supabase/Vercel plans; confirm current pricing before quoting.

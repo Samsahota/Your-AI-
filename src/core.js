@@ -71,7 +71,7 @@ const driverName = id => { const d = driver(id); return d ? `${d.id} · ${d.name
 /* ---------- roles & permissions ---------- */
 const ROLE_LABEL = { director:'Director', operations:'Operations Manager', transport:'Transport & Compliance', viewonly:'View Only', driver:'Driver', customer:'Customer Portal' };
 const SECTIONS = [
-  { id:'overview', label:'Overview', icon:'home', href:'#/overview' },
+  { id:'overview', label:'Dashboard', icon:'home', href:'#/dashboard' },
   { id:'jobs', label:'Jobs & Margins', icon:'jobs', href:'#/jobs' },
   { id:'operations', label:'Operations', icon:'ops', href:'#/ops/today' },
   { id:'cash', label:'Customers & Cash', icon:'cash', href:'#/cash/debtors' },
