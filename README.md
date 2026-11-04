@@ -34,7 +34,7 @@ The **Simulated customer mailbox** link on the sign-in screen shows delivery ema
 - `src/mobile.js` — sign-in, mailbox, driver app, customer portal
 - `src/main.js` — router, events, workflow modals, exports, print report, data self-test
 
-QA: `node tools/qa_journey.js` (needs Playwright) runs the full journey with 99 checks.
+QA (needs Playwright): `node tools/qa_journey.js` runs the full demo journey (99 checks); `node tools/qa_layout.js` audits 481 screens and dialogs for anything spilling outside its card or dialog.
 
 Role filtering in this offline demo runs in the browser and is illustrative only; production requires server-side role and tenant enforcement (e.g. Supabase Auth + Postgres RLS).
 
