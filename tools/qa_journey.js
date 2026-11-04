@@ -188,7 +188,7 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await signOut(); ok('Suspended account disabled on sign-in', await p.$('button.acct[data-id="U02"][disabled]') !== null);
   await p.click('button.acct:has-text("Jordan Reeves")'); await p.waitForTimeout(200); t = await text();
   ok('View-only: no £ by default', !(await p.evaluate(() => document.body.innerText)).includes('£'));
-  ok('View-only nav limited', (await p.$eval('.nav', e => e.innerText)).replace(/\s+/g,' ').trim() === 'Dashboard Fleet & Compliance');
+  ok('View-only nav limited', (await p.$eval('.nav', e => e.innerText)).replace(/\d+/g,'').replace(/\s+/g,' ').trim() === 'Dashboard Fleet & Compliance');
   await go('#/fleet/compliance'); ok('View-only has no action buttons', await p.$('button[data-act=followUp]') === null);
   await signOut(); await signIn('U01'); await go('#/admin/team'); await p.click('button[data-act=userStatus][data-id="U02"]'); await p.waitForTimeout(150);
   ok('Restore Lisa', await p.evaluate(() => user('U02').status) === 'active');

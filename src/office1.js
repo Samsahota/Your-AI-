@@ -21,11 +21,12 @@ const custName = id => (customer(id) || {}).name || '—';
 /* ---------- shell ---------- */
 function renderOffice(route) {
   const u = me();
-  const nav = SECTIONS.filter(s => hasSection(s.id)).map(s => `<a class="nav-item ${route.section === s.id ? 'active' : ''}" href="${s.href}" ${route.section === s.id ? 'aria-current="page"' : ''}>${icon(s.icon)}<span>${s.label}</span></a>`).join('');
+  const badge = { operations: todayStats().uncovered.length, fleet: S().compliance.filter(c => ['overdue','unsigned'].includes(c.status)).length + S().defects.filter(d => d.status === 'open').length };
+  const nav = SECTIONS.filter(s => hasSection(s.id)).map(s => `<a class="nav-item ${route.section === s.id ? 'active' : ''}" href="${s.href}" ${route.section === s.id ? 'aria-current="page"' : ''}>${icon(s.icon)}<span>${s.label}</span>${badge[s.id] ? `<span class="nbdg">${badge[s.id]}</span>` : ''}</a>`).join('');
   const content = route.view();
   return `<div class="shell ${UI.navOpen ? 'nav-open' : ''}">
     <aside class="sidebar" aria-label="Main navigation">
-      <div class="brand"><span class="brand-flag"></span><div class="brand-mark"><span class="brand-word">TRANS<b> </b>HAUL</span><span class="brand-sub">Haulage Portal</span></div></div>
+      <div class="brand">${MARK}<div class="brand-mark"><span class="brand-word">Haulage <span>Portal</span></span><span class="brand-sub">Trans Haul</span></div></div>
       <nav class="nav">${nav}</nav>
       <div class="nav-foot">
         <div class="nav-user"><span class="avatar dark">${esc(initials(u.name))}</span><div><div class="who">${esc(u.name)}</div><div class="role">${esc(ROLE_LABEL[u.role])}</div></div></div>
@@ -139,67 +140,101 @@ function activityFeed(limit = 8, filter) {
 }
 function recLinkFor(e) { return ['job','vehicle','driver','customer','invoice'].includes(e.recordType) ? recLink(e.recordType, e.recordId) : esc(e.recordId); }
 
+function kcard(o) {
+  // o: { label, icon, tone, value, unit, sub, foot, href, act, arg, span, chips }
+  const head = `<div class="kp-l"><span>${o.label}</span>${o.icon ? `<span class="kp-i ${o.tone || 'grey'}">${icon(o.icon)}</span>` : ''}</div><div class="kp-v">${o.value}${o.unit ? `<small>${o.unit}</small>` : ''}</div>${o.sub ? `<div class="kp-s">${o.sub}</div>` : ''}`;
+  const hit = o.href ? `<a class="kp-hit kpi-link" href="${o.href}" ${o.act ? `data-act="${o.act}" data-arg="${o.arg}"` : ''}>${head}</a>` : `<div class="kp-hit">${head}</div>`;
+  return `<div class="kp ${o.span ? 'span2' : ''} ${o.href ? 'is-link' : ''}">${hit}${o.chips ? `<div class="chips">${o.chips}</div>` : ''}${o.foot ? `<div class="kp-f">${o.foot}</div>` : ''}</div>`;
+}
+function dsec(n, title, sub, link, cards, cols) {
+  return `<section class="dsec" aria-labelledby="q${n}"><div class="sh"><span class="n">${n}</span><h2 id="q${n}">${title}</h2><span class="sub">${sub}</span>${link ? `<a class="more" href="${link.href}" ${link.act ? `data-act="${link.act}" data-arg="${link.arg}"` : ''}>${link.label}${icon('chevR')}</a>` : ''}</div><div class="dgrid ${cols || ''}">${cards}</div></section>`;
+}
+function wtdChart(w) {
+  const W = 300, H = 112, max = Math.max(...w.byDay.map(d => Math.max(d.planned, d.actual))) * 1.08;
+  const gw = W / w.byDay.length, bw = 26, base = H - 22;
+  const bars = w.byDay.map((d, i) => {
+    const x = i * gw + gw / 2, hp = d.planned / max * (base - 16), ha = d.actual / max * (base - 16), over = d.actual > d.planned;
+    return `<rect x="${x - bw - 2}" y="${base - hp}" width="${bw}" height="${hp}" rx="3" class="bp"/><rect x="${x + 2}" y="${base - ha}" width="${bw}" height="${ha}" rx="3" class="${over ? 'bo' : 'ba'}"/>
+      <text x="${x}" y="${H - 6}" text-anchor="middle" class="ax">${fmtDate(d.date).split(' ')[0]}</text><text x="${x + 2 + bw / 2}" y="${base - ha - 5}" text-anchor="middle" class="vl">${over ? '+' : ''}${gbp(d.actual - d.planned).replace('£', '£')}</text>`;
+  }).join('');
+  return `<svg class="mchart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Planned versus actual cost by day, Monday to Wednesday"><line x1="0" x2="${W}" y1="${base}" y2="${base}" class="gl"/>${bars}</svg>
+    <div class="legend sm"><span><i class="lg-p"></i>Planned</span><span><i class="lg-a"></i>Actual</span><span><i class="lg-o"></i>Over plan</span></div>`;
+}
 function viewOverview() {
   const u = me(), money = can('money'), cash = can('cash'), role = u.role;
   const y = yesterdayStats(), w = wtdStats(), p = podStats(), t = todayStats(), target = S().settings.revenueTarget;
   const canJobs = hasSection('jobs');
-  const kl = (href, inner, act, arg) => canJobs || !act ? `<a class="kpi-link" href="${href}" ${act ? `data-act="${act}" data-arg="${arg}"` : ''}>${inner}</a>` : `<div>${inner}</div>`;
+  const J = (act, arg) => canJobs ? { href:'#/jobs', act, arg } : {};
   const chipJob = (id, cls, label) => `<a class="chip ${cls}" href="#/job/${id}">${esc(id)}${label ? ' · ' + esc(label) : ''}</a>`;
+  let n = 0;
 
-  // Band 1
-  const ach = y.revenue / target * 100;
-  const b1 = `<section class="band" aria-labelledby="q1"><div class="band-q"><span class="qn">1</span><h2 id="q1">What happened yesterday?</h2><span class="when">${fmtDate(YESTERDAY, true)}</span></div><div class="band-body">
-    <div class="band-cell">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">Jobs delivered</span><span class="kpi-value">${y.jobs}</span><span class="kpi-meta">All booked jobs completed</span></div>`, 'kpiJobs', 'yesterday')}</div>
-    <div class="band-cell">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">On time</span><span class="kpi-value">${y.onTime.length} <span class="muted" style="font-size:16px;font-weight:600">· ${pct(y.onTime.length / y.jobs * 100, 0)}</span></span><span class="kpi-meta">${y.late.length} late against booked slot</span></div>`, 'kpiJobs', 'yesterday')}</div>
-    <div class="band-cell"><div class="kpi">${kl('#/jobs', `<span class="kpi-label">Late deliveries</span><span class="kpi-value">${y.late.length}</span>`, 'kpiJobs', 'late')}<div class="chips">${y.late.map(j => chipJob(j.id, 'warn', j.dest)).join('')}</div></div></div>
-    ${money ? `<div class="band-cell wide">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">Revenue against ${gbp(target)} daily target</span><span class="kpi-value">${gbp(y.revenue)} <span class="muted" style="font-size:15px;font-weight:600">${pct(ach)} of target</span></span><div class="meter target" aria-label="${pct(ach)} of target"><span style="width:${Math.min(100, ach)}%"></span></div><span class="kpi-meta"><span class="delta-bad">${gbp(target - y.revenue)} short</span> of target</span></div>`, 'kpiJobs', 'revenue')}</div>` : ''}
-  </div></section>`;
-
-  // Band 2
-  const mx = Math.max(y.planned, y.actual), mw = Math.max(w.planned, w.actual);
+  // headline story
   const rs = activeRecharges(), rsum = sum(rs, r => r.amount);
-  const b2 = money ? `<section class="band" aria-labelledby="q2"><div class="band-q"><span class="qn">2</span><h2 id="q2">What did those jobs cost?</h2><span class="when">Planned vs actual</span></div><div class="band-body">
-    <div class="band-cell">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">Actual cost yesterday</span><span class="kpi-value">${gbp(y.actual)}</span><div class="cmp"><span class="lbl">Planned</span><span class="bar" style="width:${y.planned / mx * 100}%"></span><span class="num">${gbp(y.planned)}</span><span class="lbl">Actual</span><span class="bar actual" style="width:${y.actual / mx * 100}%"></span><span class="num">${gbp(y.actual)}</span></div><span class="kpi-meta"><span class="delta-bad">${gbp(y.overrun, { sign:true })}</span> over plan</span></div>`, 'kpiJobs', 'yesterday')}</div>
-    <div class="band-cell">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">Contribution yesterday</span><span class="kpi-value">${gbp(y.aContrib)}</span><span class="kpi-meta">Planned ${gbp(y.pContrib)} · <span class="delta-bad">${gbp(y.aContrib - y.pContrib)}</span></span><span class="kpi-meta">Margin ${pct(y.aMargin, 2)} vs ${pct(y.pMargin, 2)} planned</span></div>`, 'kpiJobs', 'yesterday')}</div>
-    <div class="band-cell"><div class="kpi">${kl('#/jobs', `<span class="kpi-label">Jobs over cost threshold (&gt;${threshold()}%)</span><span class="kpi-value">${y.flagged.length}</span>`, 'kpiJobs', 'flagged')}<div class="chips">${y.flagged.map(j => chipJob(j.id, 'bad', gbp(costVar(j), { sign:true }))).join('')}</div></div></div>
-    <div class="band-cell">${kl('#/ops/pods#recharges', `<div class="kpi"><span class="kpi-label">Recharge recovery</span>${rs.length ? `<span class="kpi-value sm">${gbp(rsum)}</span><span class="kpi-meta">possible recovery — <b>draft only</b></span><span class="kpi-meta muted">${rs.map(r => r.jobId).join(', ')} · not revenue</span>` : `<span class="kpi-value sm muted">No drafts</span><span class="kpi-meta">${S().jobs.filter(j => j.recharge && isFlagged(j)).length} recharge candidates identified</span>`}</div>`)}</div>
-    <div class="band-cell">${kl('#/jobs', `<div class="kpi"><span class="kpi-label">Week to date cost · Mon 2 – Wed 4 Nov</span><span class="kpi-value sm">${gbp(w.actual)}</span><div class="cmp"><span class="lbl">Planned</span><span class="bar" style="width:${w.planned / mw * 100}%"></span><span class="num">${gbp(w.planned)}</span><span class="lbl">Actual</span><span class="bar actual" style="width:${w.actual / mw * 100}%"></span><span class="num">${gbp(w.actual)}</span></div><span class="kpi-meta"><span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan</span></div>`, 'kpiJobs', 'wtd')}</div>
-  </div></section>` : '';
+  const ach = y.revenue / target * 100;
+  const story = [
+    `<b>${y.jobs} jobs delivered yesterday</b>, ${y.late.length} late`,
+    money ? `revenue <b>${gbp(y.revenue)}</b> (${pct(ach)} of target)` : '',
+    money ? `costs ran <b class="delta-bad">${gbp(y.overrun)} over plan</b>, driven by ${y.flagged.map(j => j.id).join(', ')}` : '',
+    `<b>${p.missing.length} PODs</b> outstanding`,
+    `today <b>${t.uncovered.length} of ${t.booked} jobs</b> still need cover`,
+  ].filter(Boolean);
+  const storyHTML = `<div class="dash-story">${icon('info')}<div>${story.join(' · ')}.</div></div>`;
 
-  // Band 3
+  // 1 — yesterday
+  const onPct = y.onTime.length / y.jobs * 100;
+  const s1 = dsec(++n, 'What happened yesterday?', fmtDate(YESTERDAY, true), canJobs ? { href:'#/jobs', act:'kpiJobs', arg:'yesterday', label:'All jobs' } : null, [
+    kcard(Object.assign({ label:'Jobs delivered', icon:'truck', tone:'grey', value:y.jobs, sub:'Every booked job completed' }, J('kpiJobs', 'yesterday'))),
+    kcard(Object.assign({ label:'On time', icon:'check', tone:'green', value:`${y.onTime.length} <small>· ${pct(onPct, 0)}</small>`, sub:`${y.late.length} late against booked slot`, foot:`<div class="dbar"><i style="width:${onPct}%;background:var(--teal)"></i><i style="width:${100 - onPct}%;background:#E3A23B"></i></div>` }, J('kpiJobs', 'yesterday'))),
+    kcard(Object.assign({ label:'Late deliveries', icon:'clock', tone:'amber', value:y.late.length, chips: y.late.map(j => chipJob(j.id, 'warn', j.dest)).join('') }, J('kpiJobs', 'late'))),
+    money ? kcard(Object.assign({ label:`Revenue vs ${gbp(target)} daily target`, icon:'cash', tone: ach >= 100 ? 'green' : 'red', value:gbp(y.revenue), unit:`${pct(ach)} of target`, foot:`<div class="dbar tall"><i style="width:${Math.min(100, ach)}%;background:var(--charcoal)"></i><u style="left:calc(100% - 2px)"></u></div><div class="kp-s mt8"><span class="delta-bad">${gbp(target - y.revenue)} short</span> of target</div>` }, J('kpiJobs', 'revenue'))) : '',
+  ].join(''));
+
+  // 2 — cost and contribution
+  const flaggedCands = S().jobs.filter(j => j.recharge && isFlagged(j)).length;
+  const s2 = money ? dsec(++n, 'What did those jobs cost?', 'Planned vs actual · yesterday and week to date', { href:'#/jobs', act:'kpiJobs', arg:'flagged', label:'Cost exceptions' }, [
+    kcard(Object.assign({ label:'Actual cost yesterday', icon:'jobs', tone:'red', value:gbp(y.actual), sub:`Planned ${gbp(y.planned)} · <span class="delta-bad">${gbp(y.overrun, { sign:true })}</span> over plan`, foot:`<div class="cmp2"><span>Planned</span><div class="dbar"><i style="width:${y.planned / y.actual * 100}%;background:#B9B7B0"></i></div><span>Actual</span><div class="dbar"><i style="width:100%;background:var(--charcoal)"></i></div></div>` }, J('kpiJobs', 'yesterday'))),
+    kcard(Object.assign({ label:'Contribution yesterday', icon:'cash', tone:'amber', value:gbp(y.aContrib), sub:`Planned ${gbp(y.pContrib)} · <span class="delta-bad">${gbp(y.aContrib - y.pContrib)}</span>`, foot:`<div class="kp-s">Margin <b>${pct(y.aMargin, 2)}</b> vs ${pct(y.pMargin, 2)} planned</div>` }, J('kpiJobs', 'yesterday'))),
+    kcard(Object.assign({ label:`Over cost threshold (>${threshold()}%)`, icon:'alert', tone:'red', value:y.flagged.length, unit:'jobs', chips: y.flagged.map(j => chipJob(j.id, 'bad', gbp(costVar(j), { sign:true }))).join(''),
+      foot: rs.length ? `<a class="recov" href="#/ops/pods?focus=recharges"><b>${gbp(rsum)}</b> possible recovery — draft only</a>` : `<a class="recov muted" href="#/ops/pods?focus=recharges">${flaggedCands} recharge candidates · no drafts yet</a>` }, J('kpiJobs', 'flagged'))),
+    kcard(Object.assign({ label:'Week to date cost · Mon–Wed', value:gbp(w.actual), sub:`Planned ${gbp(w.planned)} · <span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan`, foot: wtdChart(w) }, J('kpiJobs', 'wtd'))),
+  ].join('')) : '';
+
+  // 3 — PODs & billing ; 4 — cash
   const unbilled = sum(p.uninvoiced, j => j.price);
-  const b3 = `<section class="band" aria-labelledby="q3"><div class="band-q"><span class="qn">3</span><h2 id="q3">Which PODs are missing and what isn't invoiced?</h2><span class="when">All delivered jobs</span></div><div class="band-body">
-    <div class="band-cell"><a class="kpi-link" href="#/ops/pods"><div class="kpi"><span class="kpi-label">Outstanding PODs</span><span class="kpi-value">${p.missing.length}</span><span class="kpi-meta">${p.missing.map(j => j.id).join(', ') || 'None'}</span></div></a></div>
-    <div class="band-cell"><a class="kpi-link" href="#/ops/pods"><div class="kpi"><span class="kpi-label">Delivered, not invoiced</span><span class="kpi-value">${p.uninvoiced.length}</span>${money ? `<span class="kpi-meta">${gbp(unbilled)} unbilled</span>` : '<span class="kpi-meta">Awaiting invoice in Xero</span>'}</div></a></div>
-    <div class="band-cell"><a class="kpi-link" href="#/ops/pods#blocked"><div class="kpi"><span class="kpi-label">Blocked by missing POD</span><span class="kpi-value">${p.blocked.length}</span><span class="kpi-meta">Cannot invoice yet</span></div></a></div>
-    <div class="band-cell"><a class="kpi-link" href="#/ops/pods#ready"><div class="kpi"><span class="kpi-label">Ready to invoice</span><span class="kpi-value">${p.ready.length}</span><span class="kpi-meta">${p.ready.map(j => j.id).join(', ') || 'None'}</span></div></a></div>
-  </div></section>`;
-
-  // Band 4
-  let b4 = '';
+  const s3 = dsec(++n, "What's missing or unbilled?", 'PODs and invoicing', { href:'#/ops/pods', label:'PODs & Billing' }, [
+    kcard({ label:'Outstanding PODs', icon:'file', tone: p.missing.length ? 'red' : 'green', value:p.missing.length, href:'#/ops/pods?focus=missing', chips: p.missing.map(j => chipJob(j.id, '', '')).join('') }),
+    kcard({ label:'Delivered, not invoiced', icon:'cash', tone:'amber', value:p.uninvoiced.length, unit: money ? `${gbp(unbilled)} unbilled` : '', href:'#/ops/pods?focus=blocked',
+      foot:`<div class="dbar tall"><i style="width:${p.blocked.length / Math.max(1, p.uninvoiced.length) * 100}%;background:#D9822B"></i><i style="width:${p.ready.length / Math.max(1, p.uninvoiced.length) * 100}%;background:var(--teal)"></i></div><div class="legend sm mt8"><span><i style="background:#D9822B"></i>${p.blocked.length} blocked by missing POD</span><span><i style="background:var(--teal)"></i>${p.ready.length} ready to invoice</span></div>` }),
+  ].join(''));
+  let s4 = '';
   if (cash) {
     const d = debtorStats();
-    const cols = ['#5B6470', '#2F3338', '#B57A16', '#B3141A'];
-    b4 = `<section class="band" aria-labelledby="q4"><div class="band-q"><span class="qn">4</span><h2 id="q4">What's the cash position?</h2><span class="when">Aged by invoice date</span></div><div class="band-body">
-      <div class="band-cell wide"><a class="kpi-link" href="#/cash/debtors"><div class="kpi"><span class="kpi-label">Total debtors</span><span class="kpi-value">${gbp(d.total)}</span><div class="stackbar" style="height:10px;margin-top:6px" aria-hidden="true">${d.buckets.map((b, i) => `<span style="flex:${b};background:${cols[i]}"></span>`).join('')}</div><span class="kpi-meta">${d.buckets.map((b, i) => `${BUCKETS[i].replace(' days','d')} ${gbp(b)}`).join(' · ')}</span></div></a></div>
-      <div class="band-cell"><a class="kpi-link" href="#/cash/debtors"><div class="kpi"><span class="kpi-label">Estimated Bibby headroom</span><span class="kpi-value">${gbp(d.headroom)}</span><span class="kpi-meta">Illustrative estimate</span></div></a></div>
-      <div class="band-cell"><a class="kpi-link" href="#/cash/debtors"><div class="kpi"><span class="kpi-label">Funding calculation</span><span class="kpi-meta">${gbp(d.eligible)} eligible × ${d.bibby.advanceRate * 100}% = ${gbp(d.funding)}</span><span class="kpi-meta">less ${gbp(d.bibby.drawn)} drawn</span></div></a></div>
-    </div></section>`;
+    s4 = dsec(++n, "What's the cash position?", 'Aged by invoice date', { href:'#/cash/debtors', label:'Cash' }, [
+      kcard({ label:'Total debtors', icon:'cash', tone:'grey', value:gbp(d.total), href:'#/cash/debtors',
+        foot:`<div class="dbar tall">${d.buckets.map((b, i) => `<i style="width:${b / d.total * 100}%;background:${BUCKET_COL[i]}"></i>`).join('')}</div><div class="legend sm mt8">${d.buckets.map((b, i) => `<span><i style="background:${BUCKET_COL[i]}"></i>${BUCKETS[i].replace(' days', 'd')} ${gbp(b)}</span>`).join('')}</div>` }),
+      kcard({ label:'Estimated Bibby headroom', icon:'lock', tone:'green', value:gbp(d.headroom), href:'#/cash/debtors', sub:'Illustrative estimate, subject to Bibby rules',
+        foot:`<dl class="calc"><dt>Eligible receivables</dt><dd>${gbp(d.eligible)}</dd><dt>× ${d.bibby.advanceRate * 100}% advance</dt><dd>${gbp(d.funding)}</dd><dt>Less drawn</dt><dd>−${gbp(d.bibby.drawn)}</dd></dl>` }),
+    ].join(''));
   }
 
-  // Band 5
+  // 5 — today
   const prog = s => t.list.filter(j => j.status === s).length;
-  const b5 = `<section class="band" aria-labelledby="q5"><div class="band-q"><span class="qn">${cash ? 5 : money ? 4 : 3}</span><h2 id="q5">What's happening today?</h2><span class="when">${fmtDate(TODAY, true)}</span></div><div class="band-body">
-    <div class="band-cell"><a class="kpi-link" href="#/ops/today"><div class="kpi"><span class="kpi-label">Booked jobs</span><span class="kpi-value">${t.booked}</span><span class="kpi-meta">${prog('en_route')} en route · ${prog('on_site')} on site · ${prog('delivered')} completed</span></div></a></div>
-    <div class="band-cell"><a class="kpi-link" href="#/ops/today"><div class="kpi"><span class="kpi-label">Covered — vehicle and driver</span><span class="kpi-value">${t.planned}<span class="muted" style="font-size:16px"> / ${t.booked}</span></span><span class="kpi-meta">${t.confirmed} confirmed in Vigo${t.proposed.length ? ` · <span class="delta-warn">${t.proposed.length} proposed</span>` : ''}</span></div></a></div>
-    <div class="band-cell wide"><div class="kpi"><a class="kpi-link" href="#/ops/today"><span class="kpi-label">Uncovered</span><span class="kpi-value ${t.uncovered.length ? '' : 'muted'}">${t.uncovered.length}</span></a><div class="chips">${t.uncovered.map(j => chipJob(j.id, 'bad', coverState(j) === 'no_driver' ? 'No driver' : 'Vehicle VOR')).join('')}${t.proposed.map(j => chipJob(j.id, 'warn', j.proposedDriverId + ' proposed')).join('')}</div></div></div>
-  </div></section>`;
+  const conf = t.confirmed, prop = t.proposed.length, unc = t.uncovered.length;
+  const s5 = dsec(++n, "What's happening today?", fmtDate(TODAY, true), { href:'#/ops/today', label:'Today Board' }, [
+    kcard({ label:'Booked jobs', icon:'ops', tone:'grey', value:t.booked, href:'#/ops/today', sub:`${prog('en_route')} en route · ${prog('on_site')} on site · ${prog('delivered')} completed`,
+      foot:`<div class="dbar tall"><i style="width:${prog('delivered') / t.booked * 100}%;background:var(--teal)"></i><i style="width:${prog('on_site') / t.booked * 100}%;background:#2D5B8A"></i><i style="width:${prog('en_route') / t.booked * 100}%;background:#7FA3C8"></i></div>` }),
+    kcard({ label:'Covered — vehicle and driver', icon:'check', tone: unc ? 'amber' : 'green', value:`${t.planned} <small style="margin-left:0">/ ${t.booked}</small>`, href:'#/ops/today', sub:`${conf} confirmed in Vigo${prop ? ` · <span class="delta-warn">${prop} proposed</span>` : ''}`,
+      foot:`<div class="dbar tall"><i style="width:${conf / t.booked * 100}%;background:var(--teal)"></i><i style="width:${prop / t.booked * 100}%;background:#E3A23B"></i><i style="width:${unc / t.booked * 100}%;background:var(--red)"></i></div>` }),
+    `<div class="kp span2"><a class="kp-hit kpi-link" href="#/ops/today"><div class="kp-l"><span>Uncovered</span><span class="kp-i ${unc ? 'red' : 'green'}">${icon(unc ? 'alert' : 'check')}</span></div><div class="kp-v">${unc}</div></a>
+      <div class="unc-list">${t.uncovered.map(j => `<a class="unc" href="#/job/${j.id}"><span class="chip bad">${j.id} · ${coverState(j) === 'no_driver' ? 'No driver' : 'Vehicle VOR'}</span><span class="small text-2">${esc(j.dest)} · ${esc(j.slot)} · ${coverState(j) === 'no_driver' ? `vehicle ${j.vehicleId} ready` : `${j.vehicleId} off road`}</span></a>`).join('')}${t.proposed.map(j => `<a class="unc" href="#/job/${j.id}"><span class="chip warn">${j.id} · ${j.proposedDriverId} proposed</span><span class="small text-2">${esc(j.dest)} · awaiting Vigo confirmation</span></a>`).join('')}${!unc && !prop ? '<span class="small text-2">Every job has a vehicle and driver.</span>' : ''}</div></div>`,
+  ].join(''));
 
   const greet = role === 'director' ? 'Good morning, Paul' : `Good morning, ${u.name.split(' ')[0] === 'Transport' ? 'Transport team' : u.name.split(' ')[0]}`;
-  return pageHead(greet, `${fmtDate(TODAY, true)} · morning position at 07:00`, `<button class="btn" data-act="printReport">${icon('print')}Print report</button>`) +
-    `<div class="bands">${b1}${b2}${b3}${b4}${b5}</div>
-    <div class="grid g-main mt24">${attentionList()}<div class="card"><div class="card-head"><h3>Recent activity</h3>${hasSection('admin') ? '<a class="link small" href="#/admin/activity">Full log</a>' : ''}</div>${activityFeed(8)}</div></div>`;
+  return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · morning position at 07:00</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
+    storyHTML + s1 + s2 + `<div class="drow2">${s3}${s4}</div>` + s5 +
+    `<div class="grid g-main mt24">${attentionList()}<div class="card"><div class="card-head"><h3>Recent activity</h3>${hasSection('admin') ? '<a class="link small" href="#/admin/activity">Full log</a>' : ''}</div>${activityFeed(8)}</div></div>`;
 }
+
 
 /* ==========================================================================
    JOBS & MARGINS

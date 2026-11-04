@@ -8,7 +8,7 @@ const DEMO_ACCOUNTS = [
   { kind:'staff', userId:'U04', label:'Driver D04', role:'Driver', desc:'Phone app: today’s jobs, check-ins, walkaround and POD' },
   { kind:'customer', contactId:'CT01', label:'Customer Contact', role:'Customer Portal', desc:'Northfield Fresh Foods — sees only deliveries shared with them' },
 ];
-function brandBlock(dark = true) { return `<div class="brand" style="padding:0;border:0"><span class="brand-flag"></span><div class="brand-mark"><span class="brand-word" ${dark ? '' : 'style="color:var(--charcoal)"'}>TRANS<b> </b>HAUL</span><span class="brand-sub">Haulage Portal</span></div></div>`; }
+function brandBlock(dark = true) { return `<div class="brand" style="padding:0;border:0">${MARK}<div class="brand-mark"><span class="brand-word" ${dark ? '' : 'style="color:var(--charcoal)"'}>Haulage <span>Portal</span></span><span class="brand-sub">Trans Haul</span></div></div>`; }
 function renderSignin() {
   const others = S().users.filter(u => !u.demo);
   const acct = a => {
@@ -71,7 +71,7 @@ function mapsBlock(j) {
   if (!j.address) return `<div class="caveat warn mt12">${icon('alert')}<div>${esc(j.addressNote || 'No usable delivery address has been supplied for this job.')} Maps is unavailable until the address is confirmed.</div></div><button class="btn m-btn mt8" disabled>${icon('map')}Open in Maps</button>`;
   return `<button class="btn m-btn mt12" data-act="openMaps" data-id="${j.id}">${icon('map')}Open in Maps</button>`;
 }
-function driverTop(sub) { const d = driver(me().driverId); return `<header class="m-top"><span class="brand-flag"></span><div class="t"><b>Trans Haul Driver</b><span>${esc(d.id)} · ${esc(d.name)}${sub ? ' · ' + sub : ''}</span></div><button class="btn btn-ghost" data-act="signOut" aria-label="Sign out">${icon('logout')}</button></header>`; }
+function driverTop(sub) { const d = driver(me().driverId); return `<header class="m-top">${MARK}<div class="t"><b>Trans Haul Driver</b><span>${esc(d.id)} · ${esc(d.name)}${sub ? ' · ' + sub : ''}</span></div><button class="btn btn-ghost" data-act="signOut" aria-label="Sign out">${icon('logout')}</button></header>`; }
 function renderDriverApp(route) {
   const sub = route.parts[1];
   if (sub === 'walkaround') return renderWalkaround(job(route.parts[2]));
@@ -133,7 +133,7 @@ function renderDriverPod(j) {
 
 /* ---------- CUSTOMER PORTAL ---------- */
 function custShares() { return sharesForContact(Store.session.contactId); }
-function custTop() { const c = contact(Store.session.contactId); return `<header class="m-top light"><span class="brand-flag"></span><div class="t"><b>Trans Haul · Delivery updates</b><span>${esc(c.name)} · ${esc(customer(c.customerId).name)}</span></div><a class="btn btn-ghost" href="#/portal/settings" aria-label="Notification settings">${icon('admin')}</a><button class="btn btn-ghost" data-act="signOut" aria-label="Sign out">${icon('logout')}</button></header>`; }
+function custTop() { const c = contact(Store.session.contactId); return `<header class="m-top light">${MARK}<div class="t"><b>Trans Haul · Delivery updates</b><span>${esc(c.name)} · ${esc(customer(c.customerId).name)}</span></div><a class="btn btn-ghost" href="#/portal/settings" aria-label="Notification settings">${icon('admin')}</a><button class="btn btn-ghost" data-act="signOut" aria-label="Sign out">${icon('logout')}</button></header>`; }
 function custJobCard(j, sh, full) {
   const pts = [['depart', 'Departed depot'], ['arrive', 'Arrived on site'], ['complete', 'Delivered']];
   const img = Store.pods[j.id];

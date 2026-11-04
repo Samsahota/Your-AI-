@@ -26,7 +26,7 @@ function fmtDT(iso) { if (!iso) return '—'; return fmtDate(iso.slice(0,10)) + 
 const hm = min => min == null ? '—' : `${Math.floor(min / 60)}h ${String(min % 60).padStart(2,'0')}m`;
 const daysBetween = (a, b) => Math.round((toD(b) - toD(a)) / 86400000);
 const addMin = (iso, m) => new Date(toD(iso).getTime() + m * 60000).toISOString().replace('.000','');
-const initials = n => n.split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
+const initials = n => n.replace(/[^A-Za-z0-9\s]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const sum = (arr, f) => arr.reduce((a, x) => a + (f ? f(x) : x), 0);
 const r2 = n => Math.round(n * 100) / 100;
 const uniq = a => [...new Set(a)];
@@ -459,6 +459,7 @@ const ICONS = {
   refresh:'<path d="M20 11a8 8 0 10-2.3 5.7M20 4v7h-7"/>', menu:'<path d="M3 6h18M3 12h18M3 18h18"/>', link:'<path d="M10 14a4 4 0 005.7 0l3-3a4 4 0 00-5.7-5.7l-1 1M14 10a4 4 0 00-5.7 0l-3 3a4 4 0 005.7 5.7l1-1"/>',
   camera:'<path d="M4 7h4l2-3h4l2 3h4v13H4z"/><circle cx="12" cy="13" r="4"/>', truck:'<path d="M1 16V6h13v10M14 9h4l4 4v3h-8"/><circle cx="6" cy="17" r="2"/><circle cx="18" cy="17" r="2"/>',
 };
+const MARK = `<svg class="mark" viewBox="0 0 32 32" aria-hidden="true"><g transform="skewX(-14)"><rect x="9.5" y="17" width="5.2" height="11" rx="1.3" fill="#ED1C24"/><rect x="17" y="11" width="5.2" height="17" rx="1.3" fill="#ED1C24"/><rect x="24.5" y="4" width="5.2" height="24" rx="1.3" fill="#F6EC3D"/></g></svg>`;
 const icon = (n, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria-hidden="true">${ICONS[n] || ''}</svg>`;
 
 /* ---------- toast & modal ---------- */
