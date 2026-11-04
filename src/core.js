@@ -21,14 +21,23 @@ const MONTHS_L = ['January','February','March','April','May','June','July','Augu
 const toD = s => new Date(s.length === 10 ? s + 'T00:00:00Z' : s);
 function fmtDate(s, long) { if (!s) return '—'; const d = toD(s); return long ? `${DAYS_L[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS_L[d.getUTCMonth()]} ${d.getUTCFullYear()}` : `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; }
 function fmtDay(s) { if (!s) return '—'; const d = toD(s); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; }
-function fmtTime(iso) { if (!iso) return '—'; const d = toD(iso); return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0'); }
-function fmtDT(iso) { if (!iso) return '—'; return fmtDate(iso.slice(0,10)) + ', ' + fmtTime(iso); }
+const UK_TIME = new Intl.DateTimeFormat('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Europe/London' });
+const UK_DATE = new Intl.DateTimeFormat('en-CA', { year:'numeric', month:'2-digit', day:'2-digit', timeZone:'Europe/London' });
+function fmtTime(iso) { if (!iso) return '—'; return UK_TIME.format(toD(iso)); }
+function fmtDT(iso) { if (!iso) return '—'; return fmtDate(iso.length > 10 ? UK_DATE.format(toD(iso)) : iso) + ', ' + fmtTime(iso); }
 const hm = min => min == null ? '—' : `${Math.floor(min / 60)}h ${String(min % 60).padStart(2,'0')}m`;
 const daysBetween = (a, b) => Math.round((toD(b) - toD(a)) / 86400000);
 const addMin = (iso, m) => new Date(toD(iso).getTime() + m * 60000).toISOString().replace('.000','');
 const initials = n => n.replace(/[^A-Za-z0-9\s]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const sum = (arr, f) => arr.reduce((a, x) => a + (f ? f(x) : x), 0);
 const r2 = n => Math.round(n * 100) / 100;
+const addDays = (d, n) => new Date(toD(d).getTime() + n * 86400000).toISOString().slice(0, 10);
+const mondayOf = d => addDays(d, -((toD(d).getUTCDay() + 6) % 7));
+function wtdDays() { const out = []; for (let d = WEEK_START; d <= YESTERDAY; d = addDays(d, 1)) out.push(d); return out; }
+function wtdLabel() { const d = wtdDays(); return d.length ? (d.length === 1 ? fmtDate(d[0]) : `${fmtDate(d[0])} – ${fmtDate(d[d.length - 1])}`) : 'No completed days yet this week'; }
+function dataRange() { const ds = S().jobs.map(j => j.date).sort(); return ds.length ? [ds[0], ds[ds.length - 1]] : [TODAY, TODAY]; }
+function positionLabel() { return 'morning position at 07:00'; }
+function tenantName() { return 'Trans Haul'; }
 const uniq = a => [...new Set(a)];
 
 /* ---------- store ---------- */
@@ -53,6 +62,9 @@ const Store = {
   },
 };
 const S = () => Store.state;
+// Overridden by the live build (src/live.js)
+function disclosure() { return { short:'Illustrative demo data', long:' · No live systems connected', title:'All data in this demonstration is illustrative. No live systems are connected.' }; }
+function clockLabel() { return `${fmtDate(nowIso().slice(0,10))} · ${fmtTime(nowIso())} GMT (demo clock)`; }
 const nowIso = () => S().clock;
 function tick(min) { S().clock = addMin(S().clock, min); return S().clock; }
 function nextId(prefix) { S().seq += 1; return prefix + '-' + String(S().seq).padStart(3, '0'); }
@@ -109,12 +121,13 @@ const plannedContrib = j => j.price - j.plannedCost;
 const actualContrib = j => j.actualCost == null ? null : j.price - j.actualCost;
 
 function periodStats(list) {
-  const done = list.filter(j => isDone(j) && j.actualCost != null);
+  const delivered = list.filter(isDone);
+  const done = delivered.filter(j => j.actualCost != null);   // costed jobs (cost data may be withheld by role)
   const revenue = sum(done, j => j.price), planned = sum(done, j => j.plannedCost), actual = sum(done, j => j.actualCost);
-  return { jobs: done.length, revenue, planned, actual, overrun: actual - planned,
+  return { jobs: delivered.length, revenue, planned, actual, overrun: actual - planned,
     pContrib: revenue - planned, aContrib: revenue - actual,
     pMargin: revenue ? (revenue - planned) / revenue * 100 : null, aMargin: revenue ? (revenue - actual) / revenue * 100 : null,
-    late: done.filter(j => j.late), onTime: done.filter(j => !j.late), flagged: done.filter(isFlagged),
+    late: delivered.filter(j => j.late), onTime: delivered.filter(j => !j.late), flagged: done.filter(isFlagged),
     costPending: list.filter(j => isDone(j) && j.actualCost == null) };
 }
 const yesterdayStats = () => periodStats(S().jobs.filter(j => j.date === YESTERDAY));
@@ -162,7 +175,7 @@ function debtorStats() {
   return { open, buckets, total: sum(buckets), eligible, funding, headroom, bibby: b };
 }
 function utilisation(vehicleId) {
-  const days = ['2026-11-02', '2026-11-03', '2026-11-04'];
+  const days = wtdDays();
   const vs = vehicleId ? [vehicle(vehicleId)] : S().vehicles;
   let avail = 0, worked = 0, miles = 0, empty = 0;
   vs.forEach(v => days.forEach(d => {
@@ -482,7 +495,11 @@ const Modal = {
       <div class="modal-body">${body}</div>${foot != null ? `<div class="modal-foot">${foot}</div>` : ''}</form>`;
     document.body.appendChild(back); this.el = back; this.onSubmit = onSubmit;
     back.addEventListener('mousedown', e => { if (e.target === back) this.close(); });
-    back.querySelector('form').addEventListener('submit', e => { e.preventDefault(); if (this.onSubmit) { try { this.onSubmit(new FormData(e.target), e.target); } catch (err) { this.error(err.message); } } });
+    back.querySelector('form').addEventListener('submit', async e => {
+      e.preventDefault(); if (!this.onSubmit) return;
+      const btn = e.target.querySelector('button[type=submit]'); if (btn) { if (btn.disabled) return; btn.disabled = true; }
+      try { await this.onSubmit(new FormData(e.target), e.target); } catch (err) { this.error(err.message); } finally { if (btn && btn.isConnected) btn.disabled = false; }
+    });
     const f = back.querySelector('input:not([type=hidden]):not([disabled]),textarea,select,button.btn-primary'); if (f) setTimeout(() => f.focus(), 30);
     if (onOpen) onOpen(back);
   },

@@ -30,14 +30,14 @@ function renderOffice(route) {
       <nav class="nav">${nav}</nav>
       <div class="nav-foot">
         <div class="nav-user"><span class="avatar dark">${esc(initials(u.name))}</span><div><div class="who">${esc(u.name)}</div><div class="role">${esc(ROLE_LABEL[u.role])}</div></div></div>
-        <div class="row"><button class="btn btn-sm btn-dark" data-act="signOut">${icon('logout')}Sign out</button><button class="btn btn-sm btn-dark" data-act="resetDemo" title="Restore the original demo data">${icon('refresh')}Reset demo</button></div>
+        <div class="row"><button class="btn btn-sm btn-dark" data-act="signOut">${icon('logout')}Sign out</button><button class="btn btn-sm btn-dark demo-only" data-act="resetDemo" title="Restore the original demo data">${icon('refresh')}Reset demo</button></div>
       </div>
     </aside>
     <div class="main">
       <header class="topbar">
         <button class="btn btn-ghost btn-sm menu-btn" data-act="toggleNav" aria-label="Open navigation">${icon('menu')}</button>
-        <span class="disclosure" title="All data in this demonstration is illustrative. No live systems are connected."><i></i><span>Illustrative demo data<span class="long"> · No live systems connected</span></span></span>
-        <span class="clock" title="Fixed demonstration clock — independent of your computer's clock">${icon('clock')} ${fmtDate(nowIso().slice(0,10))} · ${fmtTime(nowIso())} GMT (demo clock)</span>
+        <span class="disclosure" title="${esc(disclosure().title)}"><i></i><span>${esc(disclosure().short)}<span class="long">${esc(disclosure().long)}</span></span></span>
+        <span class="clock">${icon('clock')} ${esc(clockLabel())}</span>
         <div class="search" role="search">${icon('search')}<input id="gsearch" type="search" placeholder="Search jobs, vehicles, drivers${can('cash') ? ', customers' : ''}" aria-label="Global search" autocomplete="off" data-act-input="gsearch"><div class="search-results" id="gsearch-res" hidden></div></div>
       </header>
       <main class="content" id="content">${content}</main>
@@ -196,7 +196,7 @@ function viewOverview() {
     kcard(Object.assign({ label:'Contribution yesterday', icon:'cash', tone:'amber', value:gbp(y.aContrib), sub:`Planned ${gbp(y.pContrib)} · <span class="delta-bad">${gbp(y.aContrib - y.pContrib)}</span>`, foot:`<div class="kp-s">Margin <b>${pct(y.aMargin, 2)}</b> vs ${pct(y.pMargin, 2)} planned</div>` }, J('kpiJobs', 'yesterday'))),
     kcard(Object.assign({ label:`Over cost threshold (>${threshold()}%)`, icon:'alert', tone:'red', value:y.flagged.length, unit:'jobs', chips: y.flagged.map(j => chipJob(j.id, 'bad', gbp(costVar(j), { sign:true }))).join(''),
       foot: rs.length ? `<a class="recov" href="#/ops/pods?focus=recharges"><b>${gbp(rsum)}</b> possible recovery — draft only</a>` : `<a class="recov muted" href="#/ops/pods?focus=recharges">${flaggedCands} recharge candidates · no drafts yet</a>` }, J('kpiJobs', 'flagged'))),
-    kcard(Object.assign({ label:'Week to date cost · Mon–Wed', value:gbp(w.actual), sub:`Planned ${gbp(w.planned)} · <span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan`, foot: wtdChart(w) }, J('kpiJobs', 'wtd'))),
+    kcard(Object.assign({ label:`Week to date cost · ${wtdLabel()}`, value:gbp(w.actual), sub:`Planned ${gbp(w.planned)} · <span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan`, foot: wtdChart(w) }, J('kpiJobs', 'wtd'))),
   ].join('')) : '';
 
   // 3 — PODs & billing ; 4 — cash
@@ -230,7 +230,7 @@ function viewOverview() {
   ].join(''));
 
   const greet = role === 'director' ? 'Good morning, Paul' : `Good morning, ${u.name.split(' ')[0] === 'Transport' ? 'Transport team' : u.name.split(' ')[0]}`;
-  return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · morning position at 07:00</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
+  return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · ${positionLabel()}</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
     storyHTML + s1 + s2 + `<div class="drow2">${s3}${s4}</div>` + s5 +
     `<div class="grid g-main mt24">${attentionList()}<div class="card"><div class="card-head"><h3>Recent activity</h3>${hasSection('admin') ? '<a class="link small" href="#/admin/activity">Full log</a>' : ''}</div>${activityFeed(8)}</div></div>`;
 }
@@ -239,7 +239,6 @@ function viewOverview() {
 /* ==========================================================================
    JOBS & MARGINS
    ========================================================================== */
-const SEED_RANGE = ['2026-10-28', '2026-11-05'];
 function filteredJobs() {
   const f = UI.jobs; const q = f.q.trim().toLowerCase();
   let list = S().jobs.filter(j => (!f.from || j.date >= f.from) && (!f.to || j.date <= f.to));
@@ -259,7 +258,7 @@ function setJobFilter(preset) {
   if (preset === 'late') Object.assign(f, { from:YESTERDAY, to:YESTERDAY, exc:'late' });
   if (preset === 'flagged') Object.assign(f, { from:YESTERDAY, to:YESTERDAY, exc:'flagged', sort:{ key:'variance', dir:'desc' } });
   if (preset === 'wtd') Object.assign(f, { from:WEEK_START, to:YESTERDAY, sort:{ key:'id', dir:'asc' } });
-  if (preset === 'all') Object.assign(f, { from:SEED_RANGE[0], to:SEED_RANGE[1] });
+  if (preset === 'all') { const r = dataRange(); Object.assign(f, { from:r[0], to:r[1] }); }
   if (preset === 'today') Object.assign(f, { from:TODAY, to:TODAY });
   saveUI();
 }
@@ -297,7 +296,7 @@ function jobsTable(list) {
   const done = list.filter(j => isDone(j) && j.actualCost != null);
   const foot = money && list.length ? { id: `<span class="strong">Total · ${list.length} jobs</span>`, price: gbp(sum(list, j => j.price)), planned: gbp(sum(list, j => j.plannedCost)), actual: gbp(sum(done, j => j.actualCost)), contrib: gbp(sum(done, j => j.price - j.actualCost)), variance: gbp(sum(done, j => j.actualCost - j.plannedCost), { sign:true }) } : null;
   const f = UI.jobs;
-  const empty = `<div class="empty"><h4>No jobs match these filters</h4><p>${f.from && f.to ? `Nothing between ${fmtDay(f.from)} and ${fmtDay(f.to)}. ` : ''}Seeded demo data covers 28 Oct – 5 Nov 2026.</p><p class="mt12"><button class="btn btn-sm" data-act="kpiJobs" data-arg="all">Show all seeded jobs</button></p></div>`;
+  const empty = `<div class="empty"><h4>No jobs match these filters</h4><p>${f.from && f.to ? `Nothing between ${fmtDay(f.from)} and ${fmtDay(f.to)}. ` : ''}Records available cover ${fmtDay(dataRange()[0])} – ${fmtDay(dataRange()[1])}.</p><p class="mt12"><button class="btn btn-sm" data-act="kpiJobs" data-arg="all">Show all seeded jobs</button></p></div>`;
   return table({ cols, rows: list, foot, sort: UI.jobs.sort, sortKey:'jobs', empty, rowAttr: j => `class="clickable ${isFlagged(j) ? 'flag' : ''}" data-act="go" data-href="#/job/${j.id}" tabindex="0"` });
 }
 function renderJobsResults() {
@@ -313,7 +312,7 @@ function viewJobs(route) {
   const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
   const dests = uniq(S().jobs.map(j => j.dest)).sort();
   const presets = [['yesterday','Yesterday'],['wtd','Week to date'],['today','Today'],['all','All seeded']];
-  const activePreset = f.from === YESTERDAY && f.to === YESTERDAY ? 'yesterday' : f.from === WEEK_START && f.to === YESTERDAY ? 'wtd' : f.from === TODAY && f.to === TODAY ? 'today' : f.from === SEED_RANGE[0] && f.to === SEED_RANGE[1] ? 'all' : '';
+  const activePreset = f.from === YESTERDAY && f.to === YESTERDAY ? 'yesterday' : f.from === WEEK_START && f.to === YESTERDAY ? 'wtd' : f.from === TODAY && f.to === TODAY ? 'today' : f.from === dataRange()[0] && f.to === dataRange()[1] ? 'all' : '';
   const html = pageHead('Jobs &amp; Margins', 'Where revenue is earned, where contribution is eroding, and why', `<button class="btn" data-act="exportJobs">${icon('download')}Export CSV</button>`) +
     tabs([{ id:'jobs', label:'Jobs', href:'#/jobs' }, ...(money ? [{ id:'model', label:'Cost Model', href:'#/jobs/model' }] : [])], 'jobs') +
     `<div class="card">
@@ -488,7 +487,7 @@ function jobSharing(j) {
   const em = S().emails.filter(e => e.jobId === j.id);
   return `<div class="card"><div class="card-head"><h3>Customer access for ${esc(j.id)}</h3><span class="small muted">Per-job sharing only</span></div><div class="table-wrap"><table class="data cards"><thead><tr><th>Contact</th><th>Status</th><th>Show POD</th><th>Show invoice</th><th></th></tr></thead><tbody>${rows}</tbody></table></div>
     <div class="card-pad"><div class="caveat">${icon('lock')}<div>A contact sees only the jobs shared with them — never other jobs, costs, margins or driver records. Invoice visibility is off by default and enabled per share.</div></div></div></div>
-    <div class="card mt16"><div class="card-head"><h3>Notifications for this job</h3><span class="pill plain">Simulated — no email is sent</span></div>${em.length ? table({ cards:true, cols:[{ key:'subject', label:'Email', render: e => esc(e.subject) }, { key:'to', label:'To', render: e => esc(contact(e.to).email) }, { key:'at', label:'Created', render: e => fmtDT(e.at) }, { key:'link', label:'One-time link', render: e => { const st = linkState(S().links.find(l => l.token === e.token)); return `<span class="pill ${st === 'valid' ? 'ok' : st === 'used' ? 'plain' : 'warn'}">${cap(st)}</span>`; } }, { key:'x', label:'', render: e => `<button class="btn btn-sm" data-act="previewEmail" data-id="${e.id}">Preview</button>` }], rows: em }) : '<div class="empty small"><p>No notifications yet. A delivery notification is created automatically when a shared job is completed.</p></div>'}</div>`;
+    <div class="card mt16"><div class="card-head"><h3>Notifications for this job</h3><span class="pill plain">${S().links.length || S().version !== 'live' ? 'Simulated — no email is sent' : 'Sent by email with a one-time link'}</span></div>${em.length ? table({ cards:true, cols:[{ key:'subject', label:'Email', render: e => esc(e.subject) }, { key:'to', label:'To', render: e => esc(contact(e.to).email) }, { key:'at', label:'Created', render: e => fmtDT(e.at) }, { key:'link', label: S().links.length || !S().emails.some(e => e.status) ? 'One-time link' : 'Status', render: e => { if (e.status) return `<span class="pill ${e.status === 'sent' ? 'ok' : e.status === 'failed' ? 'bad' : 'plain'}" title="${esc(e.error || '')}">${cap(e.status)}</span>`; const st = linkState(S().links.find(l => l.token === e.token)); return `<span class="pill ${st === 'valid' ? 'ok' : st === 'used' ? 'plain' : 'warn'}">${cap(st)}</span>`; } }, { key:'x', label:'', render: e => e.token ? `<button class="btn btn-sm" data-act="previewEmail" data-id="${e.id}">Preview</button>` : '' }], rows: em }) : '<div class="empty small"><p>No notifications yet. A delivery notification is created automatically when a shared job is completed.</p></div>'}</div>`;
 }
 function jobHistory(j) {
   const acts = S().actions.filter(a => a.recordId === j.id);

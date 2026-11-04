@@ -41,6 +41,7 @@ p{margin:0}
 .sr-only{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 :focus-visible{outline:2px solid var(--blue);outline-offset:2px;border-radius:4px}
 [hidden]{display:none!important}
+body.live .demo-only{display:none!important}
 
 /* ---------- Buttons ---------- */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;min-height:36px;padding:0 14px;border-radius:var(--r-ctl);border:1px solid var(--line);background:#fff;color:var(--text);font-weight:550;cursor:pointer;text-decoration:none;white-space:nowrap;transition:background .12s,border-color .12s}
@@ -1118,14 +1119,23 @@ const MONTHS_L = ['January','February','March','April','May','June','July','Augu
 const toD = s => new Date(s.length === 10 ? s + 'T00:00:00Z' : s);
 function fmtDate(s, long) { if (!s) return '—'; const d = toD(s); return long ? `${DAYS_L[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS_L[d.getUTCMonth()]} ${d.getUTCFullYear()}` : `${DAYS[d.getUTCDay()]} ${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]}`; }
 function fmtDay(s) { if (!s) return '—'; const d = toD(s); return `${d.getUTCDate()} ${MONTHS[d.getUTCMonth()]} ${d.getUTCFullYear()}`; }
-function fmtTime(iso) { if (!iso) return '—'; const d = toD(iso); return String(d.getUTCHours()).padStart(2,'0') + ':' + String(d.getUTCMinutes()).padStart(2,'0'); }
-function fmtDT(iso) { if (!iso) return '—'; return fmtDate(iso.slice(0,10)) + ', ' + fmtTime(iso); }
+const UK_TIME = new Intl.DateTimeFormat('en-GB', { hour:'2-digit', minute:'2-digit', hour12:false, timeZone:'Europe/London' });
+const UK_DATE = new Intl.DateTimeFormat('en-CA', { year:'numeric', month:'2-digit', day:'2-digit', timeZone:'Europe/London' });
+function fmtTime(iso) { if (!iso) return '—'; return UK_TIME.format(toD(iso)); }
+function fmtDT(iso) { if (!iso) return '—'; return fmtDate(iso.length > 10 ? UK_DATE.format(toD(iso)) : iso) + ', ' + fmtTime(iso); }
 const hm = min => min == null ? '—' : `${Math.floor(min / 60)}h ${String(min % 60).padStart(2,'0')}m`;
 const daysBetween = (a, b) => Math.round((toD(b) - toD(a)) / 86400000);
 const addMin = (iso, m) => new Date(toD(iso).getTime() + m * 60000).toISOString().replace('.000','');
 const initials = n => n.replace(/[^A-Za-z0-9\s]/g, '').split(/\s+/).filter(Boolean).slice(0, 2).map(w => w[0]).join('').toUpperCase();
 const sum = (arr, f) => arr.reduce((a, x) => a + (f ? f(x) : x), 0);
 const r2 = n => Math.round(n * 100) / 100;
+const addDays = (d, n) => new Date(toD(d).getTime() + n * 86400000).toISOString().slice(0, 10);
+const mondayOf = d => addDays(d, -((toD(d).getUTCDay() + 6) % 7));
+function wtdDays() { const out = []; for (let d = WEEK_START; d <= YESTERDAY; d = addDays(d, 1)) out.push(d); return out; }
+function wtdLabel() { const d = wtdDays(); return d.length ? (d.length === 1 ? fmtDate(d[0]) : `${fmtDate(d[0])} – ${fmtDate(d[d.length - 1])}`) : 'No completed days yet this week'; }
+function dataRange() { const ds = S().jobs.map(j => j.date).sort(); return ds.length ? [ds[0], ds[ds.length - 1]] : [TODAY, TODAY]; }
+function positionLabel() { return 'morning position at 07:00'; }
+function tenantName() { return 'Trans Haul'; }
 const uniq = a => [...new Set(a)];
 
 /* ---------- store ---------- */
@@ -1150,6 +1160,9 @@ const Store = {
   },
 };
 const S = () => Store.state;
+// Overridden by the live build (src/live.js)
+function disclosure() { return { short:'Illustrative demo data', long:' · No live systems connected', title:'All data in this demonstration is illustrative. No live systems are connected.' }; }
+function clockLabel() { return `${fmtDate(nowIso().slice(0,10))} · ${fmtTime(nowIso())} GMT (demo clock)`; }
 const nowIso = () => S().clock;
 function tick(min) { S().clock = addMin(S().clock, min); return S().clock; }
 function nextId(prefix) { S().seq += 1; return prefix + '-' + String(S().seq).padStart(3, '0'); }
@@ -1206,12 +1219,13 @@ const plannedContrib = j => j.price - j.plannedCost;
 const actualContrib = j => j.actualCost == null ? null : j.price - j.actualCost;
 
 function periodStats(list) {
-  const done = list.filter(j => isDone(j) && j.actualCost != null);
+  const delivered = list.filter(isDone);
+  const done = delivered.filter(j => j.actualCost != null);   // costed jobs (cost data may be withheld by role)
   const revenue = sum(done, j => j.price), planned = sum(done, j => j.plannedCost), actual = sum(done, j => j.actualCost);
-  return { jobs: done.length, revenue, planned, actual, overrun: actual - planned,
+  return { jobs: delivered.length, revenue, planned, actual, overrun: actual - planned,
     pContrib: revenue - planned, aContrib: revenue - actual,
     pMargin: revenue ? (revenue - planned) / revenue * 100 : null, aMargin: revenue ? (revenue - actual) / revenue * 100 : null,
-    late: done.filter(j => j.late), onTime: done.filter(j => !j.late), flagged: done.filter(isFlagged),
+    late: delivered.filter(j => j.late), onTime: delivered.filter(j => !j.late), flagged: done.filter(isFlagged),
     costPending: list.filter(j => isDone(j) && j.actualCost == null) };
 }
 const yesterdayStats = () => periodStats(S().jobs.filter(j => j.date === YESTERDAY));
@@ -1259,7 +1273,7 @@ function debtorStats() {
   return { open, buckets, total: sum(buckets), eligible, funding, headroom, bibby: b };
 }
 function utilisation(vehicleId) {
-  const days = ['2026-11-02', '2026-11-03', '2026-11-04'];
+  const days = wtdDays();
   const vs = vehicleId ? [vehicle(vehicleId)] : S().vehicles;
   let avail = 0, worked = 0, miles = 0, empty = 0;
   vs.forEach(v => days.forEach(d => {
@@ -1579,7 +1593,11 @@ const Modal = {
       <div class="modal-body">${body}</div>${foot != null ? `<div class="modal-foot">${foot}</div>` : ''}</form>`;
     document.body.appendChild(back); this.el = back; this.onSubmit = onSubmit;
     back.addEventListener('mousedown', e => { if (e.target === back) this.close(); });
-    back.querySelector('form').addEventListener('submit', e => { e.preventDefault(); if (this.onSubmit) { try { this.onSubmit(new FormData(e.target), e.target); } catch (err) { this.error(err.message); } } });
+    back.querySelector('form').addEventListener('submit', async e => {
+      e.preventDefault(); if (!this.onSubmit) return;
+      const btn = e.target.querySelector('button[type=submit]'); if (btn) { if (btn.disabled) return; btn.disabled = true; }
+      try { await this.onSubmit(new FormData(e.target), e.target); } catch (err) { this.error(err.message); } finally { if (btn && btn.isConnected) btn.disabled = false; }
+    });
     const f = back.querySelector('input:not([type=hidden]):not([disabled]),textarea,select,button.btn-primary'); if (f) setTimeout(() => f.focus(), 30);
     if (onOpen) onOpen(back);
   },
@@ -1656,14 +1674,14 @@ function renderOffice(route) {
       <nav class="nav">${nav}</nav>
       <div class="nav-foot">
         <div class="nav-user"><span class="avatar dark">${esc(initials(u.name))}</span><div><div class="who">${esc(u.name)}</div><div class="role">${esc(ROLE_LABEL[u.role])}</div></div></div>
-        <div class="row"><button class="btn btn-sm btn-dark" data-act="signOut">${icon('logout')}Sign out</button><button class="btn btn-sm btn-dark" data-act="resetDemo" title="Restore the original demo data">${icon('refresh')}Reset demo</button></div>
+        <div class="row"><button class="btn btn-sm btn-dark" data-act="signOut">${icon('logout')}Sign out</button><button class="btn btn-sm btn-dark demo-only" data-act="resetDemo" title="Restore the original demo data">${icon('refresh')}Reset demo</button></div>
       </div>
     </aside>
     <div class="main">
       <header class="topbar">
         <button class="btn btn-ghost btn-sm menu-btn" data-act="toggleNav" aria-label="Open navigation">${icon('menu')}</button>
-        <span class="disclosure" title="All data in this demonstration is illustrative. No live systems are connected."><i></i><span>Illustrative demo data<span class="long"> · No live systems connected</span></span></span>
-        <span class="clock" title="Fixed demonstration clock — independent of your computer's clock">${icon('clock')} ${fmtDate(nowIso().slice(0,10))} · ${fmtTime(nowIso())} GMT (demo clock)</span>
+        <span class="disclosure" title="${esc(disclosure().title)}"><i></i><span>${esc(disclosure().short)}<span class="long">${esc(disclosure().long)}</span></span></span>
+        <span class="clock">${icon('clock')} ${esc(clockLabel())}</span>
         <div class="search" role="search">${icon('search')}<input id="gsearch" type="search" placeholder="Search jobs, vehicles, drivers${can('cash') ? ', customers' : ''}" aria-label="Global search" autocomplete="off" data-act-input="gsearch"><div class="search-results" id="gsearch-res" hidden></div></div>
       </header>
       <main class="content" id="content">${content}</main>
@@ -1822,7 +1840,7 @@ function viewOverview() {
     kcard(Object.assign({ label:'Contribution yesterday', icon:'cash', tone:'amber', value:gbp(y.aContrib), sub:`Planned ${gbp(y.pContrib)} · <span class="delta-bad">${gbp(y.aContrib - y.pContrib)}</span>`, foot:`<div class="kp-s">Margin <b>${pct(y.aMargin, 2)}</b> vs ${pct(y.pMargin, 2)} planned</div>` }, J('kpiJobs', 'yesterday'))),
     kcard(Object.assign({ label:`Over cost threshold (>${threshold()}%)`, icon:'alert', tone:'red', value:y.flagged.length, unit:'jobs', chips: y.flagged.map(j => chipJob(j.id, 'bad', gbp(costVar(j), { sign:true }))).join(''),
       foot: rs.length ? `<a class="recov" href="#/ops/pods?focus=recharges"><b>${gbp(rsum)}</b> possible recovery — draft only</a>` : `<a class="recov muted" href="#/ops/pods?focus=recharges">${flaggedCands} recharge candidates · no drafts yet</a>` }, J('kpiJobs', 'flagged'))),
-    kcard(Object.assign({ label:'Week to date cost · Mon–Wed', value:gbp(w.actual), sub:`Planned ${gbp(w.planned)} · <span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan`, foot: wtdChart(w) }, J('kpiJobs', 'wtd'))),
+    kcard(Object.assign({ label:`Week to date cost · ${wtdLabel()}`, value:gbp(w.actual), sub:`Planned ${gbp(w.planned)} · <span class="delta-bad">${gbp(w.actual - w.planned, { sign:true })}</span> over plan`, foot: wtdChart(w) }, J('kpiJobs', 'wtd'))),
   ].join('')) : '';
 
   // 3 — PODs & billing ; 4 — cash
@@ -1856,7 +1874,7 @@ function viewOverview() {
   ].join(''));
 
   const greet = role === 'director' ? 'Good morning, Paul' : `Good morning, ${u.name.split(' ')[0] === 'Transport' ? 'Transport team' : u.name.split(' ')[0]}`;
-  return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · morning position at 07:00</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
+  return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · ${positionLabel()}</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
     storyHTML + s1 + s2 + `<div class="drow2">${s3}${s4}</div>` + s5 +
     `<div class="grid g-main mt24">${attentionList()}<div class="card"><div class="card-head"><h3>Recent activity</h3>${hasSection('admin') ? '<a class="link small" href="#/admin/activity">Full log</a>' : ''}</div>${activityFeed(8)}</div></div>`;
 }
@@ -1865,7 +1883,6 @@ function viewOverview() {
 /* ==========================================================================
    JOBS & MARGINS
    ========================================================================== */
-const SEED_RANGE = ['2026-10-28', '2026-11-05'];
 function filteredJobs() {
   const f = UI.jobs; const q = f.q.trim().toLowerCase();
   let list = S().jobs.filter(j => (!f.from || j.date >= f.from) && (!f.to || j.date <= f.to));
@@ -1885,7 +1902,7 @@ function setJobFilter(preset) {
   if (preset === 'late') Object.assign(f, { from:YESTERDAY, to:YESTERDAY, exc:'late' });
   if (preset === 'flagged') Object.assign(f, { from:YESTERDAY, to:YESTERDAY, exc:'flagged', sort:{ key:'variance', dir:'desc' } });
   if (preset === 'wtd') Object.assign(f, { from:WEEK_START, to:YESTERDAY, sort:{ key:'id', dir:'asc' } });
-  if (preset === 'all') Object.assign(f, { from:SEED_RANGE[0], to:SEED_RANGE[1] });
+  if (preset === 'all') { const r = dataRange(); Object.assign(f, { from:r[0], to:r[1] }); }
   if (preset === 'today') Object.assign(f, { from:TODAY, to:TODAY });
   saveUI();
 }
@@ -1923,7 +1940,7 @@ function jobsTable(list) {
   const done = list.filter(j => isDone(j) && j.actualCost != null);
   const foot = money && list.length ? { id: `<span class="strong">Total · ${list.length} jobs</span>`, price: gbp(sum(list, j => j.price)), planned: gbp(sum(list, j => j.plannedCost)), actual: gbp(sum(done, j => j.actualCost)), contrib: gbp(sum(done, j => j.price - j.actualCost)), variance: gbp(sum(done, j => j.actualCost - j.plannedCost), { sign:true }) } : null;
   const f = UI.jobs;
-  const empty = `<div class="empty"><h4>No jobs match these filters</h4><p>${f.from && f.to ? `Nothing between ${fmtDay(f.from)} and ${fmtDay(f.to)}. ` : ''}Seeded demo data covers 28 Oct – 5 Nov 2026.</p><p class="mt12"><button class="btn btn-sm" data-act="kpiJobs" data-arg="all">Show all seeded jobs</button></p></div>`;
+  const empty = `<div class="empty"><h4>No jobs match these filters</h4><p>${f.from && f.to ? `Nothing between ${fmtDay(f.from)} and ${fmtDay(f.to)}. ` : ''}Records available cover ${fmtDay(dataRange()[0])} – ${fmtDay(dataRange()[1])}.</p><p class="mt12"><button class="btn btn-sm" data-act="kpiJobs" data-arg="all">Show all seeded jobs</button></p></div>`;
   return table({ cols, rows: list, foot, sort: UI.jobs.sort, sortKey:'jobs', empty, rowAttr: j => `class="clickable ${isFlagged(j) ? 'flag' : ''}" data-act="go" data-href="#/job/${j.id}" tabindex="0"` });
 }
 function renderJobsResults() {
@@ -1939,7 +1956,7 @@ function viewJobs(route) {
   const opt = (v, l, cur) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`;
   const dests = uniq(S().jobs.map(j => j.dest)).sort();
   const presets = [['yesterday','Yesterday'],['wtd','Week to date'],['today','Today'],['all','All seeded']];
-  const activePreset = f.from === YESTERDAY && f.to === YESTERDAY ? 'yesterday' : f.from === WEEK_START && f.to === YESTERDAY ? 'wtd' : f.from === TODAY && f.to === TODAY ? 'today' : f.from === SEED_RANGE[0] && f.to === SEED_RANGE[1] ? 'all' : '';
+  const activePreset = f.from === YESTERDAY && f.to === YESTERDAY ? 'yesterday' : f.from === WEEK_START && f.to === YESTERDAY ? 'wtd' : f.from === TODAY && f.to === TODAY ? 'today' : f.from === dataRange()[0] && f.to === dataRange()[1] ? 'all' : '';
   const html = pageHead('Jobs &amp; Margins', 'Where revenue is earned, where contribution is eroding, and why', `<button class="btn" data-act="exportJobs">${icon('download')}Export CSV</button>`) +
     tabs([{ id:'jobs', label:'Jobs', href:'#/jobs' }, ...(money ? [{ id:'model', label:'Cost Model', href:'#/jobs/model' }] : [])], 'jobs') +
     `<div class="card">
@@ -2294,6 +2311,7 @@ function viewInvoice(route) {
 }
 
 /* ---------- FLEET & COMPLIANCE ---------- */
+function fleetMix() { const n = k => S().vehicles.filter(v => v.typeKey === k).length; return [[n('A'), '44t artic'], [n('R26'), '26t rigid'], [n('R18'), '18t rigid']].filter(x => x[0]).map(x => `${x[0]} × ${x[1]}`).join(' · '); }
 function viewFleet(route) {
   const tab = route.parts[1] || 'vehicles';
   const nOpen = S().compliance.filter(c => ['overdue','unsigned'].includes(c.status)).length + S().defects.filter(d => d.status !== 'rectified').length;
@@ -2306,7 +2324,7 @@ function fleetVehicles() {
   const u = utilisation(); const tr = S().trailers;
   const rows = S().vehicles.map(v => Object.assign({ v }, utilisation(v.id)));
   const today = v => S().jobs.filter(j => j.vehicleId === v.id && j.date === TODAY).map(j => j.id).join(', ') || '—';
-  return `<div class="stat-row mb16"><div>${kpiS('HGVs', S().vehicles.length, '10 × 44t artic · 5 × 26t rigid · 3 × 18t rigid')}</div><div>${kpiS('Trailers', tr.total, `${tr.curtainsider} curtainsider · ${tr.flatbed} flatbed · ${tr.fridge} fridge`)}</div><div>${kpiS('Vehicle-day utilisation', pct(u.util), `${u.worked} of ${u.avail} available vehicle days worked · Mon–Wed`)}</div><div>${kpiS('Miles · Mon–Wed', int(u.miles), `${int(u.empty)} empty miles · ${pct(u.emptyPct)} empty running`)}</div></div>
+  return `<div class="stat-row mb16"><div>${kpiS('HGVs', S().vehicles.length, fleetMix())}</div><div>${kpiS('Trailers', tr.total, `${tr.curtainsider} curtainsider · ${tr.flatbed} flatbed · ${tr.fridge} fridge`)}</div><div>${kpiS('Vehicle-day utilisation', pct(u.util), `${u.worked} of ${u.avail} available vehicle days worked · ${wtdLabel()}`)}</div><div>${kpiS(`Miles · ${wtdLabel()}`, int(u.miles), `${int(u.empty)} empty miles · ${pct(u.emptyPct)} empty running`)}</div></div>
     <div class="card">${table({ cols:[
       { key:'id', label:'Vehicle', render: r => `<span class="id">${r.v.id}</span><div class="sub-line">${r.v.depot}</div>` },
       { key:'t', label:'Type', render: r => r.v.type },
@@ -2318,7 +2336,7 @@ function fleetVehicles() {
       { key:'o', label:'Defects / actions', num:true, render: r => { const n = openDefects(r.v.id).length, a = S().actions.filter(x => x.recordId === r.v.id && x.status === 'open').length; return n + a ? `<span class="delta-bad">${n} / ${a}</span>` : '—'; } },
       { key:'j', label:'Today', render: r => esc(today(r.v)) },
     ], rows, rowAttr: r => `class="clickable ${r.v.status === 'vor' ? 'flag' : ''}" data-act="go" data-href="#/vehicle/${r.v.id}" tabindex="0"` })}
-    <div class="card-pad small muted">Utilisation = days with at least one delivered job ÷ days the vehicle was available (VOR days excluded). Miles and empty miles are illustrative telematics figures for Mon 2 – Wed 4 Nov.</div></div>`;
+    <div class="card-pad small muted">Utilisation = days with at least one delivered job ÷ days the vehicle was available (VOR days excluded). Miles and empty miles are illustrative telematics figures for ${wtdLabel()}.</div></div>`;
 }
 function licencePill(d) { return { ok:'<span class="pill ok">Current</span>', overdue:'<span class="pill bad">Review overdue</span>', followup:'<span class="pill info">Follow-up recorded</span>', agency:'<span class="pill plain">Agency-held</span>' }[d.licenceStatus] || ''; }
 function tachoPill(d) { return { ok:'<span class="pill ok">No open items</span>', unsigned:'<span class="pill warn">Follow-up unsigned</span>', followup:'<span class="pill info">Follow-up recorded</span>' }[d.tachoStatus] || ''; }
@@ -2381,7 +2399,7 @@ function viewVehicle(route) {
   const all = S().vehicles.map(x => x.id), i = all.indexOf(v.id);
   const lastW = S().walkarounds.find(w => w.vehicleId === v.id);
   let body = '';
-  if (tab === 'summary') body = `<div class="stat-row mb16"><div>${kpiS('Days worked · Mon–Wed', `${u.worked} / ${u.avail}`, 'Available vehicle days')}</div><div>${kpiS('Utilisation', u.util == null ? '—' : pct(u.util, 0))}</div><div>${kpiS('Miles', int(u.miles))}</div><div>${kpiS('Empty miles', int(u.empty), u.emptyPct == null ? '' : pct(u.emptyPct) + ' empty running')}</div></div>
+  if (tab === 'summary') body = `<div class="stat-row mb16"><div>${kpiS(`Days worked · ${wtdLabel()}`, `${u.worked} / ${u.avail}`, 'Available vehicle days')}</div><div>${kpiS('Utilisation', u.util == null ? '—' : pct(u.util, 0))}</div><div>${kpiS('Miles', int(u.miles))}</div><div>${kpiS('Empty miles', int(u.empty), u.emptyPct == null ? '' : pct(u.emptyPct) + ' empty running')}</div></div>
     <div class="grid g2"><div class="card card-pad"><dl class="kv"><dt>Type</dt><dd>${v.type}</dd><dt>Base</dt><dd>${v.depot}</dd><dt>Status</dt><dd><span class="pill ${st.cls}">${st.label}</span></dd>${v.status === 'vor' ? `<dt>Off road since</dt><dd>${fmtDate(v.vorSince, true)}</dd><dt>Reason</dt><dd>${esc(v.vorReason)}</dd>` : ''}${v.vorUntil ? `<dt>Returned to service</dt><dd>${fmtDate(v.vorUntil)}</dd>` : ''}<dt>Last walkaround</dt><dd>${lastW ? `${fmtDT(lastW.at)} by ${lastW.driverId} · ${lastW.defects.length ? `${lastW.defects.length} defect(s) — <b>not cleared</b>` : 'no defects'}` : '<span class="muted">Paper record (not digitised)</span>'}</dd>${v.motDue ? `<dt>MOT due</dt><dd>${fmtDay(v.motDue)}</dd>` : ''}</dl></div>
     <div class="card"><div class="card-head"><h3>Defects</h3></div>${defs.length ? table({ cols:[{ key:'i', label:'Defect', render: d => `<span class="strong">${esc(d.item)}</span><div class="sub-line">${esc(d.note)}</div>` }, { key:'s', label:'Severity', render: d => d.severity === 'safety' ? '<span class="pill bad">Safety-critical</span>' : '<span class="pill warn">Minor</span>' }, { key:'st', label:'Status', render: d => compStatusPill(d.status) }, { key:'x', label:'', num:true, render: d => can('compliance') && d.status !== 'rectified' ? `<button class="btn btn-sm" data-act="resolveDefect" data-id="${d.id}">Record rectification</button>` : '' }], rows: defs }) : '<div class="empty small"><p>No defects recorded.</p></div>'}</div></div>`;
   if (tab === 'jobs') body = `<div class="card">${table({ cols:[{ key:'id', label:'Job', render: j => `<span class="id">${j.id}</span>` }, { key:'d', label:'Date', render: j => fmtDate(j.date) }, { key:'de', label:'Destination', render: j => esc(j.dest) }, { key:'dr', label:'Driver', render: j => esc(j.driverId || '—') }, { key:'m', label:'Miles', num:true, render: j => j.actualMiles != null ? int(j.actualMiles) : '—' }, { key:'s', label:'Status', render: deliveryPill }], rows: js, rowAttr: j => `class="clickable" data-act="go" data-href="#/job/${j.id}" tabindex="0"` })}</div>`;
@@ -2459,7 +2477,7 @@ function adminActivity() {
   return `<div class="card"><div class="filters"><div class="f-search">${icon('search')}<input class="input" type="search" placeholder="Filter by person, action or record" value="${esc(UI.actFilter)}" data-act-input="actFilter" aria-label="Filter activity"></div><button class="btn btn-sm" data-act="exportActivity">${icon('download')}Export CSV</button></div>
     <div id="act-list">${activityTable(list)}</div></div>
     <div class="grid g2 mt16"><div class="card card-pad"><div class="section-title">Customer link settings</div><dl class="kv"><dt>One-time link validity</dt><dd>${S().settings.linkHours} hours (demo time)</dd><dt>Link use</dt><dd>Single use, then expires</dd><dt>Delivery notifications</dt><dd>Sent on completion of a shared job (simulated)</dd></dl></div>
-    <div class="card card-pad"><div class="section-title">Demo data</div><p class="small text-2">The 4 November job batch, fleet counts and cash figures are the supplied demonstration figures. Earlier-period jobs, invoices and payment history are additional synthetic records. All names, companies and addresses are fictional.</p><button class="btn mt12" data-act="resetDemo">${icon('refresh')}Reset demo to initial state</button></div></div>`;
+    <div class="card card-pad"><div class="section-title">Demo data</div><p class="small text-2">The 4 November job batch, fleet counts and cash figures are the supplied demonstration figures. Earlier-period jobs, invoices and payment history are additional synthetic records. All names, companies and addresses are fictional.</p><button class="btn mt12 demo-only" data-act="resetDemo">${icon('refresh')}Reset demo to initial state</button></div></div>`;
 }
 function activityTable(list) {
   return table({ cols:[
@@ -2475,9 +2493,9 @@ function activityTable(list) {
 /* ---------- COST MODEL analysis (Jobs & Margins tab) ---------- */
 function viewCostModel() {
   const per = UI.modelPeriod, grp = UI.modelGroup;
-  const range = { yesterday:[YESTERDAY, YESTERDAY], wtd:[WEEK_START, YESTERDAY], all:['2026-10-28', YESTERDAY] }[per];
+  const range = { yesterday:[YESTERDAY, YESTERDAY], wtd:[WEEK_START, YESTERDAY], all:[dataRange()[0], YESTERDAY] }[per];
   const js = S().jobs.filter(j => j.date >= range[0] && j.date <= range[1] && isDone(j) && j.actualCost != null);
-  const weekOf = d => d >= '2026-11-02' ? 'w/c 2 Nov 2026' : 'w/c 26 Oct 2026';
+  const weekOf = d => 'w/c ' + fmtDay(mondayOf(d));
   const key = { job: j => j.id, customer: j => custName(j.customerId), driver: j => j.driverId || 'Subcontract', vehicle: j => j.vehicleId ? `${j.vehicleId} · ${vehicle(j.vehicleId).type}` : 'Subcontract', week: j => weekOf(j.date) }[grp];
   const groups = {}; js.forEach(j => { const k = key(j); (groups[k] = groups[k] || []).push(j); });
   const rows = Object.entries(groups).map(([k, l]) => { const own = l.filter(j => !j.subcontract); const miles = sum(own, j => j.actualMiles), pal = sum(own, j => j.pallets || 0); const rev = sum(l, j => j.price), pc = sum(l, j => j.plannedCost), ac = sum(l, j => j.actualCost); return { k, l, n:l.length, rev, pc, ac, con: rev - ac, m: rev ? (rev - ac) / rev * 100 : null, cpm: miles ? sum(own, j => j.actualCost) / miles : null, cpp: pal ? sum(own, j => j.actualCost) / pal : null, v: ac - pc }; }).sort((a, b) => b.v - a.v || b.rev - a.rev);
@@ -2487,7 +2505,7 @@ function viewCostModel() {
   const cur = S().rateCards[S().rateCards.length - 1].rates;
   return pageHead('Jobs &amp; Margins', 'Modelled unit costs and contribution, with drill-down') +
     tabs([{ id:'jobs', label:'Jobs', href:'#/jobs' }, { id:'model', label:'Cost Model', href:'#/jobs/model' }], 'model') +
-    `<div class="card"><div class="filters"><span class="small muted">Period</span>${[['yesterday','Yesterday'],['wtd','Week to date'],['all','All seeded (28 Oct – 4 Nov)']].map(([k, l]) => `<button class="chip ${per === k ? 'active' : ''}" data-act="modelPeriod" data-arg="${k}">${l}</button>`).join('')}<span class="small muted" style="margin-left:12px">Group by</span>${[['job','Job'],['customer','Customer'],['driver','Driver'],['vehicle','Vehicle'],['week','Week']].map(([k, l]) => `<button class="chip ${grp === k ? 'active' : ''}" data-act="modelGroup" data-arg="${k}">${l}</button>`).join('')}</div>
+    `<div class="card"><div class="filters"><span class="small muted">Period</span>${[['yesterday','Yesterday'],['wtd','Week to date'],['all','All records']].map(([k, l]) => `<button class="chip ${per === k ? 'active' : ''}" data-act="modelPeriod" data-arg="${k}">${l}</button>`).join('')}<span class="small muted" style="margin-left:12px">Group by</span>${[['job','Job'],['customer','Customer'],['driver','Driver'],['vehicle','Vehicle'],['week','Week']].map(([k, l]) => `<button class="chip ${grp === k ? 'active' : ''}" data-act="modelGroup" data-arg="${k}">${l}</button>`).join('')}</div>
     ${table({ cols:[
       { key:'k', label: { job:'Job', customer:'Customer', driver:'Driver', vehicle:'Vehicle', week:'Week' }[grp], render: r => `<span class="strong">${esc(r.k)}</span>` },
       { key:'n', label:'Jobs', num:true, render: r => r.n },
@@ -2565,7 +2583,7 @@ const STAGES = ['walkaround', 'depart', 'arrive', 'unloading', 'complete', 'pod'
 const STAGE_CTA = { walkaround:'Start walkaround check', depart:'Depart depot', arrive:'Arrived at customer', unloading:'Start unloading', complete:'Delivery complete', pod:'Upload POD' };
 const WALK_ITEMS = ['Tyres & wheel security', 'Lights & indicators', 'Mirrors & cameras', 'Brakes & air lines', 'Fluid leaks', 'Bodywork & load security', 'Windscreen, wipers & washers', 'Dashboard warnings & tachograph'];
 function driverJobs() { const d = me().driverId; return S().jobs.filter(j => j.date === TODAY && (j.driverId === d)).sort((a, b) => a.slot.localeCompare(b.slot)); }
-function walkDone(vehicleId) { return S().walkarounds.find(w => w.vehicleId === vehicleId && w.at.slice(0, 10) === TODAY && w.driverId === me().driverId); }
+function walkDone(vehicleId) { return S().walkarounds.find(w => w.vehicleId === vehicleId && w.driverId === me().driverId && (w.jobId && job(w.jobId) ? job(w.jobId).date === TODAY : w.at.slice(0, 10) === TODAY)); }
 function nextStage(j) {
   if (!walkDone(j.vehicleId)) return 'walkaround';
   if (j.status === 'not_started') return 'depart';
@@ -2744,13 +2762,13 @@ function modalDraftRecharge(jobId) {
       <div class="field"><label for="rn">Explanatory note for the customer</label><textarea class="input" id="rn" name="note">${esc(j.recharge.basis)}</textarea></div>
       <div class="caveat">${icon('info')}<div>A draft is an internal proposal. It does not raise an invoice and does not change revenue, invoiced totals or cash.</div></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Create draft</button>',
-    onSubmit: fd => { Svc.draftRecharge(jobId, fd.get('amount'), fd.get('note').trim()); Modal.close(); toast(`Recharge draft of ${gbp(Number(fd.get('amount')))} created for ${jobId} — draft only`); rerender(); } });
+    onSubmit: async fd => { await Svc.draftRecharge(jobId, fd.get('amount'), fd.get('note').trim()); Modal.close(); toast(`Recharge draft of ${gbp(Number(fd.get('amount')))} created for ${jobId} — draft only`); rerender(); } });
 }
 function modalEditRecharge(id) {
   const r = byId(S().recharges, id);
   Modal.open({ title:`Edit recharge note · ${r.jobId}`, sub:`Draft ${gbp(r.amount)}`, body:`<div class="field"><label for="en">Explanatory note</label><textarea class="input" id="en" name="note">${esc(r.note)}</textarea></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Save note</button>',
-    onSubmit: fd => { const n = fd.get('note').trim(); if (!n) throw new Error('The note cannot be empty.'); Svc.editRecharge(id, n); Modal.close(); toast('Recharge note updated'); rerender(); } });
+    onSubmit: async fd => { const n = fd.get('note').trim(); if (!n) throw new Error('The note cannot be empty.'); await Svc.editRecharge(id, n); Modal.close(); toast('Recharge note updated'); rerender(); } });
 }
 function modalProposeCover(jobId) {
   const j = job(jobId);
@@ -2763,7 +2781,7 @@ function modalProposeCover(jobId) {
       <div class="caveat warn mt12">${icon('alert')}<div>Hours shown are an <b>illustrative planning estimate</b>, not a legal determination of drivers' hours. Confirm in Tachomaster and allocate in Vigo. This records <b>proposed cover — awaiting Vigo confirmation</b>; nothing is written to Vigo.</div></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Propose cover</button>',
     onOpen: el => el.addEventListener('change', e => { if (e.target.name === 'driver') { el.querySelectorAll('.radio-card').forEach(c => c.classList.toggle('sel', c.dataset.cand === e.target.value)); el.querySelector('.m-err').hidden = true; } }),
-    onSubmit: fd => { const d = fd.get('driver'); if (!d) throw new Error('Select a driver to propose.'); Svc.proposeCover(jobId, d); Modal.close(); const t = todayStats(); toast(`${d} proposed for ${jobId} — planned cover now ${t.planned}/${t.booked}`); rerender(); } });
+    onSubmit: async fd => { const d = fd.get('driver'); if (!d) throw new Error('Select a driver to propose.'); await Svc.proposeCover(jobId, d); Modal.close(); const t = todayStats(); toast(`${d} proposed for ${jobId} — planned cover now ${t.planned}/${t.booked}`); rerender(); } });
 }
 function modalRaiseAction(type, id, preset) {
   const presets = { escalate: { title: `Source replacement 26t rigid for ${id} (V014 VOR)`, priority:'high', owner: myRole() === 'transport' ? 'U02' : 'U03', notes:'V014 off road (air leak). No available 26t rigid in fleet dataset. Options: hire-in, subcontract, or agree a revised slot with the customer.' } };
@@ -2779,7 +2797,7 @@ function modalRaiseAction(type, id, preset) {
       <div class="field"><label for="ar">Linked record</label><select class="select" id="ar" name="rec">${recOpts.map(([v, l]) => `<option value="${esc(v)}" ${v === cur ? 'selected' : ''}>${esc(l)}</option>`).join('')}</select></div></div>
       <div class="field"><label for="an">Notes</label><textarea class="input" id="an" name="notes">${esc(p.notes || '')}</textarea></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Raise action</button>',
-    onSubmit: fd => { const [rt, ri] = (fd.get('rec') || '').split(':'); if (!fd.get('due')) throw new Error('Set a follow-up date.'); const a = Svc.raiseAction({ title: fd.get('title').trim(), ownerId: fd.get('owner'), priority: fd.get('priority'), due: fd.get('due'), recordType: rt || null, recordId: ri || null, notes: fd.get('notes').trim() }); Modal.close(); toast(`Action ${a.id} assigned to ${user(a.ownerId).name}`); rerender(); } });
+    onSubmit: async fd => { const [rt, ri] = (fd.get('rec') || '').split(':'); if (!fd.get('due')) throw new Error('Set a follow-up date.'); const a = await Svc.raiseAction({ title: fd.get('title').trim(), ownerId: fd.get('owner'), priority: fd.get('priority'), due: fd.get('due'), recordType: rt || null, recordId: ri || null, notes: fd.get('notes').trim() }); Modal.close(); toast(`Action ${a.id} assigned to ${user(a.ownerId).name}`); rerender(); } });
 }
 function modalAction(id) {
   const a = byId(S().actions, id);
@@ -2789,7 +2807,7 @@ function modalAction(id) {
       <ul class="timeline">${prog.map(p => `<li><span class="dot done"></span><div><div class="small strong">${esc(user(p.by) ? user(p.by).name : p.by)}</div><div class="small">${esc(safeText(p.note))}</div></div><span class="small muted">${fmtDT(p.t)}</span></li>`).join('')}</ul>
       ${a.status === 'open' && can('act') ? `<div class="field mt12"><label for="pn">Record progress</label><textarea class="input" id="pn" name="note" placeholder="What has happened?"></textarea></div>` : ''}${errBox}`,
     foot: !can('act') ? '<button type="button" class="btn" data-act="modalClose">Close</button>' : a.status === 'open' ? `<button type="button" class="btn" data-act="modalClose">Close</button><button type="button" class="btn" data-act="completeAction" data-id="${a.id}">Mark complete</button><button class="btn btn-primary" type="submit">Add progress</button>` : `<button type="button" class="btn" data-act="reopenAction" data-id="${a.id}">Reopen</button><button type="button" class="btn btn-primary" data-act="modalClose">Close</button>`,
-    onSubmit: fd => { Svc.addProgress(id, fd.get('note') || ''); toast('Progress recorded'); rerender(); modalAction(id); } });
+    onSubmit: async fd => { await Svc.addProgress(id, fd.get('note') || ''); toast('Progress recorded'); rerender(); modalAction(id); } });
 }
 function modalFollowUp(cid) {
   const c = byId(S().compliance, cid);
@@ -2797,17 +2815,17 @@ function modalFollowUp(cid) {
   Modal.open({ title:`Record follow-up · ${c.driverId || c.vehicleId}`, sub: esc(c.title),
     body:`<div class="field"><label for="fm">What was done</label><select class="select" id="fm" name="method">${method.map(m => `<option>${esc(m)}</option>`).join('')}</select></div>
       <div class="field"><label for="fn">Notes</label><textarea class="input" id="fn" name="note" placeholder="Record the conversation, evidence seen and next step"></textarea></div>
-      <div class="field"><label for="fd">Next review date</label><input class="input" id="fd" name="next" type="date" value="2026-11-12"></div>
+      <div class="field"><label for="fd">Next review date</label><input class="input" id="fd" name="next" type="date" value="${addDays(TODAY, 7)}"></div>
       <div class="caveat warn">${icon('alert')}<div>${c.kind === 'licence' ? 'This records an internal follow-up. It is <b>not</b> a DVLA licence check and does not verify entitlement.' : c.kind === 'tacho' ? 'This records an internal follow-up. It is <b>not</b> a sign-off in Tachomaster.' : 'Internal record only.'}</div></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Record follow-up</button>',
-    onSubmit: fd => { Svc.recordFollowUp(cid, { note: fd.get('note'), method: fd.get('method'), nextDate: fd.get('next') }); Modal.close(); toast(`Follow-up recorded for ${c.driverId || c.vehicleId}`); rerender(); } });
+    onSubmit: async fd => { await Svc.recordFollowUp(cid, { note: fd.get('note'), method: fd.get('method'), nextDate: fd.get('next') }); Modal.close(); toast(`Follow-up recorded for ${c.driverId || c.vehicleId}`); rerender(); } });
 }
 function modalResolveDefect(id) {
   const d = byId(S().defects, id);
   Modal.open({ title:`Record rectification · ${d.vehicleId}`, sub:`${esc(d.item)} — ${d.severity === 'safety' ? 'safety-critical' : 'minor'}`,
     body:`<div class="field"><label for="dn">What was done</label><textarea class="input" id="dn" name="note" placeholder="Repair carried out, by whom, and checks made"></textarea></div><div class="caveat">${icon('info')}<div>Recording rectification clears the defect in the portal${d.status === 'vor' ? ' and returns the vehicle to service' : ''}. Keep the workshop record as evidence.</div></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Record rectification</button>',
-    onSubmit: fd => { Svc.resolveDefect(id, fd.get('note') || ''); Modal.close(); toast(`${d.vehicleId} defect marked rectified`); rerender(); } });
+    onSubmit: async fd => { await Svc.resolveDefect(id, fd.get('note') || ''); Modal.close(); toast(`${d.vehicleId} defect marked rectified`); rerender(); } });
 }
 function readImage(file) {
   return new Promise((res, rej) => {
@@ -2838,7 +2856,7 @@ function modalUploadPod(jobId) {
       <div class="row mt12"><button type="button" class="btn btn-sm" data-act="podSampleModal" data-id="${j.id}">Use sample image</button><button type="button" class="btn btn-sm btn-ghost" data-act="podPaper" data-id="${j.id}">Record paper POD received (no image)</button></div>
       <div id="mpod-prev" class="mt12"></div><p class="small muted mt12">Stored in this browser for the demo. Not sent to Vigo or SharePoint.</p>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit" id="mpod-submit" disabled>Save POD</button>',
-    onSubmit: () => { if (!pendingPod) throw new Error('Choose an image first.'); Svc.podUpload(jobId, pendingPod); Modal.close(); toast(`POD saved for ${jobId}`); rerender(); } });
+    onSubmit: async () => { if (!pendingPod) throw new Error('Choose an image first.'); await Svc.podUpload(jobId, pendingPod); Modal.close(); toast(`POD saved for ${jobId}`); rerender(); } });
 }
 function modalInvite() {
   const secs = SECTIONS.filter(s => !['overview','admin'].includes(s.id));
@@ -2849,7 +2867,7 @@ function modalInvite() {
       <label class="check" style="border-top:1px solid var(--line-2);margin-top:4px"><input type="checkbox" name="money" id="imoney"><span><b>Can view financial figures</b><div class="small muted">Off by default. Required for Customers & Cash.</div></span></label></div>${errBox}`,
     foot:'<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn btn-primary" type="submit">Send invitation</button>',
     onOpen: el => el.addEventListener('change', e => { if (e.target.name === 'role') el.querySelector('#vo-box').hidden = e.target.value !== 'viewonly'; if (e.target.value === 'cash' && e.target.checked) el.querySelector('#imoney').checked = true; if (e.target.id === 'imoney' && !e.target.checked) { const c = el.querySelector('input[value=cash]'); c.checked = false; } }),
-    onSubmit: fd => { const u = Svc.invite({ name: fd.get('name') || '', email: fd.get('email') || '', role: fd.get('role'), sections: fd.getAll('sec'), money: !!fd.get('money') }); Modal.close(); toast(`${u.name} invited as ${ROLE_LABEL[u.role]} (simulated)`); rerender(); } });
+    onSubmit: async fd => { const u = await Svc.invite({ name: fd.get('name') || '', email: fd.get('email') || '', role: fd.get('role'), sections: fd.getAll('sec'), money: !!fd.get('money') }); Modal.close(); toast(`${u.name} invited as ${ROLE_LABEL[u.role]} (simulated)`); rerender(); } });
 }
 const PLANNED = {
   'xero-invoice': ['Prepare invoices in Xero', 'Planned integration. In production the portal would create draft invoices in Xero for ready jobs through Trans Haul’s own authorised Xero connection, then read back the invoice number and status. In this demo nothing is sent to Xero.'],
@@ -2872,7 +2890,7 @@ function modalRigids(jobId) {
     foot:`<button type="button" class="btn" data-act="modalClose">Close</button>${can('act') ? `<button type="button" class="btn btn-primary" data-act="raiseAction" data-type="job" data-id="${jobId}" data-preset="escalate">Record action / escalate</button>` : ''}` });
 }
 function confirmModal(title, body, label, fn, danger) {
-  Modal.open({ title, body:`<p class="text-2">${body}</p>${errBox}`, foot:`<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn ${danger ? 'btn-primary' : 'btn-dark'}" type="submit">${label}</button>`, onSubmit: () => { fn(); Modal.close(); } });
+  Modal.open({ title, body:`<p class="text-2">${body}</p>${errBox}`, foot:`<button type="button" class="btn" data-act="modalClose">Cancel</button><button class="btn ${danger ? 'btn-primary' : 'btn-dark'}" type="submit">${label}</button>`, onSubmit: async () => { await fn(); Modal.close(); } });
 }
 
 /* ---------- exports & print ---------- */
@@ -2891,9 +2909,9 @@ function exportActivity() { downloadCSV('activity-log.csv', ['Time', 'Actor', 'R
 function printReport() {
   const m = can('money'), y = yesterdayStats(), w = wtdStats(), p = podStats(), t = todayStats();
   const tr = (k, v) => `<tr><td>${k}</td><td class="num">${v}</td></tr>`;
-  let h = `<div class="print-h"><div><b style="font-size:18px">Trans Haul · Morning report</b><div>${fmtDate(TODAY, true)} · position at 07:00 · prepared for ${esc(me().name)} (${ROLE_LABEL[myRole()]})</div></div><div>Illustrative demo data · No live systems connected</div></div>`;
+  let h = `<div class="print-h"><div><b style="font-size:18px">${esc(tenantName())} · Morning report</b><div>${fmtDate(TODAY, true)} · ${positionLabel()} · prepared for ${esc(me().name)} (${ROLE_LABEL[myRole()]})</div></div><div>Illustrative demo data · No live systems connected</div></div>`;
   h += `<h2>1. Yesterday · ${fmtDate(YESTERDAY, true)}</h2><table>${tr('Jobs delivered', y.jobs)}${tr('On time', `${y.onTime.length} (${pct(y.onTime.length / y.jobs * 100, 0)})`)}${tr('Late', y.late.map(j => j.id).join(', '))}${m ? tr('Revenue vs target', `${gbp(y.revenue)} vs ${gbp(S().settings.revenueTarget)} (${pct(y.revenue / S().settings.revenueTarget * 100)})`) : ''}</table>`;
-  if (m) h += `<h2>2. Costs and contribution</h2><table>${tr('Planned / actual cost', `${gbp(y.planned)} / ${gbp(y.actual)} (${gbp(y.overrun, { sign:true })})`)}${tr('Planned / actual contribution', `${gbp(y.pContrib)} / ${gbp(y.aContrib)}`)}${tr('Planned / actual margin', `${pct(y.pMargin, 2)} / ${pct(y.aMargin, 2)}`)}${tr('Week to date cost (Mon–Wed)', `${gbp(w.planned)} planned / ${gbp(w.actual)} actual (${gbp(w.actual - w.planned, { sign:true })})`)}${tr('Recharge drafts (draft only)', gbp(sum(activeRecharges(), r => r.amount)))}</table>
+  if (m) h += `<h2>2. Costs and contribution</h2><table>${tr('Planned / actual cost', `${gbp(y.planned)} / ${gbp(y.actual)} (${gbp(y.overrun, { sign:true })})`)}${tr('Planned / actual contribution', `${gbp(y.pContrib)} / ${gbp(y.aContrib)}`)}${tr('Planned / actual margin', `${pct(y.pMargin, 2)} / ${pct(y.aMargin, 2)}`)}${tr(`Week to date cost (${wtdLabel()})`, `${gbp(w.planned)} planned / ${gbp(w.actual)} actual (${gbp(w.actual - w.planned, { sign:true })})`)}${tr('Recharge drafts (draft only)', gbp(sum(activeRecharges(), r => r.amount)))}</table>
     <table><thead><tr><th>Flagged job</th><th>Destination</th><th class="num">Planned</th><th class="num">Actual</th><th class="num">Variance</th></tr></thead><tbody>${y.flagged.map(j => `<tr><td>${j.id}</td><td>${esc(j.dest)}</td><td class="num">${gbp(j.plannedCost)}</td><td class="num">${gbp(j.actualCost)}</td><td class="num">${gbp(costVar(j), { sign:true })}</td></tr>`).join('')}</tbody></table>`;
   h += `<h2>PODs and billing</h2><table>${tr('Outstanding PODs', `${p.missing.length} — ${p.missing.map(j => j.id).join(', ')}`)}${tr('Delivered, not invoiced', p.uninvoiced.length)}${tr('Blocked by POD / ready', `${p.blocked.length} / ${p.ready.length}`)}</table>`;
   if (can('cash')) { const d = debtorStats(); h += `<h2>Cash</h2><table>${tr('Total debtors (by invoice date)', gbp(d.total))}${d.buckets.map((b, i) => tr(BUCKETS[i], gbp(b))).join('')}${tr('Estimated Bibby headroom (illustrative)', gbp(d.headroom))}</table>`; }
@@ -2906,7 +2924,7 @@ function printReport() {
 const ACT = {
   modalClose: () => Modal.close(),
   toggleNav: () => { UI.navOpen = !UI.navOpen; document.querySelector('.shell').classList.toggle('nav-open', UI.navOpen); },
-  signIn: el => {
+  signIn: async el => {
     const kind = el.dataset.kind, id = el.dataset.id;
     if (kind === 'customer') { Store.setSession({ kind:'customer', contactId:id, via:'direct' }); location.hash = '#/portal'; render(); return; }
     const u = user(id); if (u.status === 'suspended') return toast('This account is suspended.', 'err');
@@ -2917,8 +2935,8 @@ const ACT = {
   signOut: () => signOut(),
   resetDemo: () => confirmModal('Reset demo?', 'This restores every record to the initial demonstration state and signs you out. Uploaded POD images are removed.', 'Reset demo', () => { Store.reset(); Object.assign(UI.jobs, { q:'', from:YESTERDAY, to:YESTERDAY, customer:'', vehicle:'', driver:'', dest:'', exc:'', sort:{ key:'id', dir:'asc' } }); saveUI(); UI.crumb = null; location.hash = '#/signin'; render(); toast('Demo reset to its initial state'); }, true),
   go: el => go(el.dataset.href),
-  kpiJobs: el => { const a = el.dataset.arg; if (a === 'clear') setJobFilter('yesterday'); else setJobFilter(a); go('#/jobs'); },
-  sort: el => {
+  kpiJobs: async el => { const a = el.dataset.arg; if (a === 'clear') setJobFilter('yesterday'); else setJobFilter(a); go('#/jobs'); },
+  sort: async el => {
     const t = el.dataset.table, k = el.dataset.key;
     const s = t === 'jobs' ? UI.jobs.sort : (UI.sorts[t] = UI.sorts[t] || { key:'', dir:'asc' });
     if (s.key === k) s.dir = s.dir === 'asc' ? 'desc' : 'asc'; else { s.key = k; s.dir = ['price','planned','actual','variance','amount','age','date'].includes(k) ? 'desc' : 'asc'; }
@@ -2926,60 +2944,60 @@ const ACT = {
   },
   draftRecharge: el => modalDraftRecharge(el.dataset.id),
   editRecharge: el => modalEditRecharge(el.dataset.id),
-  cancelRecharge: el => confirmModal('Cancel recharge draft?', 'The draft is kept in history and can be restored.', 'Cancel draft', () => { Svc.cancelRecharge(el.dataset.id); toast('Recharge draft cancelled'); rerender(); }),
-  restoreRecharge: el => { try { Svc.restoreRecharge(el.dataset.id); toast('Recharge draft restored'); rerender(); } catch (e) { toast(e.message, 'err'); } },
+  cancelRecharge: el => confirmModal('Cancel recharge draft?', 'The draft is kept in history and can be restored.', 'Cancel draft', async () => { await Svc.cancelRecharge(el.dataset.id); toast('Recharge draft cancelled'); rerender(); }),
+  restoreRecharge: async el => { try { await Svc.restoreRecharge(el.dataset.id); toast('Recharge draft restored'); rerender(); } catch (e) { toast(e.message, 'err'); } },
   proposeCover: el => modalProposeCover(el.dataset.id),
-  withdrawCover: el => confirmModal('Withdraw proposed cover?', 'The job returns to uncovered.', 'Withdraw', () => { Svc.withdrawCover(el.dataset.id); toast('Proposal withdrawn'); rerender(); }),
+  withdrawCover: el => confirmModal('Withdraw proposed cover?', 'The job returns to uncovered.', 'Withdraw', async () => { await Svc.withdrawCover(el.dataset.id); toast('Proposal withdrawn'); rerender(); }),
   rigidCheck: el => modalRigids(el.dataset.id),
   raiseAction: el => modalRaiseAction(el.dataset.type, el.dataset.id, el.dataset.preset),
   openAction: el => modalAction(el.dataset.id),
-  completeAction: el => { const n = Modal.el && Modal.el.querySelector('#pn'); Svc.completeAction(el.dataset.id, n && n.value.trim()); Modal.close(); toast('Action completed'); rerender(); },
-  reopenAction: el => { Svc.reopenAction(el.dataset.id); Modal.close(); toast('Action reopened'); rerender(); },
-  actFilter: el => { UI.actionsFilter = el.dataset.arg; rerender(); },
+  completeAction: async el => { const n = Modal.el && Modal.el.querySelector('#pn'); await Svc.completeAction(el.dataset.id, n && n.value.trim()); Modal.close(); toast('Action completed'); rerender(); },
+  reopenAction: async el => { await Svc.reopenAction(el.dataset.id); Modal.close(); toast('Action reopened'); rerender(); },
+  actFilter: async el => { UI.actionsFilter = el.dataset.arg; rerender(); },
   followUp: el => modalFollowUp(el.dataset.id),
   resolveDefect: el => modalResolveDefect(el.dataset.id),
   uploadPod: el => modalUploadPod(el.dataset.id),
-  podSampleModal: el => { pendingPod = samplePod(job(el.dataset.id)); showPodPreview('mpod-prev', 'mpod-submit'); },
-  podPaper: el => { Svc.podUpload(el.dataset.id, null); Modal.close(); toast(`Paper POD logged for ${el.dataset.id}`); rerender(); },
-  share: el => { try { Svc.share(el.dataset.job, el.dataset.contact, { pod:true, invoice:false }); toast('Job shared — the contact can now see this job only'); rerender(); } catch (e) { toast(e.message, 'err'); } },
-  unshare: el => confirmModal('Stop sharing?', 'The contact will no longer see this job in the customer portal.', 'Stop sharing', () => { Svc.unshare(el.dataset.id); toast('Sharing stopped'); rerender(); }),
-  sendLink: el => { const c = contact(el.dataset.contact); if (!c.notify) return toast(`${c.email} has opted out of notifications.`, 'err'); tick(1); Svc.issueLink(el.dataset.contact, el.dataset.job, 'signin'); Store.save(); toast('One-time link created (simulated) — see the customer mailbox'); rerender(); },
+  podSampleModal: async el => { pendingPod = samplePod(job(el.dataset.id)); showPodPreview('mpod-prev', 'mpod-submit'); },
+  podPaper: async el => { await Svc.podUpload(el.dataset.id, null); Modal.close(); toast(`Paper POD logged for ${el.dataset.id}`); rerender(); },
+  share: async el => { try { await Svc.share(el.dataset.job, el.dataset.contact, { pod:true, invoice:false }); toast('Job shared — the contact can now see this job only'); rerender(); } catch (e) { toast(e.message, 'err'); } },
+  unshare: el => confirmModal('Stop sharing?', 'The contact will no longer see this job in the customer portal.', 'Stop sharing', async () => { await Svc.unshare(el.dataset.id); toast('Sharing stopped'); rerender(); }),
+  sendLink: async el => { const c = contact(el.dataset.contact); if (!c.notify) return toast(`${c.email} has opted out of notifications.`, 'err'); tick(1); await Svc.issueLink(el.dataset.contact, el.dataset.job, 'signin'); Store.save(); toast('One-time link created (simulated) — see the customer mailbox'); rerender(); },
   previewEmail: el => modalEmail(el.dataset.id),
-  openLink: el => { Modal.close(); go('#/link/' + el.dataset.arg); },
-  expireLink: el => { Svc.expireLink(el.dataset.arg); toast(`Link expired — ${S().settings.linkHours}h demo period simulated`); rerender(); },
-  newLink: el => { const l = S().links.find(x => x.token === el.dataset.arg); Svc.issueLink(l.contactId, l.jobId, 'signin'); Store.save(); toast('New one-time link created (simulated)'); go('#/mailbox'); },
+  openLink: async el => { Modal.close(); go('#/link/' + el.dataset.arg); },
+  expireLink: async el => { await Svc.expireLink(el.dataset.arg); toast(`Link expired — ${S().settings.linkHours}h demo period simulated`); rerender(); },
+  newLink: async el => { const l = S().links.find(x => x.token === el.dataset.arg); await Svc.issueLink(l.contactId, l.jobId, 'signin'); Store.save(); toast('New one-time link created (simulated)'); go('#/mailbox'); },
   planned: el => modalPlanned(el.dataset.arg),
   invite: () => modalInvite(),
-  userStatus: el => { const u = user(el.dataset.id), to = el.dataset.arg; const f = () => { Svc.setUserStatus(u.id, to); toast(`${u.name} ${to === 'suspended' ? 'suspended' : 'restored'}`); rerender(); }; to === 'suspended' ? confirmModal(`Suspend ${u.name}?`, 'They will not be able to sign in until restored. Their history is kept.', 'Suspend', f, true) : f(); },
-  bucket: el => { UI.invBucket = el.dataset.arg === 'all' ? null : Number(el.dataset.arg); go('#/cash/invoices'); },
-  docCat: el => { UI.docCat = el.dataset.arg; rerender(); },
-  modelPeriod: el => { UI.modelPeriod = el.dataset.arg; rerender(); },
-  modelGroup: el => { UI.modelGroup = el.dataset.arg; rerender(); },
-  drill: el => {
+  userStatus: async el => { const u = user(el.dataset.id), to = el.dataset.arg; const f = async () => { await Svc.setUserStatus(u.id, to); toast(`${u.name} ${to === 'suspended' ? 'suspended' : 'restored'}`); rerender(); }; to === 'suspended' ? confirmModal(`Suspend ${u.name}?`, 'They will not be able to sign in until restored. Their history is kept.', 'Suspend', f, true) : f(); },
+  bucket: async el => { UI.invBucket = el.dataset.arg === 'all' ? null : Number(el.dataset.arg); go('#/cash/invoices'); },
+  docCat: async el => { UI.docCat = el.dataset.arg; rerender(); },
+  modelPeriod: async el => { UI.modelPeriod = el.dataset.arg; rerender(); },
+  modelGroup: async el => { UI.modelGroup = el.dataset.arg; rerender(); },
+  drill: async el => {
     const g = el.dataset.grp, k = el.dataset.key;
     if (g === 'job') return go('#/job/' + k);
     setJobFilter('clear'); Object.assign(UI.jobs, { from: el.dataset.from, to: el.dataset.to });
     if (g === 'customer') UI.jobs.customer = k; if (g === 'driver') UI.jobs.driver = k; if (g === 'vehicle') UI.jobs.vehicle = k;
-    if (g === 'week') Object.assign(UI.jobs, k >= '2026-11-02' ? { from: WEEK_START > el.dataset.from ? WEEK_START : el.dataset.from } : { to: '2026-10-30' });
+    if (g === 'week') Object.assign(UI.jobs, { from: mondayOf(k) > el.dataset.from ? mondayOf(k) : el.dataset.from, to: addDays(mondayOf(k), 6) < el.dataset.to ? addDays(mondayOf(k), 6) : el.dataset.to });
     saveUI(); go('#/jobs');
   },
   printReport: () => printReport(),
   exportJobs: () => exportJobs(), exportPods: () => exportPods(), exportInvoices: () => exportInvoices(), exportActivity: () => exportActivity(),
   // driver
-  driverStage: el => {
+  driverStage: async el => {
     const id = el.dataset.id, st = el.dataset.arg;
     if (st === 'walkaround') return go('#/driver-app/walkaround/' + id);
     if (st === 'pod') return go('#/driver-app/pod/' + id);
-    Svc.checkin(id, st); toast(`${STAGE_LABEL[st]} · ${fmtTime(nowIso())}`); rerender();
+    await Svc.checkin(id, st); toast(`${STAGE_LABEL[st]} · ${fmtTime(nowIso())}`); rerender();
   },
-  walkSet: el => {
+  walkSet: async el => {
     const i = el.dataset.i, v = el.dataset.v, row = el.closest('.m-check');
     row.querySelectorAll('.seg button').forEach(b => { const on = b.dataset.v === v; b.className = on ? (v === 'pass' ? 'on-ok' : 'on-bad') : ''; b.setAttribute('aria-pressed', on); });
     row.querySelector(`input[name=r${i}]`).value = v; document.getElementById('wd' + i).hidden = v !== 'defect';
   },
-  openMaps: el => { const j = job(el.dataset.id); Modal.open({ title:'Open in Maps', sub:'Simulated hand-off', body:`<p class="text-2">On a phone this opens the driver's maps app with the delivery postcode <b>${esc(j.address[j.address.length - 1])}</b>.</p><div class="caveat warn mt12">${icon('alert')}<div>This is a fictional demo address with a non-real postcode, so no maps app is opened.</div></div>`, foot:'<button type="button" class="btn btn-primary m-btn" data-act="modalClose">Close</button>' }); },
+  openMaps: async el => { const j = job(el.dataset.id); Modal.open({ title:'Open in Maps', sub:'Simulated hand-off', body:`<p class="text-2">On a phone this opens the driver's maps app with the delivery postcode <b>${esc(j.address[j.address.length - 1])}</b>.</p><div class="caveat warn mt12">${icon('alert')}<div>This is a fictional demo address with a non-real postcode, so no maps app is opened.</div></div>`, foot:'<button type="button" class="btn btn-primary m-btn" data-act="modalClose">Close</button>' }); },
   podSample: () => { const j = job(parseRoute().parts[2]); pendingPod = samplePod(j); showPodPreview('pod-prev', 'pod-submit'); },
-  podSubmit: el => { if (!pendingPod) return toast('Choose a photo first.', 'err'); try { Svc.podUpload(el.dataset.id, pendingPod); pendingPod = null; toast('POD submitted'); go('#/driver-app'); } catch (e) { toast(e.message, 'err'); } },
+  podSubmit: async el => { if (!pendingPod) return toast('Choose a photo first.', 'err'); try { await Svc.podUpload(el.dataset.id, pendingPod); pendingPod = null; toast('POD submitted'); go('#/driver-app'); } catch (e) { toast(e.message, 'err'); } },
 };
 function showPodPreview(boxId, btnId) {
   const box = document.getElementById(boxId); if (!box || !pendingPod) return;
@@ -2987,35 +3005,35 @@ function showPodPreview(boxId, btnId) {
   const b = document.getElementById(btnId); if (b) b.disabled = false;
 }
 const CHANGE = {
-  shareToggle: el => { Svc.updateShare(el.dataset.id, el.dataset.key, el.checked); toast(`${el.dataset.key === 'pod' ? 'POD' : 'Invoice'} ${el.checked ? 'visible to' : 'hidden from'} the contact`); rerender(); },
-  invCustomer: el => { UI.invCustomer = el.value; rerender(); },
-  notify: el => { Svc.setNotify(Store.session.contactId, el.checked); toast(el.checked ? 'Delivery notifications on' : 'You have opted out of delivery notifications'); },
+  shareToggle: async el => { await Svc.updateShare(el.dataset.id, el.dataset.key, el.checked); toast(`${el.dataset.key === 'pod' ? 'POD' : 'Invoice'} ${el.checked ? 'visible to' : 'hidden from'} the contact`); rerender(); },
+  invCustomer: async el => { UI.invCustomer = el.value; rerender(); },
+  notify: async el => { await Svc.setNotify(Store.session.contactId, el.checked); toast(el.checked ? 'Delivery notifications on' : 'You have opted out of delivery notifications'); },
   podFile: async el => { try { pendingPod = await readImage(el.files[0]); showPodPreview('pod-prev', 'pod-submit'); } catch (e) { toast(e.message, 'err'); } },
   podFileModal: async el => { try { pendingPod = await readImage(el.files[0]); showPodPreview('mpod-prev', 'mpod-submit'); } catch (e) { Modal.error(e.message); } },
 };
 const INPUT = {
   gsearch: el => renderSearchResults(el.value),
-  docQ: el => { UI.docQ = el.value; const q = el.value.toLowerCase(); const list = S().documents.filter(d => (!UI.docCat || d.category === UI.docCat) && (!q || (d.title + d.summary).toLowerCase().includes(q))); document.getElementById('doc-list').innerHTML = docList(list); },
-  actFilter: el => { UI.actFilter = el.value; const f = el.value.toLowerCase(); document.getElementById('act-list').innerHTML = activityTable(S().activity.filter(e => !f || [actorLabel(e).name, e.action, e.recordId, e.next].join(' ').toLowerCase().includes(f))); },
+  docQ: async el => { UI.docQ = el.value; const q = el.value.toLowerCase(); const list = S().documents.filter(d => (!UI.docCat || d.category === UI.docCat) && (!q || (d.title + d.summary).toLowerCase().includes(q))); document.getElementById('doc-list').innerHTML = docList(list); },
+  actFilter: async el => { UI.actFilter = el.value; const f = el.value.toLowerCase(); document.getElementById('act-list').innerHTML = activityTable(S().activity.filter(e => !f || [actorLabel(e).name, e.action, e.recordId, e.next].join(' ').toLowerCase().includes(f))); },
 };
 const FORMS = {
-  walkaround: (form, fd) => {
+  walkaround: async (form, fd) => {
     const results = WALK_ITEMS.map((it, i) => ({ item: it, result: fd.get('r' + i), severity: fd.get('sev' + i), note: (fd.get('note' + i) || '').trim() }));
     const bad = results.find(r => r.result === 'defect' && !r.note);
     if (bad) return toast(`Describe the defect for “${bad.item}”.`, 'err');
-    const j = job(form.dataset.id); const w = Svc.submitWalkaround(j.id, j.vehicleId, results);
+    const j = job(form.dataset.id); const w = await Svc.submitWalkaround(j.id, j.vehicleId, results);
     const safety = results.some(r => r.result === 'defect' && r.severity === 'safety');
     toast(w.defects.length ? (safety ? 'Safety-critical defect sent to the transport office. Do not depart.' : 'Walkaround submitted with a minor defect reported') : 'Walkaround complete — no defects');
     go('#/driver-app');
   },
-  rates: (form, fd) => {
+  rates: async (form, fd) => {
     const cur = S().rateCards[S().rateCards.length - 1].rates; const r = {};
     for (const k of Object.keys(cur)) { const v = Number(fd.get(k)); if (!(v >= 0) || fd.get(k) === '') return toast('Every rate needs a number of zero or more.', 'err'); r[k] = v; }
     if (Object.keys(cur).every(k => cur[k] === r[k])) return toast('No rates have changed.', 'err');
-    Svc.publishRates(r, (fd.get('note') || '').trim()); toast('New rate card version published — completed jobs keep their snapshots'); rerender();
+    await Svc.publishRates(r, (fd.get('note') || '').trim()); toast('New rate card version published — completed jobs keep their snapshots'); rerender();
   },
-  threshold: (form, fd) => { try { Svc.setThreshold(fd.get('thr')); toast(`Threshold set to ${threshold()}% — ${S().jobs.filter(isFlagged).length} jobs flagged`); rerender(); } catch (e) { toast(e.message, 'err'); } },
-  custFind: (form, fd) => { const ref = (fd.get('ref') || '').trim().toUpperCase(); if (!ref) return; const sh = custShares().find(s => s.jobId.toUpperCase() === ref || (job(s.jobId).customerRef || '').toUpperCase() === ref); go('#/portal/job/' + encodeURIComponent(sh ? sh.jobId : ref)); },
+  threshold: async (form, fd) => { try { await Svc.setThreshold(fd.get('thr')); toast(`Threshold set to ${threshold()}% — ${S().jobs.filter(isFlagged).length} jobs flagged`); rerender(); } catch (e) { toast(e.message, 'err'); } },
+  custFind: async (form, fd) => { const ref = (fd.get('ref') || '').trim().toUpperCase(); if (!ref) return; const sh = custShares().find(s => s.jobId.toUpperCase() === ref || (job(s.jobId).customerRef || '').toUpperCase() === ref); go('#/portal/job/' + encodeURIComponent(sh ? sh.jobId : ref)); },
 };
 function bindEvents() {
   document.addEventListener('click', e => {
@@ -3023,7 +3041,7 @@ function bindEvents() {
     if (el && !el.disabled && !el.classList.contains('is-disabled')) {
       const fn = ACT[el.dataset.act]; if (!fn) return;
       if (el.tagName === 'A' || el.tagName === 'BUTTON' || el.tagName === 'TR' || el.tagName === 'TH') e.preventDefault();
-      try { fn(el, e); } catch (err) { toast(err.message, 'err'); console.error(err); }
+      Promise.resolve().then(() => fn(el, e)).catch(err => { toast(err.message, 'err'); console.error(err); });
       return;
     }
     if (e.target.closest('a.is-disabled')) { e.preventDefault(); return; }
@@ -3041,8 +3059,8 @@ function bindEvents() {
     if (b) { if (b === 'sort') { const [k, d] = e.target.value.split(':'); UI.jobs.sort = { key:k, dir:d }; } else UI.jobs[b] = e.target.value; saveUI(); renderJobsResults(); return; }
     const a = e.target.dataset.actInput; if (a && INPUT[a]) INPUT[a](e.target);
   });
-  document.addEventListener('change', e => { const a = e.target.dataset.actChange; if (a && CHANGE[a]) { try { CHANGE[a](e.target); } catch (err) { toast(err.message, 'err'); } } });
-  document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); try { FORMS[f.dataset.form](f, new FormData(f)); } catch (err) { toast(err.message, 'err'); } });
+  document.addEventListener('change', e => { const a = e.target.dataset.actChange; if (a && CHANGE[a]) Promise.resolve().then(() => CHANGE[a](e.target)).catch(err => toast(err.message, 'err')); });
+  document.addEventListener('submit', e => { const f = e.target.closest('form[data-form]'); if (!f) return; e.preventDefault(); Promise.resolve().then(() => FORMS[f.dataset.form](f, new FormData(f))).catch(err => toast(err.message, 'err')); });
   window.addEventListener('hashchange', () => { Modal.close(); UI.navOpen = false; render(); });
   window.addEventListener('storage', e => { if (e.key === KEY) { Store.load(); rerender(); } });
 }
@@ -3071,6 +3089,7 @@ function selfTest() {
 
 /* ---------- boot ---------- */
 (function boot() {
+  if (window.THP_CONFIG && window.THP_CONFIG.mode === 'live') return;
   Store.load();
   bindEvents();
   if (!location.hash) location.replace(Store.session ? '#/dashboard' : '#/signin');

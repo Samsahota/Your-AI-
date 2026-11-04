@@ -168,6 +168,7 @@ function viewInvoice(route) {
 }
 
 /* ---------- FLEET & COMPLIANCE ---------- */
+function fleetMix() { const n = k => S().vehicles.filter(v => v.typeKey === k).length; return [[n('A'), '44t artic'], [n('R26'), '26t rigid'], [n('R18'), '18t rigid']].filter(x => x[0]).map(x => `${x[0]} × ${x[1]}`).join(' · '); }
 function viewFleet(route) {
   const tab = route.parts[1] || 'vehicles';
   const nOpen = S().compliance.filter(c => ['overdue','unsigned'].includes(c.status)).length + S().defects.filter(d => d.status !== 'rectified').length;
@@ -180,7 +181,7 @@ function fleetVehicles() {
   const u = utilisation(); const tr = S().trailers;
   const rows = S().vehicles.map(v => Object.assign({ v }, utilisation(v.id)));
   const today = v => S().jobs.filter(j => j.vehicleId === v.id && j.date === TODAY).map(j => j.id).join(', ') || '—';
-  return `<div class="stat-row mb16"><div>${kpiS('HGVs', S().vehicles.length, '10 × 44t artic · 5 × 26t rigid · 3 × 18t rigid')}</div><div>${kpiS('Trailers', tr.total, `${tr.curtainsider} curtainsider · ${tr.flatbed} flatbed · ${tr.fridge} fridge`)}</div><div>${kpiS('Vehicle-day utilisation', pct(u.util), `${u.worked} of ${u.avail} available vehicle days worked · Mon–Wed`)}</div><div>${kpiS('Miles · Mon–Wed', int(u.miles), `${int(u.empty)} empty miles · ${pct(u.emptyPct)} empty running`)}</div></div>
+  return `<div class="stat-row mb16"><div>${kpiS('HGVs', S().vehicles.length, fleetMix())}</div><div>${kpiS('Trailers', tr.total, `${tr.curtainsider} curtainsider · ${tr.flatbed} flatbed · ${tr.fridge} fridge`)}</div><div>${kpiS('Vehicle-day utilisation', pct(u.util), `${u.worked} of ${u.avail} available vehicle days worked · ${wtdLabel()}`)}</div><div>${kpiS(`Miles · ${wtdLabel()}`, int(u.miles), `${int(u.empty)} empty miles · ${pct(u.emptyPct)} empty running`)}</div></div>
     <div class="card">${table({ cols:[
       { key:'id', label:'Vehicle', render: r => `<span class="id">${r.v.id}</span><div class="sub-line">${r.v.depot}</div>` },
       { key:'t', label:'Type', render: r => r.v.type },
@@ -192,7 +193,7 @@ function fleetVehicles() {
       { key:'o', label:'Defects / actions', num:true, render: r => { const n = openDefects(r.v.id).length, a = S().actions.filter(x => x.recordId === r.v.id && x.status === 'open').length; return n + a ? `<span class="delta-bad">${n} / ${a}</span>` : '—'; } },
       { key:'j', label:'Today', render: r => esc(today(r.v)) },
     ], rows, rowAttr: r => `class="clickable ${r.v.status === 'vor' ? 'flag' : ''}" data-act="go" data-href="#/vehicle/${r.v.id}" tabindex="0"` })}
-    <div class="card-pad small muted">Utilisation = days with at least one delivered job ÷ days the vehicle was available (VOR days excluded). Miles and empty miles are illustrative telematics figures for Mon 2 – Wed 4 Nov.</div></div>`;
+    <div class="card-pad small muted">Utilisation = days with at least one delivered job ÷ days the vehicle was available (VOR days excluded). Miles and empty miles are illustrative telematics figures for ${wtdLabel()}.</div></div>`;
 }
 function licencePill(d) { return { ok:'<span class="pill ok">Current</span>', overdue:'<span class="pill bad">Review overdue</span>', followup:'<span class="pill info">Follow-up recorded</span>', agency:'<span class="pill plain">Agency-held</span>' }[d.licenceStatus] || ''; }
 function tachoPill(d) { return { ok:'<span class="pill ok">No open items</span>', unsigned:'<span class="pill warn">Follow-up unsigned</span>', followup:'<span class="pill info">Follow-up recorded</span>' }[d.tachoStatus] || ''; }
@@ -255,7 +256,7 @@ function viewVehicle(route) {
   const all = S().vehicles.map(x => x.id), i = all.indexOf(v.id);
   const lastW = S().walkarounds.find(w => w.vehicleId === v.id);
   let body = '';
-  if (tab === 'summary') body = `<div class="stat-row mb16"><div>${kpiS('Days worked · Mon–Wed', `${u.worked} / ${u.avail}`, 'Available vehicle days')}</div><div>${kpiS('Utilisation', u.util == null ? '—' : pct(u.util, 0))}</div><div>${kpiS('Miles', int(u.miles))}</div><div>${kpiS('Empty miles', int(u.empty), u.emptyPct == null ? '' : pct(u.emptyPct) + ' empty running')}</div></div>
+  if (tab === 'summary') body = `<div class="stat-row mb16"><div>${kpiS(`Days worked · ${wtdLabel()}`, `${u.worked} / ${u.avail}`, 'Available vehicle days')}</div><div>${kpiS('Utilisation', u.util == null ? '—' : pct(u.util, 0))}</div><div>${kpiS('Miles', int(u.miles))}</div><div>${kpiS('Empty miles', int(u.empty), u.emptyPct == null ? '' : pct(u.emptyPct) + ' empty running')}</div></div>
     <div class="grid g2"><div class="card card-pad"><dl class="kv"><dt>Type</dt><dd>${v.type}</dd><dt>Base</dt><dd>${v.depot}</dd><dt>Status</dt><dd><span class="pill ${st.cls}">${st.label}</span></dd>${v.status === 'vor' ? `<dt>Off road since</dt><dd>${fmtDate(v.vorSince, true)}</dd><dt>Reason</dt><dd>${esc(v.vorReason)}</dd>` : ''}${v.vorUntil ? `<dt>Returned to service</dt><dd>${fmtDate(v.vorUntil)}</dd>` : ''}<dt>Last walkaround</dt><dd>${lastW ? `${fmtDT(lastW.at)} by ${lastW.driverId} · ${lastW.defects.length ? `${lastW.defects.length} defect(s) — <b>not cleared</b>` : 'no defects'}` : '<span class="muted">Paper record (not digitised)</span>'}</dd>${v.motDue ? `<dt>MOT due</dt><dd>${fmtDay(v.motDue)}</dd>` : ''}</dl></div>
     <div class="card"><div class="card-head"><h3>Defects</h3></div>${defs.length ? table({ cols:[{ key:'i', label:'Defect', render: d => `<span class="strong">${esc(d.item)}</span><div class="sub-line">${esc(d.note)}</div>` }, { key:'s', label:'Severity', render: d => d.severity === 'safety' ? '<span class="pill bad">Safety-critical</span>' : '<span class="pill warn">Minor</span>' }, { key:'st', label:'Status', render: d => compStatusPill(d.status) }, { key:'x', label:'', num:true, render: d => can('compliance') && d.status !== 'rectified' ? `<button class="btn btn-sm" data-act="resolveDefect" data-id="${d.id}">Record rectification</button>` : '' }], rows: defs }) : '<div class="empty small"><p>No defects recorded.</p></div>'}</div></div>`;
   if (tab === 'jobs') body = `<div class="card">${table({ cols:[{ key:'id', label:'Job', render: j => `<span class="id">${j.id}</span>` }, { key:'d', label:'Date', render: j => fmtDate(j.date) }, { key:'de', label:'Destination', render: j => esc(j.dest) }, { key:'dr', label:'Driver', render: j => esc(j.driverId || '—') }, { key:'m', label:'Miles', num:true, render: j => j.actualMiles != null ? int(j.actualMiles) : '—' }, { key:'s', label:'Status', render: deliveryPill }], rows: js, rowAttr: j => `class="clickable" data-act="go" data-href="#/job/${j.id}" tabindex="0"` })}</div>`;
@@ -333,7 +334,7 @@ function adminActivity() {
   return `<div class="card"><div class="filters"><div class="f-search">${icon('search')}<input class="input" type="search" placeholder="Filter by person, action or record" value="${esc(UI.actFilter)}" data-act-input="actFilter" aria-label="Filter activity"></div><button class="btn btn-sm" data-act="exportActivity">${icon('download')}Export CSV</button></div>
     <div id="act-list">${activityTable(list)}</div></div>
     <div class="grid g2 mt16"><div class="card card-pad"><div class="section-title">Customer link settings</div><dl class="kv"><dt>One-time link validity</dt><dd>${S().settings.linkHours} hours (demo time)</dd><dt>Link use</dt><dd>Single use, then expires</dd><dt>Delivery notifications</dt><dd>Sent on completion of a shared job (simulated)</dd></dl></div>
-    <div class="card card-pad"><div class="section-title">Demo data</div><p class="small text-2">The 4 November job batch, fleet counts and cash figures are the supplied demonstration figures. Earlier-period jobs, invoices and payment history are additional synthetic records. All names, companies and addresses are fictional.</p><button class="btn mt12" data-act="resetDemo">${icon('refresh')}Reset demo to initial state</button></div></div>`;
+    <div class="card card-pad"><div class="section-title">Demo data</div><p class="small text-2">The 4 November job batch, fleet counts and cash figures are the supplied demonstration figures. Earlier-period jobs, invoices and payment history are additional synthetic records. All names, companies and addresses are fictional.</p><button class="btn mt12 demo-only" data-act="resetDemo">${icon('refresh')}Reset demo to initial state</button></div></div>`;
 }
 function activityTable(list) {
   return table({ cols:[
@@ -349,9 +350,9 @@ function activityTable(list) {
 /* ---------- COST MODEL analysis (Jobs & Margins tab) ---------- */
 function viewCostModel() {
   const per = UI.modelPeriod, grp = UI.modelGroup;
-  const range = { yesterday:[YESTERDAY, YESTERDAY], wtd:[WEEK_START, YESTERDAY], all:['2026-10-28', YESTERDAY] }[per];
+  const range = { yesterday:[YESTERDAY, YESTERDAY], wtd:[WEEK_START, YESTERDAY], all:[dataRange()[0], YESTERDAY] }[per];
   const js = S().jobs.filter(j => j.date >= range[0] && j.date <= range[1] && isDone(j) && j.actualCost != null);
-  const weekOf = d => d >= '2026-11-02' ? 'w/c 2 Nov 2026' : 'w/c 26 Oct 2026';
+  const weekOf = d => 'w/c ' + fmtDay(mondayOf(d));
   const key = { job: j => j.id, customer: j => custName(j.customerId), driver: j => j.driverId || 'Subcontract', vehicle: j => j.vehicleId ? `${j.vehicleId} · ${vehicle(j.vehicleId).type}` : 'Subcontract', week: j => weekOf(j.date) }[grp];
   const groups = {}; js.forEach(j => { const k = key(j); (groups[k] = groups[k] || []).push(j); });
   const rows = Object.entries(groups).map(([k, l]) => { const own = l.filter(j => !j.subcontract); const miles = sum(own, j => j.actualMiles), pal = sum(own, j => j.pallets || 0); const rev = sum(l, j => j.price), pc = sum(l, j => j.plannedCost), ac = sum(l, j => j.actualCost); return { k, l, n:l.length, rev, pc, ac, con: rev - ac, m: rev ? (rev - ac) / rev * 100 : null, cpm: miles ? sum(own, j => j.actualCost) / miles : null, cpp: pal ? sum(own, j => j.actualCost) / pal : null, v: ac - pc }; }).sort((a, b) => b.v - a.v || b.rev - a.rev);
@@ -361,7 +362,7 @@ function viewCostModel() {
   const cur = S().rateCards[S().rateCards.length - 1].rates;
   return pageHead('Jobs &amp; Margins', 'Modelled unit costs and contribution, with drill-down') +
     tabs([{ id:'jobs', label:'Jobs', href:'#/jobs' }, { id:'model', label:'Cost Model', href:'#/jobs/model' }], 'model') +
-    `<div class="card"><div class="filters"><span class="small muted">Period</span>${[['yesterday','Yesterday'],['wtd','Week to date'],['all','All seeded (28 Oct – 4 Nov)']].map(([k, l]) => `<button class="chip ${per === k ? 'active' : ''}" data-act="modelPeriod" data-arg="${k}">${l}</button>`).join('')}<span class="small muted" style="margin-left:12px">Group by</span>${[['job','Job'],['customer','Customer'],['driver','Driver'],['vehicle','Vehicle'],['week','Week']].map(([k, l]) => `<button class="chip ${grp === k ? 'active' : ''}" data-act="modelGroup" data-arg="${k}">${l}</button>`).join('')}</div>
+    `<div class="card"><div class="filters"><span class="small muted">Period</span>${[['yesterday','Yesterday'],['wtd','Week to date'],['all','All records']].map(([k, l]) => `<button class="chip ${per === k ? 'active' : ''}" data-act="modelPeriod" data-arg="${k}">${l}</button>`).join('')}<span class="small muted" style="margin-left:12px">Group by</span>${[['job','Job'],['customer','Customer'],['driver','Driver'],['vehicle','Vehicle'],['week','Week']].map(([k, l]) => `<button class="chip ${grp === k ? 'active' : ''}" data-act="modelGroup" data-arg="${k}">${l}</button>`).join('')}</div>
     ${table({ cols:[
       { key:'k', label: { job:'Job', customer:'Customer', driver:'Driver', vehicle:'Vehicle', week:'Week' }[grp], render: r => `<span class="strong">${esc(r.k)}</span>` },
       { key:'n', label:'Jobs', num:true, render: r => r.n },

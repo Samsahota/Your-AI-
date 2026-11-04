@@ -57,7 +57,7 @@ const STAGES = ['walkaround', 'depart', 'arrive', 'unloading', 'complete', 'pod'
 const STAGE_CTA = { walkaround:'Start walkaround check', depart:'Depart depot', arrive:'Arrived at customer', unloading:'Start unloading', complete:'Delivery complete', pod:'Upload POD' };
 const WALK_ITEMS = ['Tyres & wheel security', 'Lights & indicators', 'Mirrors & cameras', 'Brakes & air lines', 'Fluid leaks', 'Bodywork & load security', 'Windscreen, wipers & washers', 'Dashboard warnings & tachograph'];
 function driverJobs() { const d = me().driverId; return S().jobs.filter(j => j.date === TODAY && (j.driverId === d)).sort((a, b) => a.slot.localeCompare(b.slot)); }
-function walkDone(vehicleId) { return S().walkarounds.find(w => w.vehicleId === vehicleId && w.at.slice(0, 10) === TODAY && w.driverId === me().driverId); }
+function walkDone(vehicleId) { return S().walkarounds.find(w => w.vehicleId === vehicleId && w.driverId === me().driverId && (w.jobId && job(w.jobId) ? job(w.jobId).date === TODAY : w.at.slice(0, 10) === TODAY)); }
 function nextStage(j) {
   if (!walkDone(j.vehicleId)) return 'walkaround';
   if (j.status === 'not_started') return 'depart';

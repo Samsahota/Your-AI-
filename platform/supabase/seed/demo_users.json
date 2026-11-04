@@ -1,0 +1,30 @@
+{
+  "tenant": "11111111-1111-4111-8111-111111111111",
+  "users": {
+    "U01": {
+      "email": "paul.dyer@transhaul.example",
+      "id": "00000000-0000-4000-8000-000000000001",
+      "role": "director"
+    },
+    "U02": {
+      "email": "lisa.grant@transhaul.example",
+      "id": "00000000-0000-4000-8000-000000000002",
+      "role": "operations"
+    },
+    "U03": {
+      "email": "transport@transhaul.example",
+      "id": "00000000-0000-4000-8000-000000000003",
+      "role": "transport"
+    },
+    "U04": {
+      "email": "d04@transhaul.example",
+      "id": "00000000-0000-4000-8000-000000000004",
+      "role": "driver"
+    },
+    "CT01": {
+      "email": "deliveries@northfield-fresh.example",
+      "id": "00000000-0000-4000-8000-000000000005",
+      "role": "customer"
+    }
+  }
+}
