@@ -231,7 +231,7 @@ function viewOverview() {
 
   const greet = role === 'director' ? 'Good morning, Paul' : `Good morning, ${u.name.split(' ')[0] === 'Transport' ? 'Transport team' : u.name.split(' ')[0]}`;
   return `<div class="hello"><div><div class="date">${icon('clock')} ${fmtDate(TODAY, true)} · ${positionLabel()}</div><h1>${greet}</h1></div><div class="sp"><button class="btn" data-act="printReport">${icon('print')}Print report</button></div></div>` +
-    storyHTML + s1 + s2 + `<div class="drow2">${s3}${s4}</div>` + s5 +
+    storyHTML + s1 + s2 + `${s3}${s4}` + s5 +
     `<div class="grid g-main mt24">${attentionList()}<div class="card"><div class="card-head"><h3>Recent activity</h3>${hasSection('admin') ? '<a class="link small" href="#/admin/activity">Full log</a>' : ''}</div>${activityFeed(8)}</div></div>`;
 }
 
