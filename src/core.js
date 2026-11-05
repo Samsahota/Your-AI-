@@ -340,6 +340,23 @@ const Svc = {
     if (stage === 'complete') this.notifyDelivery(j);
     Store.save();
   },
+  undoCheckin(jobId) {
+    const j = job(jobId); const u = lastUndo(j);
+    if (!u) throw new Error('This step can no longer be undone here — contact the transport office.');
+    tick(1); const prev = j.status;
+    j.checkins.splice(j.checkins.lastIndexOf(u), 1);
+    if (u.stage === 'depart') { j.status = 'not_started'; j.eta = null; }
+    if (u.stage === 'arrive') j.status = 'en_route';
+    if (u.stage === 'complete') {
+      j.status = 'on_site'; j.deliveredAt = null; j.late = null; j.pod = { status:'n/a' }; j.invoice = { status:'not_due' }; j.costPending = false;
+      const cancelled = S().emails.filter(e => e.jobId === jobId && e.kind === 'delivery' && e.at >= u.at);
+      S().emails = S().emails.filter(e => !cancelled.includes(e));
+      S().links = S().links.filter(l => !(cancelled.some(e => e.token === l.token) && !l.usedAt));
+      if (cancelled.length) log('Delivery notification cancelled', 'job', jobId, 'Queued', 'Cancelled before sending (check-in undone)');
+    }
+    log('Driver undid check-in', 'job', jobId, statusLabel(prev) + ' — ' + STAGE_LABEL[u.stage], statusLabel(j.status));
+    Store.save();
+  },
   notifyDelivery(j) {
     sharesForJob(j.id).forEach(sh => {
       const c = contact(sh.contactId);
@@ -479,6 +496,7 @@ const icon = (n, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria
 function toast(msg, kind) {
   let box = document.querySelector('.toasts');
   if (!box) { box = document.createElement('div'); box.className = 'toasts'; box.setAttribute('role', 'status'); document.body.appendChild(box); }
+  if (window.innerWidth < 760) box.querySelectorAll('.toast').forEach(x => x.remove());   // phones: one message at a time
   const t = document.createElement('div'); t.className = 'toast' + (kind === 'err' ? ' err' : '');
   t.innerHTML = icon(kind === 'err' ? 'alert' : 'check') + '<div>' + esc(msg) + '</div>';
   box.appendChild(t); setTimeout(() => t.remove(), 4200);

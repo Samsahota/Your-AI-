@@ -460,6 +460,11 @@ dl.calc dt{color:var(--muted)} dl.calc dd{margin:0;text-align:right;font-weight:
 @media (max-width:760px){.hello h1{font-size:24px}.kp-v{font-size:25px}.dgrid,.drow2 .dgrid,.drow2 > .dsec:only-child .dgrid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}.kp{padding:14px}.kp.span2{grid-column:1/-1}.sh .more{margin-left:0}}
 @media (max-width:480px){.dgrid,.drow2 .dgrid,.drow2 > .dsec:only-child .dgrid{grid-template-columns:1fr}.kp.span2{grid-column:auto}}
 
+/* driver pinned action bar */
+.m-actionbar{position:sticky;bottom:0;z-index:5;background:#fff;border-top:1px solid var(--line);padding:12px 16px calc(12px + env(safe-area-inset-bottom));display:flex;flex-direction:column;gap:4px;box-shadow:0 -6px 18px rgba(20,20,18,.06)}
+.m-undo{min-height:44px;font-size:14px;color:var(--text-2)}
+body.has-actionbar .toasts{bottom:150px}
+.seg button[aria-pressed=false]{color:var(--text-2)}
 /* ---------- Print ---------- */
 #print-root{display:none}
 @media print{
@@ -536,8 +541,11 @@ dl.calc dt{color:var(--muted)} dl.calc dd{margin:0;text-align:right;font-weight:
   .cards-wrap{padding:10px;background:var(--bg)}
   .kv{grid-template-columns:1fr 1.3fr}
   .hbar{grid-template-columns:90px 1fr 80px}
-  .toasts{left:12px;right:12px;bottom:12px}
-  .modal-back{padding:16px 8px}
+  .toasts,body.has-actionbar .toasts{left:12px;right:12px;bottom:auto;top:72px;z-index:300}
+  .modal-back{padding:0;align-items:flex-end}
+  .modal,.modal.wide{max-width:none;border-radius:16px 16px 0 0;max-height:92vh;overflow:auto;padding-bottom:env(safe-area-inset-bottom)}
+  .modal-foot{flex-wrap:nowrap}
+  .modal-foot .btn{min-height:48px;flex:1}
 }
 @media (max-width:420px){
   .g3,.g4{grid-template-columns:1fr}
@@ -1438,6 +1446,23 @@ const Svc = {
     if (stage === 'complete') this.notifyDelivery(j);
     Store.save();
   },
+  undoCheckin(jobId) {
+    const j = job(jobId); const u = lastUndo(j);
+    if (!u) throw new Error('This step can no longer be undone here — contact the transport office.');
+    tick(1); const prev = j.status;
+    j.checkins.splice(j.checkins.lastIndexOf(u), 1);
+    if (u.stage === 'depart') { j.status = 'not_started'; j.eta = null; }
+    if (u.stage === 'arrive') j.status = 'en_route';
+    if (u.stage === 'complete') {
+      j.status = 'on_site'; j.deliveredAt = null; j.late = null; j.pod = { status:'n/a' }; j.invoice = { status:'not_due' }; j.costPending = false;
+      const cancelled = S().emails.filter(e => e.jobId === jobId && e.kind === 'delivery' && e.at >= u.at);
+      S().emails = S().emails.filter(e => !cancelled.includes(e));
+      S().links = S().links.filter(l => !(cancelled.some(e => e.token === l.token) && !l.usedAt));
+      if (cancelled.length) log('Delivery notification cancelled', 'job', jobId, 'Queued', 'Cancelled before sending (check-in undone)');
+    }
+    log('Driver undid check-in', 'job', jobId, statusLabel(prev) + ' — ' + STAGE_LABEL[u.stage], statusLabel(j.status));
+    Store.save();
+  },
   notifyDelivery(j) {
     sharesForJob(j.id).forEach(sh => {
       const c = contact(sh.contactId);
@@ -1577,6 +1602,7 @@ const icon = (n, cls = '') => `<svg class="icon ${cls}" viewBox="0 0 24 24" aria
 function toast(msg, kind) {
   let box = document.querySelector('.toasts');
   if (!box) { box = document.createElement('div'); box.className = 'toasts'; box.setAttribute('role', 'status'); document.body.appendChild(box); }
+  if (window.innerWidth < 760) box.querySelectorAll('.toast').forEach(x => x.remove());   // phones: one message at a time
   const t = document.createElement('div'); t.className = 'toast' + (kind === 'err' ? ' err' : '');
   t.innerHTML = icon(kind === 'err' ? 'alert' : 'check') + '<div>' + esc(msg) + '</div>';
   box.appendChild(t); setTimeout(() => t.remove(), 4200);
@@ -2614,7 +2640,7 @@ function renderDriverApp(route) {
     ${cur ? driverJobCard(cur, true) : `<div class="m-card"><h3>All jobs complete</h3><p class="text-2 mt8">No further jobs assigned today. Thanks — drive safely.</p></div>`}
     ${js.filter(j => j !== cur).map(j => `<a class="m-card" href="#/driver-app/job/${j.id}" style="text-decoration:none;color:inherit;display:block"><div class="between"><span class="m-label">${isDone(j) && j.pod.status === 'received' ? 'Completed' : 'Later today'}</span>${deliveryPill(j)}</div><div class="strong mt8">${j.id} · ${esc(j.dest)} · ${esc(j.slot)}</div><div class="small text-2">${esc(custName(j.customerId))}${j.address ? '' : ' · address awaiting confirmation'}</div></a>`).join('')}
     ${hist.length ? `<div class="m-label mt8">Yesterday</div>${hist.map(j => `<div class="m-card"><div class="between"><span class="strong">${j.id} · ${esc(j.dest)}</span>${deliveryPill(j)}</div></div>`).join('')}` : ''}
-  </div><div class="m-foot">Illustrative demo data · No live systems connected</div></div>`;
+  </div><div class="m-foot">${esc(disclosure().short)}</div>${driverActionBar(cur)}</div>`;
 }
 function driverJobCard(j, primary) {
   const ns = nextStage(j); const v = vehicle(j.vehicleId);
@@ -2626,23 +2652,43 @@ function driverJobCard(j, primary) {
     ${j.address ? `<div class="m-label mt16">Delivery address</div><div class="m-addr">${j.address.slice(0, -1).map(esc).join('<br>')}<br><b>${esc(j.address[j.address.length - 1])}</b></div><div class="small muted">Fictional demo address — postcode is not real or geocodable.</div>` : `<div class="m-label mt16">Delivery address</div>`}
     ${mapsBlock(j)}
     ${j.instructions ? `<div class="m-label mt16">Arrival instructions</div><p class="mt8">${esc(j.instructions)}</p>` : ''}
-    <div class="m-label mt16">Progress</div><div class="m-steps" aria-label="Progress">${steps}</div>
-    ${ns ? `<div class="mt16">${blocked ? `<div class="caveat warn mb8">${icon('alert')}<div>A safety-critical defect is open on ${v.id}. Do not depart until the transport office clears the vehicle.</div></div><button class="btn btn-primary m-btn" disabled>${STAGE_CTA[ns]}</button>` : `<button class="btn btn-primary m-btn" data-act="driverStage" data-id="${j.id}" data-arg="${ns}">${STAGE_CTA[ns]}</button>`}</div>` : '<p class="mt16 delta-ok">Delivery complete and POD submitted.</p>'}
+    <div class="between mt16"><span class="m-label">Progress</span><span class="small text-2">${ns ? `Step ${STAGES.indexOf(ns) + 1} of ${STAGES.length} · ${STAGE_LABEL[ns]}` : 'All steps complete'}</span></div><div class="m-steps mt8" aria-label="Progress">${steps}</div>
+    ${blocked ? `<div class="caveat warn mt12">${icon('alert')}<div>A safety-critical defect is open on ${v.id}. Do not depart until the transport office clears the vehicle.</div></div>` : ''}
+    ${!ns ? '<p class="mt12 delta-ok">Delivery complete and POD submitted.</p>' : ''}
     ${primary ? `<a class="btn btn-ghost btn-block mt8" href="#/driver-app/job/${j.id}">Job details and check-in times</a>` : ''}</div>`;
+}
+/* Pinned bottom bar: the next step is always within thumb reach, with undo for the last step. */
+const UNDO_MIN = 10;
+function lastUndo(j) {
+  const last = [...j.checkins].reverse().find(c => ['depart', 'arrive', 'unloading', 'complete'].includes(c.stage));
+  if (!last) return null;
+  if (last.stage === 'complete' && j.pod.status === 'received') return null;
+  if ((toD(nowIso()) - toD(last.at)) / 60000 > UNDO_MIN) return null;
+  return last;
+}
+function driverActionBar(j) {
+  if (!j) return '';
+  const ns = nextStage(j); const u = lastUndo(j);
+  const blocked = ns === 'depart' && openDefects(j.vehicleId).some(x => x.severity === 'safety');
+  if (!ns && !u) return '';
+  return `<div class="m-actionbar">
+    ${ns ? `<button class="btn btn-primary m-btn" data-act="driverStage" data-id="${j.id}" data-arg="${ns}" ${blocked ? 'disabled' : ''}>${STAGE_CTA[ns]}</button>` : ''}
+    ${u ? `<button class="btn btn-ghost btn-block m-undo" data-act="undoCheckin" data-id="${j.id}">${icon('back')}Undo “${STAGE_LABEL[u.stage]}” (${fmtTime(u.at)})</button>` : ''}
+  </div>`;
 }
 function renderDriverJob(j) {
   if (!j || j.driverId !== me().driverId) return `<div class="m-app">${driverTop()}<div class="m-body"><div class="m-card"><h3>Job not available</h3><p class="text-2 mt8">You can only see jobs assigned to you.</p><a class="btn m-btn mt16" href="#/driver-app">Back</a></div></div></div>`;
   return `<div class="m-app">${driverTop()}<div class="m-body"><a class="btn btn-ghost" style="align-self:flex-start" href="#/driver-app">${icon('back')}Today</a>${driverJobCard(j, false)}
-    <div class="m-card"><div class="m-label">Check-ins</div><ul class="timeline mt8">${STAGES.map(s => { const c = s === 'walkaround' ? walkDone(j.vehicleId) : j.checkins.find(x => x.stage === s); return `<li><span class="dot ${c ? 'done' : ''}"></span><div>${STAGE_LABEL[s]}</div><span class="small ${c ? '' : 'muted'}">${c ? fmtTime(c.at) : '—'}</span></li>`; }).join('')}</ul></div></div></div>`;
+    <div class="m-card"><div class="m-label">Check-ins</div><ul class="timeline mt8">${STAGES.map(s => { const c = s === 'walkaround' ? walkDone(j.vehicleId) : j.checkins.find(x => x.stage === s); return `<li><span class="dot ${c ? 'done' : ''}"></span><div>${STAGE_LABEL[s]}</div><span class="small ${c ? '' : 'muted'}">${c ? fmtTime(c.at) : '—'}</span></li>`; }).join('')}</ul></div></div>${driverActionBar(j)}</div>`;
 }
 function renderWalkaround(j) {
   if (!j) return renderDriverApp({ parts:['driver-app'] });
   const v = vehicle(j.vehicleId);
   return `<div class="m-app">${driverTop('Walkaround')}<form class="m-body" data-form="walkaround" data-id="${j.id}">
     <a class="btn btn-ghost" style="align-self:flex-start" href="#/driver-app">${icon('back')}Cancel</a>
-    <div><div class="m-big">Walkaround check</div><div class="text-2">${v.id} · ${v.type} · before first use today</div></div>
-    <div class="m-card">${WALK_ITEMS.map((it, i) => `<div class="m-check"><span>${esc(it)}</span><div class="seg" role="group" aria-label="${esc(it)}"><button type="button" class="on-ok" data-act="walkSet" data-i="${i}" data-v="pass" aria-pressed="true">Pass</button><button type="button" data-act="walkSet" data-i="${i}" data-v="defect" aria-pressed="false">Defect</button></div>
-      <input type="hidden" name="r${i}" value="pass"><div class="walk-defect" id="wd${i}" hidden style="grid-column:1/-1"><div class="field mt8"><label for="sev${i}">Severity</label><select class="select" id="sev${i}" name="sev${i}" style="height:44px"><option value="minor">Minor — safe to use, report for repair</option><option value="safety">Safety-critical — vehicle must not be used</option></select></div><div class="field"><label for="note${i}">Describe the defect</label><textarea class="input" id="note${i}" name="note${i}" placeholder="What did you find?"></textarea></div></div></div>`).join('')}</div>
+    <div><div class="m-big">Walkaround check</div><div class="text-2">${v.id} · ${v.type} · before first use today</div><div class="small mt8"><b id="walk-count">0 of ${WALK_ITEMS.length}</b> checked — mark each item Pass or Defect</div></div>
+    <div class="m-card">${WALK_ITEMS.map((it, i) => `<div class="m-check"><span>${esc(it)}</span><div class="seg" role="group" aria-label="${esc(it)}"><button type="button" data-act="walkSet" data-i="${i}" data-v="pass" aria-pressed="false">Pass</button><button type="button" data-act="walkSet" data-i="${i}" data-v="defect" aria-pressed="false">Defect</button></div>
+      <input type="hidden" name="r${i}" value=""><div class="walk-defect" id="wd${i}" hidden style="grid-column:1/-1"><div class="field mt8"><label for="sev${i}">Severity</label><select class="select" id="sev${i}" name="sev${i}" style="height:44px"><option value="minor">Minor — safe to use, report for repair</option><option value="safety">Safety-critical — vehicle must not be used</option></select></div><div class="field"><label for="note${i}">Describe the defect</label><textarea class="input" id="note${i}" name="note${i}" placeholder="What did you find?"></textarea></div></div></div>`).join('')}</div>
     <div class="caveat">${icon('info')}<div>Defects go straight to the transport office and are linked to ${v.id}. A safety-critical defect keeps the vehicle uncleared until it is assessed.</div></div>
     <button class="btn btn-primary m-btn" type="submit">Submit walkaround</button></form></div>`;
 }
@@ -2736,6 +2782,7 @@ function render() {
   done(r);
 }
 function done(r) {
+  document.body.classList.toggle('has-actionbar', !!document.querySelector('.m-actionbar'));
   const key = r.path + JSON.stringify(r.q);
   if (key !== lastPath) {
     const focus = r.q.focus;
@@ -2989,12 +3036,16 @@ const ACT = {
     const id = el.dataset.id, st = el.dataset.arg;
     if (st === 'walkaround') return go('#/driver-app/walkaround/' + id);
     if (st === 'pod') return go('#/driver-app/pod/' + id);
+    if (st === 'complete') return confirmModal('Confirm delivery complete?', 'This records the delivery time and notifies the customer. Only confirm once the goods are handed over.', 'Delivery complete', async () => { await Svc.checkin(id, st); toast(`Delivery complete · ${fmtTime(nowIso())}`); rerender(); });
     await Svc.checkin(id, st); toast(`${STAGE_LABEL[st]} · ${fmtTime(nowIso())}`); rerender();
   },
+  undoCheckin: async el => { const j = job(el.dataset.id); const u = lastUndo(j); if (!u) return toast('This step can no longer be undone here — contact the transport office.', 'err'); await Svc.undoCheckin(j.id); toast(`Undone: ${STAGE_LABEL[u.stage]}`); rerender(); },
   walkSet: async el => {
     const i = el.dataset.i, v = el.dataset.v, row = el.closest('.m-check');
     row.querySelectorAll('.seg button').forEach(b => { const on = b.dataset.v === v; b.className = on ? (v === 'pass' ? 'on-ok' : 'on-bad') : ''; b.setAttribute('aria-pressed', on); });
     row.querySelector(`input[name=r${i}]`).value = v; document.getElementById('wd' + i).hidden = v !== 'defect';
+    const done = [...document.querySelectorAll('form[data-form=walkaround] input[type=hidden]')].filter(x => x.value).length;
+    const c = document.getElementById('walk-count'); if (c) c.textContent = `${done} of ${WALK_ITEMS.length}`;
   },
   openMaps: async el => { const j = job(el.dataset.id); Modal.open({ title:'Open in Maps', sub:'Simulated hand-off', body:`<p class="text-2">On a phone this opens the driver's maps app with the delivery postcode <b>${esc(j.address[j.address.length - 1])}</b>.</p><div class="caveat warn mt12">${icon('alert')}<div>This is a fictional demo address with a non-real postcode, so no maps app is opened.</div></div>`, foot:'<button type="button" class="btn btn-primary m-btn" data-act="modalClose">Close</button>' }); },
   podSample: () => { const j = job(parseRoute().parts[2]); pendingPod = samplePod(j); showPodPreview('pod-prev', 'pod-submit'); },
@@ -3020,6 +3071,8 @@ const INPUT = {
 const FORMS = {
   walkaround: async (form, fd) => {
     const results = WALK_ITEMS.map((it, i) => ({ item: it, result: fd.get('r' + i), severity: fd.get('sev' + i), note: (fd.get('note' + i) || '').trim() }));
+    const unanswered = results.filter(r => !r.result);
+    if (unanswered.length) return toast(`Check every item before submitting — ${unanswered.length} still to mark (first: ${unanswered[0].item}).`, 'err');
     const bad = results.find(r => r.result === 'defect' && !r.note);
     if (bad) return toast(`Describe the defect for “${bad.item}”.`, 'err');
     const j = job(form.dataset.id); const w = await Svc.submitWalkaround(j.id, j.vehicleId, results);

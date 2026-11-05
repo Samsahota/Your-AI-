@@ -69,8 +69,15 @@ try {
   // Scene E — driver on a phone
   await signOutUI(); await p.setViewportSize({ width: 390, height: 844 }); await signIn('d04@transhaul.example'); t = await text();
   ok('E driver app opens on TODAY-05', t.includes('TODAY-05') && t.includes('ZZ4 7KT') && !t.includes('£'));
-  await p.click('button[data-arg=walkaround]'); await wait(300); await p.click('form[data-form=walkaround] button[type=submit]'); await wait(1000);
-  for (const s of ['depart', 'arrive', 'unloading', 'complete']) { await p.click(`button[data-arg=${s}]`); await wait(900); }
+  await p.click('button[data-arg=walkaround]'); await wait(300);
+  for (const btn of await p.$$('button[data-act=walkSet][data-v=pass]')) await btn.click();
+  await p.click('form[data-form=walkaround] button[type=submit]'); await wait(1000);
+  for (const s of ['depart', 'arrive', 'unloading']) { await p.click(`button[data-arg=${s}]`); await wait(900); }
+  await p.click('button[data-arg=complete]'); await wait(300); await submitModal(); await wait(600);
+  ok('E undo of accidental completion works against the database', (await text()).includes('Undo “Delivery complete”'));
+  await p.click('button[data-act=undoCheckin]'); await wait(1000);
+  ok('E job back on site after undo', !(await text()).includes('Upload POD'));
+  await p.click('button[data-arg=complete]'); await wait(300); await submitModal(); await wait(900);
   t = await text(); ok('E next task is POD', t.includes('Upload POD'));
   await p.click('button[data-arg=pod]'); await wait(300); await p.click('button[data-act=podSample]'); await wait(300); await p.click('#pod-submit'); await wait(1500);
   t = await text(); ok('E driver moves on to TODAY-19', t.includes('TODAY-19'));

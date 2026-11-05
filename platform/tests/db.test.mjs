@@ -113,6 +113,15 @@ test('Scene E: driver sees only own work and must follow the check-in order', as
   const [d] = await as(U.tm, `select count(*)::int n from defects where vehicle_id='V011' and status='open'`); assert.equal(d.n, 1);
   await rejects(as(U.d04, `select driver_checkin('TODAY-05', 'arrive')`), /Depart before arriving/);
   for (const s of ['depart', 'arrive', 'unloading', 'complete']) await as(U.d04, `select driver_checkin('TODAY-05', $1)`, [s]);
+  // accidental "complete": undo restores on-site and cancels the queued customer email, then redo
+  assert.equal((await as(U.d04, `select undo_checkin('TODAY-05') as s`))[0].s, 'complete');
+  const [u] = await as(U.paul, `select status, pod_status, invoice_status from jobs where id='TODAY-05'`);
+  assert.deepEqual([u.status, u.pod_status, u.invoice_status], ['on_site', 'n/a', 'not_due']);
+  assert.deepEqual((await as(U.paul, `select status from notifications`)).map(x => x.status), ['cancelled']);
+  await rejects(as(U.lisa, `select undo_checkin('TODAY-05')`), /Only drivers/);
+  await db.query(`update notifications set status = 'cancelled'`);
+  await as(U.d04, `select driver_checkin('TODAY-05', 'complete')`);
+  await db.query(`delete from notifications where status = 'cancelled'`);
   const [j] = await as(U.paul, `select status, pod_status, invoice_status from jobs where id='TODAY-05'`);
   assert.deepEqual([j.status, j.pod_status, j.invoice_status], ['delivered', 'missing', 'pending']);
   const n = await as(U.paul, `select contact_id, status, subject from notifications`);
@@ -122,6 +131,7 @@ test('Scene E: driver sees only own work and must follow the check-in order', as
   await as(U.d04, `insert into storage.objects (bucket_id, name, owner) values ('pods', $1, auth.uid())`, [`${T}/TODAY-05/pod.jpg`]);
   await rejects(as(U.d04, `insert into storage.objects (bucket_id, name) values ('pods', $1)`, [`${T}/TODAY-03/pod.jpg`]), /row-level security/);
   await as(U.d04, `select record_pod('TODAY-05', $1, 'pod.jpg')`, [`${T}/TODAY-05/pod.jpg`]);
+  await rejects(as(U.d04, `select undo_checkin('TODAY-05')`), /POD has been recorded/);
   const [p] = await as(U.paul, `select * from v_pod_billing`);
   assert.deepEqual([p.pods_missing, p.not_invoiced, p.ready_to_invoice].map(Number), [4, 8, 4]);
 });

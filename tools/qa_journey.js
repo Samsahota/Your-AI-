@@ -128,7 +128,19 @@ const results = []; const ok = (name, cond, extra='') => { results.push([cond ? 
   await p.click('button[data-arg=walkaround]'); await p.waitForTimeout(150);
   await p.screenshot({ path: 'shots/E-walkaround.png', fullPage: true });
   await p.click('button[type=submit]'); await p.waitForTimeout(150);
-  for (const st of ['depart','arrive','unloading','complete']) { await p.click(`button[data-arg=${st}]`); await p.waitForTimeout(150); }
+  ok('E walkaround cannot be submitted unchecked', await p.evaluate(() => S().walkarounds.length) === 0);
+  for (const b of await p.$$('button[data-act=walkSet][data-v=pass]')) await b.click();
+  await p.click('button[type=submit]'); await p.waitForTimeout(150);
+  for (const st of ['depart','arrive']) { await p.click(`button[data-arg=${st}]`); await p.waitForTimeout(150); }
+  ok('E undo offered for last step', (await text()).includes('Undo “Arrived at customer”'));
+  await p.click('button[data-act=undoCheckin]'); await p.waitForTimeout(150);
+  ok('E undo returns job to en route', await p.evaluate(() => job('TODAY-05').status) === 'en_route');
+  await p.click('button[data-arg=arrive]'); await p.waitForTimeout(150);
+  await p.click('button[data-arg=unloading]'); await p.waitForTimeout(150);
+  await p.click('button[data-arg=complete]'); await p.waitForTimeout(150);
+  ok('E delivery complete asks for confirmation', (await p.$eval('.modal', m => m.innerText)).includes('notifies the customer'));
+  await p.click('.modal button[type=submit]'); await p.waitForTimeout(200);
+  ok('E next step button pinned and visible without scrolling', await p.$eval('.m-actionbar button.btn-primary', b => { const r = b.getBoundingClientRect(); return r.bottom <= innerHeight && r.top >= 0; }));
   t = await text(); ok('E after complete, next is POD', t.includes('Upload POD'));
   await p.click('button[data-arg=pod]'); await p.waitForTimeout(150);
   await p.setInputFiles('#pod-file', { name: 'pod.png', mimeType: 'image/png', buffer: fs.readFileSync('shots/E-walkaround.png') }); await p.waitForTimeout(600);

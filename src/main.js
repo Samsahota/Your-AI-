@@ -45,6 +45,7 @@ function render() {
   done(r);
 }
 function done(r) {
+  document.body.classList.toggle('has-actionbar', !!document.querySelector('.m-actionbar'));
   const key = r.path + JSON.stringify(r.q);
   if (key !== lastPath) {
     const focus = r.q.focus;
@@ -298,12 +299,16 @@ const ACT = {
     const id = el.dataset.id, st = el.dataset.arg;
     if (st === 'walkaround') return go('#/driver-app/walkaround/' + id);
     if (st === 'pod') return go('#/driver-app/pod/' + id);
+    if (st === 'complete') return confirmModal('Confirm delivery complete?', 'This records the delivery time and notifies the customer. Only confirm once the goods are handed over.', 'Delivery complete', async () => { await Svc.checkin(id, st); toast(`Delivery complete · ${fmtTime(nowIso())}`); rerender(); });
     await Svc.checkin(id, st); toast(`${STAGE_LABEL[st]} · ${fmtTime(nowIso())}`); rerender();
   },
+  undoCheckin: async el => { const j = job(el.dataset.id); const u = lastUndo(j); if (!u) return toast('This step can no longer be undone here — contact the transport office.', 'err'); await Svc.undoCheckin(j.id); toast(`Undone: ${STAGE_LABEL[u.stage]}`); rerender(); },
   walkSet: async el => {
     const i = el.dataset.i, v = el.dataset.v, row = el.closest('.m-check');
     row.querySelectorAll('.seg button').forEach(b => { const on = b.dataset.v === v; b.className = on ? (v === 'pass' ? 'on-ok' : 'on-bad') : ''; b.setAttribute('aria-pressed', on); });
     row.querySelector(`input[name=r${i}]`).value = v; document.getElementById('wd' + i).hidden = v !== 'defect';
+    const done = [...document.querySelectorAll('form[data-form=walkaround] input[type=hidden]')].filter(x => x.value).length;
+    const c = document.getElementById('walk-count'); if (c) c.textContent = `${done} of ${WALK_ITEMS.length}`;
   },
   openMaps: async el => { const j = job(el.dataset.id); Modal.open({ title:'Open in Maps', sub:'Simulated hand-off', body:`<p class="text-2">On a phone this opens the driver's maps app with the delivery postcode <b>${esc(j.address[j.address.length - 1])}</b>.</p><div class="caveat warn mt12">${icon('alert')}<div>This is a fictional demo address with a non-real postcode, so no maps app is opened.</div></div>`, foot:'<button type="button" class="btn btn-primary m-btn" data-act="modalClose">Close</button>' }); },
   podSample: () => { const j = job(parseRoute().parts[2]); pendingPod = samplePod(j); showPodPreview('pod-prev', 'pod-submit'); },
@@ -329,6 +334,8 @@ const INPUT = {
 const FORMS = {
   walkaround: async (form, fd) => {
     const results = WALK_ITEMS.map((it, i) => ({ item: it, result: fd.get('r' + i), severity: fd.get('sev' + i), note: (fd.get('note' + i) || '').trim() }));
+    const unanswered = results.filter(r => !r.result);
+    if (unanswered.length) return toast(`Check every item before submitting — ${unanswered.length} still to mark (first: ${unanswered[0].item}).`, 'err');
     const bad = results.find(r => r.result === 'defect' && !r.note);
     if (bad) return toast(`Describe the defect for “${bad.item}”.`, 'err');
     const j = job(form.dataset.id); const w = await Svc.submitWalkaround(j.id, j.vehicleId, results);

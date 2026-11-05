@@ -157,6 +157,7 @@ Object.assign(Svc, {
   submitWalkaround: async (jobId, vehicleId, results) => { const r = await after(rpc('submit_walkaround', { p_job: jobId, p_results: results.map(x => ({ item: x.item, result: x.result, severity: x.result === 'defect' ? x.severity : null, note: x.note })) })); return { id: r.id, defects: r.defects }; },
   resolveDefect: (id, note) => after(rpc('resolve_defect', { p_id: id, p_note: note })),
   checkin: (jobId, stage) => after(rpc('driver_checkin', { p_job: jobId, p_stage: stage })),
+  undoCheckin: jobId => after(rpc('undo_checkin', { p_job: jobId })),
   podUpload: async (jobId, file) => {
     let path = null;
     if (file && file.dataUrl) {
