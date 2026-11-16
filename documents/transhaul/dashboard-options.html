@@ -1,0 +1,249 @@
+<title>Haulage Portal Options</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: one column of option cards; each card pairs a short brief with a greyscale wireframe drawn in CSS. */
+:root{
+  --bg:#F3F4F2; --panel:#FFFFFF; --ink:#1D2321; --muted:#5E6864; --line:#D9DDDA;
+  --wf:#E6E9E7; --wf2:#CDD3D0; --accent:#1F6F5C; --accent-soft:#DCEDE7;
+  --good:#2E7D4F; --warn:#B7791F; --bad:#C0392B;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#141817; --panel:#1C2120; --ink:#E7ECEA; --muted:#9AA5A0; --line:#2E3533;
+  --wf:#262D2B; --wf2:#36403D; --accent:#5FC3A6; --accent-soft:#1F3A33;
+  --good:#5BC489; --warn:#E0A84A; --bad:#E26A5C; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#141817; --panel:#1C2120; --ink:#E7ECEA; --muted:#9AA5A0; --line:#2E3533;
+  --wf:#262D2B; --wf2:#36403D; --accent:#5FC3A6; --accent-soft:#1F3A33;
+  --good:#5BC489; --warn:#E0A84A; --bad:#E26A5C; color-scheme:dark}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.55}
+.wrap{max-width:1120px;margin:0 auto;padding-block:40px 64px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));display:grid;gap:40px}
+h1,h2,h3{font-family:var(--display);text-wrap:balance;margin:0;line-height:1.2}
+h1{font-size:2rem} h2{font-size:1.4rem} h3{font-size:1.1rem}
+p{margin:0;max-width:68ch}
+.lede{color:var(--muted);font-size:1.02rem}
+.eyebrow{font-size:.72rem;letter-spacing:.08em;text-transform:uppercase;color:var(--muted);font-weight:600}
+header{display:grid;gap:10px}
+.rule{display:flex;flex-wrap:wrap;gap:8px;margin-top:6px}
+.chip{font-size:.78rem;padding:3px 10px;border-radius:999px;background:var(--accent-soft);color:var(--ink);border:1px solid var(--line)}
+.chip.no{background:transparent;color:var(--muted);text-decoration:line-through}
+section{display:grid;gap:16px}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:20px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1.35fr);gap:24px;align-items:start}
+@media (max-width:820px){.card{grid-template-columns:minmax(0,1fr)}}
+.brief{display:grid;gap:10px;min-width:0}
+.tag{display:inline-block;font-family:var(--display);font-weight:700;font-size:.8rem;color:var(--accent)}
+.brief ul{margin:0;padding-left:18px;display:grid;gap:4px}
+.meta{display:grid;grid-template-columns:auto 1fr;gap:4px 12px;font-size:.85rem}
+.meta dt{color:var(--muted)} .meta dd{margin:0}
+.price{font-variant-numeric:tabular-nums}
+/* wireframe primitives */
+.wf{border:1px solid var(--line);border-radius:8px;background:var(--bg);padding:10px;display:grid;gap:8px;min-width:0;font-size:.7rem;color:var(--muted)}
+.bar{display:flex;gap:6px;align-items:center}
+.logo{width:22px;height:10px;background:var(--accent);border-radius:2px}
+.nav{display:flex;gap:6px;flex-wrap:wrap}
+.nav i{display:block;height:8px;width:38px;border-radius:2px;background:var(--wf2)}
+.nav i.on{background:var(--accent)}
+.row{display:grid;gap:8px}
+.c2{grid-template-columns:repeat(2,minmax(0,1fr))}.c3{grid-template-columns:repeat(3,minmax(0,1fr))}.c4{grid-template-columns:repeat(4,minmax(0,1fr))}.c5{grid-template-columns:repeat(5,minmax(0,1fr))}
+.split{grid-template-columns:minmax(0,2fr) minmax(0,1fr)}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:5px;padding:7px;display:grid;gap:4px;min-height:34px;align-content:start}
+.box b{font-weight:600;color:var(--ink);font-size:.68rem}
+.num{font-family:var(--display);font-size:1rem;color:var(--ink);font-weight:600;font-variant-numeric:tabular-nums}
+.ln{height:5px;border-radius:2px;background:var(--wf2)} .ln.s{width:60%} .ln.m{width:80%}
+.st{height:4px;border-radius:2px} .st.g{background:var(--good)} .st.a{background:var(--warn)} .st.r{background:var(--bad)}
+.chart{height:46px;border-radius:3px;background:linear-gradient(to top,var(--wf2) 0 35%,transparent 35%) 0 0/12% 100% repeat-x,var(--wf)}
+.tall{min-height:90px}
+.li{display:flex;gap:5px;align-items:center}
+.dot{width:7px;height:7px;border-radius:50%;flex:none} .dot.r{background:var(--bad)} .dot.a{background:var(--warn)} .dot.g{background:var(--good)}
+.li .ln{flex:1}
+.phone{width:92px;border:1px solid var(--line);border-radius:12px;padding:8px 6px;background:var(--panel);display:grid;gap:5px}
+.btn{height:14px;border-radius:4px;background:var(--accent)}
+/* package matrix */
+.tbl{overflow-x:auto;background:var(--panel);border:1px solid var(--line);border-radius:10px}
+table{border-collapse:collapse;width:100%;min-width:720px;font-size:.88rem}
+th,td{padding:10px 12px;border-bottom:1px solid var(--line);text-align:left;vertical-align:top}
+thead th{font-family:var(--display);font-size:.9rem;background:var(--wf)}
+td.y{color:var(--good);font-weight:600} td.n{color:var(--muted)}
+tbody tr:last-child td{border-bottom:0}
+.note{font-size:.85rem;color:var(--muted)}
+.fit{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:12px}
+.fit div{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:14px;display:grid;gap:4px}
+@media (prefers-reduced-motion:no-preference){.card{transition:border-color .15s}.card:hover{border-color:var(--accent)}}
+</style>
+
+<div class="wrap">
+<header>
+  <span class="eyebrow">Discovery session · options sheet</span>
+  <h1>Haulage Portal: what it could look like</h1>
+  <p class="lede">Four packages you can grow through, and five ways to lay out the home screen. Point at what fits; we build from that. Every option reads data from the systems you already run. None of them replace your TMS.</p>
+  <div class="rule">
+    <span class="chip">Reads your TMS, tachograph, accounts</span>
+    <span class="chip">Enter data once, or not at all</span>
+    <span class="chip">Role-based: no £ for transport and drivers</span>
+    <span class="chip no">Job booking</span><span class="chip no">Routing</span><span class="chip no">Invoicing</span><span class="chip no">Drivers' hours calculation</span>
+  </div>
+</header>
+
+<section>
+  <h2>Packages: the system at each stage</h2>
+  <p class="note">Each stage keeps everything from the one before. Start small and switch on the next stage when it earns its place.</p>
+  <div class="tbl"><table>
+    <thead><tr><th>What you get</th><th>1 · Morning Dashboard</th><th>2 · Operator Core</th><th>3 · Core + Driver App</th><th>4 · Full Platform</th></tr></thead>
+    <tbody>
+      <tr><td>Director home screen (pick a layout below)</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Automatic feeds (TMS, tacho reports, accounts)</td><td class="y">1–2 feeds</td><td class="y">Up to 4</td><td class="y">Up to 4</td><td class="y">All agreed</td></tr>
+      <tr><td>Plan vs actual cost per job</td><td class="y">Summary</td><td class="y">Per job</td><td class="y">Per job</td><td class="y">Per job</td></tr>
+      <tr><td>Operations and transport manager views</td><td class="n">No</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Compliance: licences, MOTs, defects, infringements</td><td class="n">Alerts only</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Actions and follow-ups</td><td class="n">No</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>PODs and unbilled work</td><td class="n">Count only</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Policies and procedures library</td><td class="n">No</td><td class="y">Yes</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Driver app: walkarounds, check-ins, photo PODs</td><td class="n">No</td><td class="n">No</td><td class="y">Yes</td><td class="y">Yes</td></tr>
+      <tr><td>Customer tracking page and delivery emails</td><td class="n">No</td><td class="n">No</td><td class="n">Optional</td><td class="y">Yes</td></tr>
+      <tr><td>Cash and invoice-finance view</td><td class="n">No</td><td class="n">Optional</td><td class="n">Optional</td><td class="y">Yes</td></tr>
+      <tr><td>Indicative setup / monthly</td><td class="price">£1.5–2.5k / £200–350</td><td class="price">£4–7k / £450–750</td><td class="price">+£1.5–2.5k / +£150–250</td><td class="price">+ each add-on</td></tr>
+    </tbody>
+  </table></div>
+  <p class="note">Prices are starting ranges for discussion, not a quote. Each data connection is priced separately: £750–1,500 to set up an API connection, £500–1,000 for a report or file feed, then £50–75 a month to keep each one running.</p>
+</section>
+
+<section>
+  <h2>Package wireframes</h2>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Package 1</span><h3>Morning Dashboard</h3>
+      <p>One screen for the director. Numbers arrive overnight from the feeds; nobody types anything.</p>
+      <dl class="meta"><dt>Users</dt><dd>Director, plus one or two viewers</dd><dt>Screens</dt><dd>Dashboard, job list (read-only)</dd><dt>Good for</dt><dd>Proving the feeds work before buying more</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: single dashboard screen">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i></div></div>
+      <div class="row c4"><div class="box"><b>Revenue</b><span class="num">£••</span></div><div class="box"><b>Margin</b><span class="num">••%</span></div><div class="box"><b>Unbilled</b><span class="num">••</span></div><div class="box"><b>Alerts</b><span class="num">•</span></div></div>
+      <div class="box"><b>Plan vs actual, last 7 days</b><div class="chart"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Package 2</span><h3>Operator Core</h3>
+      <p>Adds the daily working views for operations and transport, and turns exceptions into owned actions.</p>
+      <dl class="meta"><dt>Users</dt><dd>Director, ops, transport, admin</dd><dt>Screens</dt><dd>Dashboard, Jobs &amp; margins, Operations, Compliance, Actions, Policies</dd><dt>Good for</dt><dd>Replacing spreadsheets and the shared-drive hub</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: dashboard with full navigation">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="row split">
+        <div class="row"><div class="row c3"><div class="box"><b>Margin</b><span class="num">••%</span></div><div class="box"><b>Unbilled</b><span class="num">£••</span></div><div class="box"><b>Defects</b><span class="num">•</span></div></div>
+          <div class="box"><b>Jobs today</b><div class="ln"></div><div class="ln m"></div><div class="ln s"></div></div></div>
+        <div class="box tall"><b>Actions due</b><div class="li"><span class="dot r"></span><div class="ln"></div></div><div class="li"><span class="dot a"></span><div class="ln"></div></div><div class="li"><span class="dot g"></span><div class="ln"></div></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Package 3</span><h3>Core + Driver App</h3>
+      <p>Drivers do walkaround checks, check-ins and photo PODs on their phone. Defects and PODs land in the office views straight away.</p>
+      <dl class="meta"><dt>Users</dt><dd>Package 2, plus every driver</dd><dt>Screens</dt><dd>Driver: today, walkaround, check-in, POD</dd><dt>Skip it if</dt><dd>Your TMS app or paper already does this well</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: office dashboard beside a driver phone screen">
+      <div class="row" style="grid-template-columns:minmax(0,1fr) auto;align-items:start">
+        <div class="row"><div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i><i></i></div></div>
+          <div class="row c2"><div class="box"><b>Walkarounds done</b><span class="num">•/•</span></div><div class="box"><b>PODs in</b><span class="num">••</span></div></div>
+          <div class="box"><b>Defects reported today</b><div class="li"><span class="dot r"></span><div class="ln"></div></div><div class="li"><span class="dot a"></span><div class="ln"></div></div></div></div>
+        <div class="phone"><b style="color:var(--ink);font-size:.65rem">Today</b><div class="ln"></div><div class="ln m"></div><div class="st g"></div><div class="ln s"></div><div class="btn"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Package 4</span><h3>Full Platform</h3>
+      <p>Adds customer tracking, delivery emails and the director's cash view. Each one switches on separately.</p>
+      <dl class="meta"><dt>Users</dt><dd>Everyone, plus customer contacts</dd><dt>Screens</dt><dd>Customer portal, Cash &amp; finance, Cover planning</dd><dt>Good for</dt><dd>Hauliers whose TMS has no customer portal</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: dashboard with cash panel and customer tracking">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div></div>
+      <div class="row c3"><div class="box"><b>Debtors</b><span class="num">£••k</span></div><div class="box"><b>Finance headroom</b><span class="num">£••k</span></div><div class="box"><b>On-time</b><span class="num">••%</span></div></div>
+      <div class="row c2"><div class="box"><b>Cash, 13 weeks</b><div class="chart"></div></div><div class="box"><b>Customer view</b><div class="st g"></div><div class="ln"></div><div class="ln s"></div></div></div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Home screen layouts</h2>
+  <p class="note">The same data, arranged five ways. Each role can have a different one. A sensible start: director on A or C, operations on B, transport on E.</p>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Layout A</span><h3>Five questions</h3>
+      <p>Five numbered sections down the page, each answering one question a director asks every morning.</p>
+      <ul><li>Are we making money on the work?</li><li>Where is margin leaking?</li><li>What's delivered but not billed?</li><li>Are we compliant and safe?</li><li>Is cash OK?</li></ul>
+      <dl class="meta"><dt>Best for</dt><dd>Directors who read top to bottom</dd><dt>Trade-off</dt><dd>Longer scroll</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: five stacked question sections">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i></div></div>
+      <div class="box"><b>1 · Making money?</b><div class="row c3"><span class="num">£••</span><span class="num">••%</span><div class="chart" style="height:22px"></div></div></div>
+      <div class="box"><b>2 · Margin leaking?</b><div class="ln m"></div><div class="ln s"></div></div>
+      <div class="box"><b>3 · Delivered, not billed?</b><div class="ln"></div></div>
+      <div class="box"><b>4 · Compliant and safe?</b><div class="row c4"><div class="st g"></div><div class="st g"></div><div class="st a"></div><div class="st r"></div></div></div>
+      <div class="box"><b>5 · Cash OK?</b><div class="ln s"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Layout B</span><h3>Exceptions first</h3>
+      <p>Only what needs a person today: red at the top, then amber. Everything that's fine stays out of sight until clicked.</p>
+      <dl class="meta"><dt>Best for</dt><dd>Operations managers</dd><dt>Trade-off</dt><dd>No overview when all is well</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: list of exceptions grouped by severity">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i></div></div>
+      <div class="box"><b>Needs action now · 3</b><div class="li"><span class="dot r"></span><div class="ln"></div></div><div class="li"><span class="dot r"></span><div class="ln m"></div></div><div class="li"><span class="dot r"></span><div class="ln s"></div></div></div>
+      <div class="box"><b>Today · 5</b><div class="li"><span class="dot a"></span><div class="ln"></div></div><div class="li"><span class="dot a"></span><div class="ln m"></div></div></div>
+      <div class="box"><b>All clear · 41 jobs, 18 vehicles</b><div class="st g"></div></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Layout C</span><h3>One-screen scorecard</h3>
+      <p>Eight to ten tiles, each with a number, a target and a red/amber/green state. Fits one screen with no scrolling; works on a wall TV.</p>
+      <dl class="meta"><dt>Best for</dt><dd>Directors, office wall screen</dd><dt>Trade-off</dt><dd>Less context per number</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: grid of scorecard tiles">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i></div></div>
+      <div class="row c4">
+        <div class="box"><b>Revenue</b><span class="num">£••</span><div class="st g"></div></div><div class="box"><b>Margin</b><span class="num">••%</span><div class="st a"></div></div><div class="box"><b>Cost/mile</b><span class="num">£•.••</span><div class="st g"></div></div><div class="box"><b>Unbilled</b><span class="num">••</span><div class="st r"></div></div>
+        <div class="box"><b>Defects</b><span class="num">•</span><div class="st a"></div></div><div class="box"><b>MOTs due</b><span class="num">•</span><div class="st g"></div></div><div class="box"><b>Infringements</b><span class="num">•</span><div class="st g"></div></div><div class="box"><b>Debtors</b><span class="num">£••k</span><div class="st a"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Layout D</span><h3>Today board</h3>
+      <p>Today's jobs as columns by status: planned, on the road, delivered, POD in, billed. Problems show as coloured cards in the column they're stuck in.</p>
+      <dl class="meta"><dt>Best for</dt><dd>Busy planning offices</dd><dt>Trade-off</dt><dd>Closest to a TMS screen; keep it read-only</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: five status columns of job cards">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i></div></div>
+      <div class="row c5">
+        <div class="box tall"><b>Planned</b><div class="ln"></div><div class="ln"></div><div class="ln m"></div></div>
+        <div class="box tall"><b>On road</b><div class="ln"></div><div class="st a"></div><div class="ln"></div></div>
+        <div class="box tall"><b>Delivered</b><div class="ln"></div><div class="ln m"></div></div>
+        <div class="box tall"><b>POD in</b><div class="ln"></div><div class="st r"></div></div>
+        <div class="box tall"><b>Billed</b><div class="ln s"></div></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="brief"><span class="tag">Layout E</span><h3>Compliance first</h3>
+      <p>Vehicles and drivers with their checks, expiries and open defects. No money anywhere on the screen.</p>
+      <dl class="meta"><dt>Best for</dt><dd>Transport managers, DVSA visits</dd><dt>Trade-off</dt><dd>Nothing on cost or margin, by design</dd></dl></div>
+    <div class="wf" aria-label="Wireframe: compliance counters above vehicle and driver lists">
+      <div class="bar"><span class="logo"></span><div class="nav"><i class="on"></i><i></i><i></i></div></div>
+      <div class="row c4"><div class="box"><b>Walkarounds</b><span class="num">•/•</span></div><div class="box"><b>Open defects</b><span class="num">•</span></div><div class="box"><b>Due in 30 days</b><span class="num">•</span></div><div class="box"><b>Infringements</b><span class="num">•</span></div></div>
+      <div class="row c2">
+        <div class="box"><b>Vehicles</b><div class="li"><span class="dot g"></span><div class="ln"></div></div><div class="li"><span class="dot a"></span><div class="ln"></div></div><div class="li"><span class="dot r"></span><div class="ln"></div></div></div>
+        <div class="box"><b>Drivers</b><div class="li"><span class="dot g"></span><div class="ln"></div></div><div class="li"><span class="dot g"></span><div class="ln"></div></div><div class="li"><span class="dot a"></span><div class="ln"></div></div></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section>
+  <h2>Questions to settle in the room</h2>
+  <div class="fit">
+    <div><b>Which package to start on?</b><span class="note">Most operators land on 2, or 3 if paper walkarounds are a pain.</span></div>
+    <div><b>Which layout per role?</b><span class="note">Director, operations and transport can each have a different one.</span></div>
+    <div><b>Which feeds first?</b><span class="note">TMS, tachograph reports, accounts. We connect each one; you send the API details or the reports.</span></div>
+    <div><b>What must the first screen answer?</b><span class="note">The three numbers checked first every morning, for each role.</span></div>
+  </div>
+</section>
+</div>
