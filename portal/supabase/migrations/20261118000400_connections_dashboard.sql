@@ -164,6 +164,7 @@ begin
         when bool_or(i ->> 'status' = 'red') then 'red'
         when bool_or(i ->> 'status' = 'amber') then 'amber'
         when bool_or(i ->> 'status' = 'green') then 'green'
+        when bool_or(i ->> 'status' = 'no_target') then 'no_target'
         else 'no_data' end,
       coalesce(bool_or(i ->> 'status' in ('no_data', 'stale', 'no_target')), false)
       into worst, incomplete

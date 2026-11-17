@@ -1,0 +1,2244 @@
+<title>Operations Platform Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: app frame (side menu + main) under a sticky login switcher; dashboard = bullseye left, measures right. */
+:root{
+  --bg:#F2F4F3; --panel:#FFFFFF; --ink:#18201D; --muted:#5B6662; --line:#D8DEDB; --soft:#E9EEEC;
+  --nav:#17221F; --nav-ink:#DDE6E2; --nav-muted:#8FA19A; --accent:#1C7A62;
+  --green:#2E8B57; --amber:#D99A1E; --red:#C8412F; --grey:#9AA6A1; --slate:#6E7F95;
+  --green-bg:#E3F2E9; --amber-bg:#FBF0D9; --red-bg:#F8E2DE; --grey-bg:#EEF1F0; --slate-bg:#E7ECF3;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1513; --panel:#18201D; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2B3532; --soft:#202A27;
+  --nav:#0B100E; --nav-ink:#DDE6E2; --nav-muted:#7F918A; --accent:#4FC3A1;
+  --green:#4CC183; --amber:#E9B24A; --red:#EF6F5C; --grey:#7D8A85; --slate:#8FA2BE;
+  --green-bg:#173225; --amber-bg:#3A2E14; --red-bg:#3D1F1A; --grey-bg:#232C29; --slate-bg:#212A38; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --panel:#18201D; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2B3532; --soft:#202A27;
+  --nav:#0B100E; --nav-ink:#DDE6E2; --nav-muted:#7F918A; --accent:#4FC3A1;
+  --green:#4CC183; --amber:#E9B24A; --red:#EF6F5C; --grey:#7D8A85; --slate:#8FA2BE;
+  --green-bg:#173225; --amber-bg:#3A2E14; --red-bg:#3D1F1A; --grey-bg:#232C29; --slate-bg:#212A38; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;margin:0}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.2}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+.top-in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.brand h1{font-size:1.1rem}.brand p{margin:0;color:var(--muted);font-size:.8rem}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.who button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.who button:focus-visible,.nav button:focus-visible,.seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.frame{max-width:1280px;margin:16px auto 48px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:860px){.frame{grid-template-columns:minmax(0,1fr)}}
+.nav{align-self:start;background:var(--nav);color:var(--nav-ink);border-radius:12px;padding:14px 10px;display:grid;gap:2px;align-content:start}
+.nav .co{padding:4px 8px 12px;border-bottom:1px solid #ffffff1a;margin-bottom:8px}
+.nav .co b{display:block;font-family:var(--display)}.nav .co span{color:var(--nav-muted);font-size:.78rem}
+.nav button{all:unset;display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:.88rem}
+.nav button.on{background:#ffffff14}
+.nav button[disabled]{color:var(--nav-muted);cursor:not-allowed}
+.nav small{font-size:.7rem;color:var(--nav-muted)}
+@media (max-width:860px){.nav{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.nav .co{grid-column:1/-1}}
+main{display:grid;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h2{font-size:1.05rem;margin-bottom:4px}.card .sub{color:var(--muted);font-size:.84rem;margin:0 0 12px}
+.dash{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1060px){.dash{grid-template-columns:minmax(0,1fr)}}
+svg.bull{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
+svg.bull text{font-family:var(--body)}
+.heads{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.tile .n{font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.tile .l{font-size:.78rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-green{color:var(--green);background:var(--green-bg)}.s-amber{color:var(--amber);background:var(--amber-bg)}.s-red{color:var(--red);background:var(--red-bg)}
+.s-no_data,.s-stale,.s-no_access{color:var(--grey);background:var(--grey-bg)}.s-no_target{color:var(--slate);background:var(--slate-bg)}
+.qgroup{display:grid;gap:6px;margin-bottom:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.qhead h3{font-size:.95rem}
+.m{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--soft)}
+.m .nm{min-width:0}.m .nm small{display:block;color:var(--muted);font-size:.74rem}
+.m .v{font-family:var(--display);font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.segs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.seg{font:inherit;font-size:.78rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 10px;border-radius:999px;cursor:pointer}
+.seg[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.hidden{color:var(--muted)}
+.lvl{font-size:.74rem;font-weight:600;padding:2px 6px;border-radius:6px}
+.lvl-full{color:var(--green);background:var(--green-bg)}.lvl-own{color:var(--amber);background:var(--amber-bg)}.lvl-none{color:var(--grey);background:var(--grey-bg)}
+.note{font-size:.82rem;color:var(--muted)}
+.banner{display:block;margin:12px 0 0;background:var(--slate-bg);border-radius:10px;padding:10px 12px;font-size:.84rem}
+.ok{color:var(--green);font-weight:600}
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><h1>Operations platform: setup preview</h1><p>Demo Haulage Ltd, a fictional test company. Every figure below came straight from the platform's database on <span id="day"></span>.</p></div>
+  <div class="who" id="who" role="group" aria-label="Sign in as"></div>
+</div></header>
+
+<div class="frame">
+  <nav class="nav" id="nav" aria-label="Menu"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const DATA = {
+  "generated": "2026-11-17T21:21:23.622Z",
+  "day": "2026-11-17",
+  "users": {
+    "admin": {
+      "label": "Platform admin (Sam, Your AI)",
+      "access": {
+        "mfa": true,
+        "name": "Platform Admin",
+        "role": "platform_admin",
+        "areas": {
+          "hs": "full",
+          "pnl": "full",
+          "cost": "full",
+          "people": "full",
+          "payroll": "full",
+          "records": "full",
+          "service": "full",
+          "settings": "full",
+          "dashboard": "full",
+          "compliance": "full",
+          "people_detail": "full"
+        },
+        "division": null,
+        "company_id": null
+      },
+      "dashboard": null,
+      "counts": {
+        "jobs": 10,
+        "job_costs": 10,
+        "warehouse_daily": 1,
+        "cost_daily": 1,
+        "pnl_lines": 1,
+        "payroll_periods": 1,
+        "staff": 20,
+        "people_events": 4,
+        "hr_cases": 1,
+        "incidents": 2,
+        "infringements": 2,
+        "compliance_items": 2,
+        "defects": 1
+      }
+    },
+    "director": {
+      "label": "Director",
+      "access": {
+        "mfa": true,
+        "name": "Dana Director",
+        "role": "director",
+        "areas": {
+          "hs": "full",
+          "pnl": "full",
+          "cost": "full",
+          "people": "full",
+          "payroll": "full",
+          "records": "full",
+          "service": "full",
+          "settings": "full",
+          "dashboard": "full",
+          "compliance": "full",
+          "people_detail": "full"
+        },
+        "division": null,
+        "company_id": "20000000-0000-4000-8000-00000000000a"
+      },
+      "dashboard": {
+        "day": "2026-11-17",
+        "company": "Demo Haulage Ltd",
+        "measures": [
+          {
+            "code": "compliance.infringements_7d",
+            "name": "Infringements (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 2,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 3,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "compliance",
+            "description": "Drivers' hours infringements recorded in the last 7 days."
+          },
+          {
+            "code": "compliance.overdue",
+            "name": "Overdue items",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 0,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "MOTs, inspections, checks, training and audit actions past their due date."
+          },
+          {
+            "code": "compliance.due_14",
+            "name": "Due in the next 14 days",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 2,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Compliance items due in the next 14 days."
+          },
+          {
+            "code": "compliance.open_defects",
+            "name": "Open vehicle defects",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Defects reported and not yet rectified."
+          },
+          {
+            "code": "cost.revenue_vs_plan",
+            "name": "Revenue against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 88.2,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 100,
+            "headline": true,
+            "quadrant": "cost",
+            "description": "Revenue for the month so far against the monthly plan, pro rata to the day."
+          },
+          {
+            "code": "cost.job_cost_vs_plan",
+            "name": "Job cost against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 108.3,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 105,
+            "green_at": 100,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Actual cost of jobs delivered on the day as a percentage of their planned cost."
+          },
+          {
+            "code": "cost.cost_per_case",
+            "name": "Warehouse cost per case",
+            "unit": "£",
+            "scope": "all",
+            "value": 1.5,
+            "better": "lower",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Warehouse costs for the day divided by cases handled."
+          },
+          {
+            "code": "hs.accidents_mtd",
+            "name": "Accidents this month",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 1,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "hs",
+            "description": "Accidents and personal accidents recorded this month."
+          },
+          {
+            "code": "hs.near_misses_open",
+            "name": "Open near misses",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Near misses still open."
+          },
+          {
+            "code": "hs.days_since_accident",
+            "name": "Days since last accident",
+            "unit": "days",
+            "scope": "all",
+            "value": 47,
+            "better": "higher",
+            "status": "green",
+            "amber_at": 7,
+            "green_at": 30,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Days since the most recent accident or personal accident."
+          },
+          {
+            "code": "people.absence_pct",
+            "name": "Absence",
+            "unit": "%",
+            "scope": "all",
+            "value": 5,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 5,
+            "green_at": 3,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff absent on the day as a share of active staff."
+          },
+          {
+            "code": "people.holiday_pct",
+            "name": "On holiday",
+            "unit": "%",
+            "scope": "all",
+            "value": 10,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 25,
+            "green_at": 15,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff on holiday on the day as a share of active staff."
+          },
+          {
+            "code": "people.overtime_pct",
+            "name": "Overtime (last 7 days)",
+            "unit": "%",
+            "scope": "all",
+            "value": 2.4,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 15,
+            "green_at": 10,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Overtime hours in the last 7 days as a share of contracted hours."
+          },
+          {
+            "code": "people.wtd_breaches",
+            "name": "Working time breaches (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Working time directive breaches recorded in the last 7 days."
+          },
+          {
+            "code": "service.otif",
+            "name": "On time in full",
+            "unit": "%",
+            "scope": "all",
+            "value": 80,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": true,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time and in full, as a share of all jobs delivered that day."
+          },
+          {
+            "code": "service.on_time",
+            "name": "On time",
+            "unit": "%",
+            "scope": "all",
+            "value": 90,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time."
+          },
+          {
+            "code": "service.picks_per_hour",
+            "name": "Picks per labour hour",
+            "unit": "picks",
+            "scope": "all",
+            "value": 20,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Warehouse picks divided by labour hours for the day."
+          },
+          {
+            "code": "service.cases_per_hour",
+            "name": "Cases per labour hour (work rate)",
+            "unit": "cases",
+            "scope": "all",
+            "value": 10,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Cases handled divided by labour hours for the day."
+          }
+        ],
+        "quadrants": {
+          "hs": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "cost": {
+            "status": "red",
+            "incomplete": true
+          },
+          "people": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "service": {
+            "status": "red",
+            "incomplete": true
+          },
+          "compliance": {
+            "status": "red",
+            "incomplete": false
+          }
+        },
+        "connections": [
+          {
+            "label": "Bibby (invoice finance)",
+            "status": "waiting_access",
+            "system": "bibby",
+            "last_success_at": null
+          },
+          {
+            "label": "BrightPay (payroll)",
+            "status": "waiting_access",
+            "system": "brightpay",
+            "last_success_at": null
+          },
+          {
+            "label": "Falcon Tracking (DOT Tracking)",
+            "status": "waiting_access",
+            "system": "falcon",
+            "last_success_at": null
+          },
+          {
+            "label": "PreDrive (walkaround checks and defects)",
+            "status": "waiting_access",
+            "system": "predrive",
+            "last_success_at": null
+          },
+          {
+            "label": "SharePoint (Microsoft 365)",
+            "status": "waiting_access",
+            "system": "sharepoint",
+            "last_success_at": null
+          },
+          {
+            "label": "Tachomaster (drivers' hours)",
+            "status": "waiting_access",
+            "system": "tachomaster",
+            "last_success_at": null
+          },
+          {
+            "label": "Vigo (transport management)",
+            "status": "waiting_access",
+            "system": "vigo",
+            "last_success_at": null
+          },
+          {
+            "label": "Warehouse figures",
+            "status": "waiting_access",
+            "system": "warehouse",
+            "last_success_at": null
+          },
+          {
+            "label": "Xero (accounts)",
+            "status": "waiting_access",
+            "system": "xero",
+            "last_success_at": null
+          }
+        ],
+        "stale_sources": []
+      },
+      "counts": {
+        "jobs": 10,
+        "job_costs": 10,
+        "warehouse_daily": 1,
+        "cost_daily": 1,
+        "pnl_lines": 1,
+        "payroll_periods": 1,
+        "staff": 20,
+        "people_events": 4,
+        "hr_cases": 1,
+        "incidents": 2,
+        "infringements": 2,
+        "compliance_items": 2,
+        "defects": 1
+      }
+    },
+    "consultant": {
+      "label": "Consultant (full access)",
+      "access": {
+        "mfa": true,
+        "name": "Connor Consultant",
+        "role": "consultant",
+        "areas": {
+          "hs": "full",
+          "pnl": "full",
+          "cost": "full",
+          "people": "full",
+          "payroll": "full",
+          "records": "full",
+          "service": "full",
+          "settings": "none",
+          "dashboard": "full",
+          "compliance": "full",
+          "people_detail": "full"
+        },
+        "division": null,
+        "company_id": "20000000-0000-4000-8000-00000000000a"
+      },
+      "dashboard": {
+        "day": "2026-11-17",
+        "company": "Demo Haulage Ltd",
+        "measures": [
+          {
+            "code": "compliance.infringements_7d",
+            "name": "Infringements (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 2,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 3,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "compliance",
+            "description": "Drivers' hours infringements recorded in the last 7 days."
+          },
+          {
+            "code": "compliance.overdue",
+            "name": "Overdue items",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 0,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "MOTs, inspections, checks, training and audit actions past their due date."
+          },
+          {
+            "code": "compliance.due_14",
+            "name": "Due in the next 14 days",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 2,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Compliance items due in the next 14 days."
+          },
+          {
+            "code": "compliance.open_defects",
+            "name": "Open vehicle defects",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Defects reported and not yet rectified."
+          },
+          {
+            "code": "cost.revenue_vs_plan",
+            "name": "Revenue against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 88.2,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 100,
+            "headline": true,
+            "quadrant": "cost",
+            "description": "Revenue for the month so far against the monthly plan, pro rata to the day."
+          },
+          {
+            "code": "cost.job_cost_vs_plan",
+            "name": "Job cost against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 108.3,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 105,
+            "green_at": 100,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Actual cost of jobs delivered on the day as a percentage of their planned cost."
+          },
+          {
+            "code": "cost.cost_per_case",
+            "name": "Warehouse cost per case",
+            "unit": "£",
+            "scope": "all",
+            "value": 1.5,
+            "better": "lower",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Warehouse costs for the day divided by cases handled."
+          },
+          {
+            "code": "hs.accidents_mtd",
+            "name": "Accidents this month",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 1,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "hs",
+            "description": "Accidents and personal accidents recorded this month."
+          },
+          {
+            "code": "hs.near_misses_open",
+            "name": "Open near misses",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Near misses still open."
+          },
+          {
+            "code": "hs.days_since_accident",
+            "name": "Days since last accident",
+            "unit": "days",
+            "scope": "all",
+            "value": 47,
+            "better": "higher",
+            "status": "green",
+            "amber_at": 7,
+            "green_at": 30,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Days since the most recent accident or personal accident."
+          },
+          {
+            "code": "people.absence_pct",
+            "name": "Absence",
+            "unit": "%",
+            "scope": "all",
+            "value": 5,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 5,
+            "green_at": 3,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff absent on the day as a share of active staff."
+          },
+          {
+            "code": "people.holiday_pct",
+            "name": "On holiday",
+            "unit": "%",
+            "scope": "all",
+            "value": 10,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 25,
+            "green_at": 15,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff on holiday on the day as a share of active staff."
+          },
+          {
+            "code": "people.overtime_pct",
+            "name": "Overtime (last 7 days)",
+            "unit": "%",
+            "scope": "all",
+            "value": 2.4,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 15,
+            "green_at": 10,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Overtime hours in the last 7 days as a share of contracted hours."
+          },
+          {
+            "code": "people.wtd_breaches",
+            "name": "Working time breaches (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Working time directive breaches recorded in the last 7 days."
+          },
+          {
+            "code": "service.otif",
+            "name": "On time in full",
+            "unit": "%",
+            "scope": "all",
+            "value": 80,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": true,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time and in full, as a share of all jobs delivered that day."
+          },
+          {
+            "code": "service.on_time",
+            "name": "On time",
+            "unit": "%",
+            "scope": "all",
+            "value": 90,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time."
+          },
+          {
+            "code": "service.picks_per_hour",
+            "name": "Picks per labour hour",
+            "unit": "picks",
+            "scope": "all",
+            "value": 20,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Warehouse picks divided by labour hours for the day."
+          },
+          {
+            "code": "service.cases_per_hour",
+            "name": "Cases per labour hour (work rate)",
+            "unit": "cases",
+            "scope": "all",
+            "value": 10,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Cases handled divided by labour hours for the day."
+          }
+        ],
+        "quadrants": {
+          "hs": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "cost": {
+            "status": "red",
+            "incomplete": true
+          },
+          "people": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "service": {
+            "status": "red",
+            "incomplete": true
+          },
+          "compliance": {
+            "status": "red",
+            "incomplete": false
+          }
+        },
+        "connections": null,
+        "stale_sources": []
+      },
+      "counts": {
+        "jobs": 10,
+        "job_costs": 10,
+        "warehouse_daily": 1,
+        "cost_daily": 1,
+        "pnl_lines": 1,
+        "payroll_periods": 1,
+        "staff": 20,
+        "people_events": 4,
+        "hr_cases": 1,
+        "incidents": 2,
+        "infringements": 2,
+        "compliance_items": 2,
+        "defects": 1
+      }
+    },
+    "operations": {
+      "label": "Operations Manager",
+      "access": {
+        "mfa": true,
+        "name": "Olive Operations",
+        "role": "operations",
+        "areas": {
+          "hs": "full",
+          "pnl": "none",
+          "cost": "full",
+          "people": "full",
+          "payroll": "none",
+          "records": "full",
+          "service": "full",
+          "settings": "none",
+          "dashboard": "full",
+          "compliance": "full",
+          "people_detail": "none"
+        },
+        "division": null,
+        "company_id": "20000000-0000-4000-8000-00000000000a"
+      },
+      "dashboard": {
+        "day": "2026-11-17",
+        "company": "Demo Haulage Ltd",
+        "measures": [
+          {
+            "code": "compliance.infringements_7d",
+            "name": "Infringements (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 2,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 3,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "compliance",
+            "description": "Drivers' hours infringements recorded in the last 7 days."
+          },
+          {
+            "code": "compliance.overdue",
+            "name": "Overdue items",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 0,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "MOTs, inspections, checks, training and audit actions past their due date."
+          },
+          {
+            "code": "compliance.due_14",
+            "name": "Due in the next 14 days",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 2,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Compliance items due in the next 14 days."
+          },
+          {
+            "code": "compliance.open_defects",
+            "name": "Open vehicle defects",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Defects reported and not yet rectified."
+          },
+          {
+            "code": "cost.revenue_vs_plan",
+            "name": "Revenue against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 88.2,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 100,
+            "headline": true,
+            "quadrant": "cost",
+            "description": "Revenue for the month so far against the monthly plan, pro rata to the day."
+          },
+          {
+            "code": "cost.job_cost_vs_plan",
+            "name": "Job cost against plan",
+            "unit": "%",
+            "scope": "all",
+            "value": 108.3,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 105,
+            "green_at": 100,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Actual cost of jobs delivered on the day as a percentage of their planned cost."
+          },
+          {
+            "code": "cost.cost_per_case",
+            "name": "Warehouse cost per case",
+            "unit": "£",
+            "scope": "all",
+            "value": 1.5,
+            "better": "lower",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Warehouse costs for the day divided by cases handled."
+          },
+          {
+            "code": "hs.accidents_mtd",
+            "name": "Accidents this month",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 1,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "hs",
+            "description": "Accidents and personal accidents recorded this month."
+          },
+          {
+            "code": "hs.near_misses_open",
+            "name": "Open near misses",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Near misses still open."
+          },
+          {
+            "code": "hs.days_since_accident",
+            "name": "Days since last accident",
+            "unit": "days",
+            "scope": "all",
+            "value": 47,
+            "better": "higher",
+            "status": "green",
+            "amber_at": 7,
+            "green_at": 30,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Days since the most recent accident or personal accident."
+          },
+          {
+            "code": "people.absence_pct",
+            "name": "Absence",
+            "unit": "%",
+            "scope": "all",
+            "value": 5,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 5,
+            "green_at": 3,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff absent on the day as a share of active staff."
+          },
+          {
+            "code": "people.holiday_pct",
+            "name": "On holiday",
+            "unit": "%",
+            "scope": "all",
+            "value": 10,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 25,
+            "green_at": 15,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff on holiday on the day as a share of active staff."
+          },
+          {
+            "code": "people.overtime_pct",
+            "name": "Overtime (last 7 days)",
+            "unit": "%",
+            "scope": "all",
+            "value": 2.4,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 15,
+            "green_at": 10,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Overtime hours in the last 7 days as a share of contracted hours."
+          },
+          {
+            "code": "people.wtd_breaches",
+            "name": "Working time breaches (last 7 days)",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Working time directive breaches recorded in the last 7 days."
+          },
+          {
+            "code": "service.otif",
+            "name": "On time in full",
+            "unit": "%",
+            "scope": "all",
+            "value": 80,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": true,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time and in full, as a share of all jobs delivered that day."
+          },
+          {
+            "code": "service.on_time",
+            "name": "On time",
+            "unit": "%",
+            "scope": "all",
+            "value": 90,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time."
+          },
+          {
+            "code": "service.picks_per_hour",
+            "name": "Picks per labour hour",
+            "unit": "picks",
+            "scope": "all",
+            "value": 20,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Warehouse picks divided by labour hours for the day."
+          },
+          {
+            "code": "service.cases_per_hour",
+            "name": "Cases per labour hour (work rate)",
+            "unit": "cases",
+            "scope": "all",
+            "value": 10,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Cases handled divided by labour hours for the day."
+          }
+        ],
+        "quadrants": {
+          "hs": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "cost": {
+            "status": "red",
+            "incomplete": true
+          },
+          "people": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "service": {
+            "status": "red",
+            "incomplete": true
+          },
+          "compliance": {
+            "status": "red",
+            "incomplete": false
+          }
+        },
+        "connections": null,
+        "stale_sources": []
+      },
+      "counts": {
+        "jobs": 10,
+        "job_costs": 10,
+        "warehouse_daily": 1,
+        "cost_daily": 1,
+        "pnl_lines": 0,
+        "payroll_periods": 0,
+        "staff": 20,
+        "people_events": 4,
+        "hr_cases": 0,
+        "incidents": 2,
+        "infringements": 2,
+        "compliance_items": 2,
+        "defects": 1
+      }
+    },
+    "transport": {
+      "label": "Transport Manager",
+      "access": {
+        "mfa": true,
+        "name": "Toni Transport",
+        "role": "transport",
+        "areas": {
+          "hs": "full",
+          "pnl": "none",
+          "cost": "none",
+          "people": "own",
+          "payroll": "none",
+          "records": "own",
+          "service": "own",
+          "settings": "none",
+          "dashboard": "own",
+          "compliance": "own",
+          "people_detail": "none"
+        },
+        "division": "transport",
+        "company_id": "20000000-0000-4000-8000-00000000000a"
+      },
+      "dashboard": {
+        "day": "2026-11-17",
+        "company": "Demo Haulage Ltd",
+        "measures": [
+          {
+            "code": "compliance.infringements_7d",
+            "name": "Infringements (last 7 days)",
+            "unit": "count",
+            "scope": "transport",
+            "value": 2,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 3,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "compliance",
+            "description": "Drivers' hours infringements recorded in the last 7 days."
+          },
+          {
+            "code": "compliance.overdue",
+            "name": "Overdue items",
+            "unit": "count",
+            "scope": "transport",
+            "value": 1,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 0,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "MOTs, inspections, checks, training and audit actions past their due date."
+          },
+          {
+            "code": "compliance.due_14",
+            "name": "Due in the next 14 days",
+            "unit": "count",
+            "scope": "transport",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 2,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Compliance items due in the next 14 days."
+          },
+          {
+            "code": "compliance.open_defects",
+            "name": "Open vehicle defects",
+            "unit": "count",
+            "scope": "transport",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Defects reported and not yet rectified."
+          },
+          {
+            "code": "hs.accidents_mtd",
+            "name": "Accidents this month",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 1,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "hs",
+            "description": "Accidents and personal accidents recorded this month."
+          },
+          {
+            "code": "hs.near_misses_open",
+            "name": "Open near misses",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Near misses still open."
+          },
+          {
+            "code": "hs.days_since_accident",
+            "name": "Days since last accident",
+            "unit": "days",
+            "scope": "all",
+            "value": 47,
+            "better": "higher",
+            "status": "green",
+            "amber_at": 7,
+            "green_at": 30,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Days since the most recent accident or personal accident."
+          },
+          {
+            "code": "people.absence_pct",
+            "name": "Absence",
+            "unit": "%",
+            "scope": "transport",
+            "value": 10,
+            "better": "lower",
+            "status": "red",
+            "amber_at": 5,
+            "green_at": 3,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff absent on the day as a share of active staff."
+          },
+          {
+            "code": "people.holiday_pct",
+            "name": "On holiday",
+            "unit": "%",
+            "scope": "transport",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 25,
+            "green_at": 15,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff on holiday on the day as a share of active staff."
+          },
+          {
+            "code": "people.overtime_pct",
+            "name": "Overtime (last 7 days)",
+            "unit": "%",
+            "scope": "transport",
+            "value": 4.4,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 15,
+            "green_at": 10,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Overtime hours in the last 7 days as a share of contracted hours."
+          },
+          {
+            "code": "people.wtd_breaches",
+            "name": "Working time breaches (last 7 days)",
+            "unit": "count",
+            "scope": "transport",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Working time directive breaches recorded in the last 7 days."
+          },
+          {
+            "code": "service.otif",
+            "name": "On time in full",
+            "unit": "%",
+            "scope": "transport",
+            "value": 80,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": true,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time and in full, as a share of all jobs delivered that day."
+          },
+          {
+            "code": "service.on_time",
+            "name": "On time",
+            "unit": "%",
+            "scope": "transport",
+            "value": 90,
+            "better": "higher",
+            "status": "red",
+            "amber_at": 95,
+            "green_at": 98,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Jobs delivered on the day that arrived by the due time."
+          }
+        ],
+        "quadrants": {
+          "hs": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "cost": {
+            "status": "no_access",
+            "incomplete": false
+          },
+          "people": {
+            "status": "red",
+            "incomplete": false
+          },
+          "service": {
+            "status": "red",
+            "incomplete": false
+          },
+          "compliance": {
+            "status": "red",
+            "incomplete": false
+          }
+        },
+        "connections": null,
+        "stale_sources": []
+      },
+      "counts": {
+        "jobs": 10,
+        "job_costs": 0,
+        "warehouse_daily": 0,
+        "cost_daily": 0,
+        "pnl_lines": 0,
+        "payroll_periods": 0,
+        "staff": 10,
+        "people_events": 2,
+        "hr_cases": 0,
+        "incidents": 2,
+        "infringements": 2,
+        "compliance_items": 1,
+        "defects": 1
+      }
+    },
+    "warehouse": {
+      "label": "Warehouse Manager",
+      "access": {
+        "mfa": true,
+        "name": "Wes Warehouse",
+        "role": "warehouse",
+        "areas": {
+          "hs": "full",
+          "pnl": "none",
+          "cost": "own",
+          "people": "own",
+          "payroll": "none",
+          "records": "own",
+          "service": "own",
+          "settings": "none",
+          "dashboard": "own",
+          "compliance": "own",
+          "people_detail": "none"
+        },
+        "division": "warehouse",
+        "company_id": "20000000-0000-4000-8000-00000000000a"
+      },
+      "dashboard": {
+        "day": "2026-11-17",
+        "company": "Demo Haulage Ltd",
+        "measures": [
+          {
+            "code": "compliance.overdue",
+            "name": "Overdue items",
+            "unit": "count",
+            "scope": "warehouse",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 0,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "MOTs, inspections, checks, training and audit actions past their due date."
+          },
+          {
+            "code": "compliance.due_14",
+            "name": "Due in the next 14 days",
+            "unit": "count",
+            "scope": "warehouse",
+            "value": 1,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 2,
+            "headline": false,
+            "quadrant": "compliance",
+            "description": "Compliance items due in the next 14 days."
+          },
+          {
+            "code": "cost.cost_per_case",
+            "name": "Warehouse cost per case",
+            "unit": "£",
+            "scope": "warehouse",
+            "value": 1.5,
+            "better": "lower",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "cost",
+            "description": "Warehouse costs for the day divided by cases handled."
+          },
+          {
+            "code": "hs.accidents_mtd",
+            "name": "Accidents this month",
+            "unit": "count",
+            "scope": "all",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 1,
+            "green_at": 0,
+            "headline": true,
+            "quadrant": "hs",
+            "description": "Accidents and personal accidents recorded this month."
+          },
+          {
+            "code": "hs.near_misses_open",
+            "name": "Open near misses",
+            "unit": "count",
+            "scope": "all",
+            "value": 1,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Near misses still open."
+          },
+          {
+            "code": "hs.days_since_accident",
+            "name": "Days since last accident",
+            "unit": "days",
+            "scope": "all",
+            "value": 47,
+            "better": "higher",
+            "status": "green",
+            "amber_at": 7,
+            "green_at": 30,
+            "headline": false,
+            "quadrant": "hs",
+            "description": "Days since the most recent accident or personal accident."
+          },
+          {
+            "code": "people.absence_pct",
+            "name": "Absence",
+            "unit": "%",
+            "scope": "warehouse",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 5,
+            "green_at": 3,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff absent on the day as a share of active staff."
+          },
+          {
+            "code": "people.holiday_pct",
+            "name": "On holiday",
+            "unit": "%",
+            "scope": "warehouse",
+            "value": 20,
+            "better": "lower",
+            "status": "amber",
+            "amber_at": 25,
+            "green_at": 15,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Staff on holiday on the day as a share of active staff."
+          },
+          {
+            "code": "people.overtime_pct",
+            "name": "Overtime (last 7 days)",
+            "unit": "%",
+            "scope": "warehouse",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 15,
+            "green_at": 10,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Overtime hours in the last 7 days as a share of contracted hours."
+          },
+          {
+            "code": "people.wtd_breaches",
+            "name": "Working time breaches (last 7 days)",
+            "unit": "count",
+            "scope": "warehouse",
+            "value": 0,
+            "better": "lower",
+            "status": "green",
+            "amber_at": 2,
+            "green_at": 0,
+            "headline": false,
+            "quadrant": "people",
+            "description": "Working time directive breaches recorded in the last 7 days."
+          },
+          {
+            "code": "service.picks_per_hour",
+            "name": "Picks per labour hour",
+            "unit": "picks",
+            "scope": "warehouse",
+            "value": 20,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Warehouse picks divided by labour hours for the day."
+          },
+          {
+            "code": "service.cases_per_hour",
+            "name": "Cases per labour hour (work rate)",
+            "unit": "cases",
+            "scope": "warehouse",
+            "value": 10,
+            "better": "higher",
+            "status": "no_target",
+            "amber_at": null,
+            "green_at": null,
+            "headline": false,
+            "quadrant": "service",
+            "description": "Cases handled divided by labour hours for the day."
+          }
+        ],
+        "quadrants": {
+          "hs": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "cost": {
+            "status": "no_target",
+            "incomplete": true
+          },
+          "people": {
+            "status": "amber",
+            "incomplete": false
+          },
+          "service": {
+            "status": "no_target",
+            "incomplete": true
+          },
+          "compliance": {
+            "status": "green",
+            "incomplete": false
+          }
+        },
+        "connections": null,
+        "stale_sources": []
+      },
+      "counts": {
+        "jobs": 0,
+        "job_costs": 0,
+        "warehouse_daily": 1,
+        "cost_daily": 1,
+        "pnl_lines": 0,
+        "payroll_periods": 0,
+        "staff": 10,
+        "people_events": 2,
+        "hr_cases": 0,
+        "incidents": 2,
+        "infringements": 0,
+        "compliance_items": 1,
+        "defects": 0
+      }
+    }
+  },
+  "admin": {
+    "companies": [
+      {
+        "name": "Demo Haulage Ltd",
+        "deal": "founding",
+        "setup_fee": 3000,
+        "monthly_fee": 300,
+        "status": "active",
+        "modules": []
+      },
+      {
+        "name": "Second Haulier Ltd",
+        "deal": "standard",
+        "setup_fee": 5000,
+        "monthly_fee": 500,
+        "status": "active",
+        "modules": []
+      }
+    ],
+    "users": [
+      {
+        "name": "Platform Admin",
+        "role": "platform_admin",
+        "division": null,
+        "status": "active",
+        "is_test": false,
+        "company": null
+      },
+      {
+        "name": "Dana Director",
+        "role": "director",
+        "division": null,
+        "status": "active",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Connor Consultant",
+        "role": "consultant",
+        "division": null,
+        "status": "active",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Lee Leaver",
+        "role": "operations",
+        "division": null,
+        "status": "suspended",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Olive Operations",
+        "role": "operations",
+        "division": null,
+        "status": "active",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Toni Transport",
+        "role": "transport",
+        "division": "transport",
+        "status": "active",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Tess Tester",
+        "role": "transport",
+        "division": "transport",
+        "status": "active",
+        "is_test": true,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Wes Warehouse",
+        "role": "warehouse",
+        "division": "warehouse",
+        "status": "active",
+        "is_test": false,
+        "company": "Demo Haulage Ltd"
+      },
+      {
+        "name": "Sid Second",
+        "role": "director",
+        "division": null,
+        "status": "active",
+        "is_test": false,
+        "company": "Second Haulier Ltd"
+      }
+    ],
+    "connections": [
+      {
+        "system": "bibby",
+        "label": "Bibby (invoice finance)",
+        "method": "file",
+        "status": "waiting_access",
+        "feeds": [],
+        "verified": false,
+        "notes": "No API found. Monthly statement export. Feeds the cash view add-on."
+      },
+      {
+        "system": "brightpay",
+        "label": "BrightPay (payroll)",
+        "method": "file",
+        "status": "waiting_access",
+        "feeds": [
+          "payroll_periods",
+          "people_events"
+        ],
+        "verified": false,
+        "notes": "No general API found. Payroll cost reaches Xero as a journal; hours, overtime and absence from a monthly CSV export."
+      },
+      {
+        "system": "falcon",
+        "label": "Falcon Tracking (DOT Tracking)",
+        "method": "api",
+        "status": "waiting_access",
+        "feeds": [
+          "jobs"
+        ],
+        "verified": false,
+        "notes": "Mileage, arrival times, idling. Scheduled daily reports by email are supported; API on request."
+      },
+      {
+        "system": "predrive",
+        "label": "PreDrive (walkaround checks and defects)",
+        "method": "api",
+        "status": "waiting_access",
+        "feeds": [
+          "defects",
+          "compliance_items"
+        ],
+        "verified": false,
+        "notes": "Described by Road Tech as DVSA compliant. We read results; we do not rebuild walkaround checks."
+      },
+      {
+        "system": "sharepoint",
+        "label": "SharePoint (Microsoft 365)",
+        "method": "oauth",
+        "status": "waiting_access",
+        "feeds": [
+          "staff",
+          "people_events",
+          "incidents",
+          "compliance_items",
+          "hr_cases"
+        ],
+        "verified": true,
+        "notes": "Microsoft Graph with Sites.Selected: access to named sites only, approved by their Microsoft admin. Spreadsheet layouts must stay the same."
+      },
+      {
+        "system": "tachomaster",
+        "label": "Tachomaster (drivers' hours)",
+        "method": "api",
+        "status": "waiting_access",
+        "feeds": [
+          "infringements",
+          "people_events"
+        ],
+        "verified": false,
+        "notes": "No public API found. Road Tech runs integrations for partners; ask once for Tachomaster, Falcon and PreDrive together. Tachomaster can email scheduled reports."
+      },
+      {
+        "system": "vigo",
+        "label": "Vigo (transport management)",
+        "method": "api",
+        "status": "waiting_access",
+        "feeds": [
+          "customers",
+          "jobs",
+          "job_costs"
+        ],
+        "verified": false,
+        "notes": "No public API documentation. Ask Vigo for read-only API docs and a key; until then a scheduled daily jobs export (CSV) emailed to the report inbox."
+      },
+      {
+        "system": "warehouse",
+        "label": "Warehouse figures",
+        "method": "file",
+        "status": "waiting_access",
+        "feeds": [
+          "warehouse_daily",
+          "cost_daily"
+        ],
+        "verified": false,
+        "notes": "Source not yet known: a warehouse system, the TMS, or spreadsheets."
+      },
+      {
+        "system": "xero",
+        "label": "Xero (accounts)",
+        "method": "oauth",
+        "status": "waiting_access",
+        "feeds": [
+          "pnl_lines",
+          "cost_daily"
+        ],
+        "verified": true,
+        "notes": "Public API. Trans Haul's Xero admin approves read-only access once. Developer pricing tiers since March 2026: check cost per connected company."
+      }
+    ],
+    "matrix": [
+      {
+        "role": "consultant",
+        "area": "compliance",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "cost",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "dashboard",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "hs",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "payroll",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "people",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "people_detail",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "pnl",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "records",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "service",
+        "level": "full"
+      },
+      {
+        "role": "consultant",
+        "area": "settings",
+        "level": "none"
+      },
+      {
+        "role": "director",
+        "area": "compliance",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "cost",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "dashboard",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "hs",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "payroll",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "people",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "people_detail",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "pnl",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "records",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "service",
+        "level": "full"
+      },
+      {
+        "role": "director",
+        "area": "settings",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "compliance",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "cost",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "dashboard",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "hs",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "payroll",
+        "level": "none"
+      },
+      {
+        "role": "operations",
+        "area": "people",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "people_detail",
+        "level": "none"
+      },
+      {
+        "role": "operations",
+        "area": "pnl",
+        "level": "none"
+      },
+      {
+        "role": "operations",
+        "area": "records",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "service",
+        "level": "full"
+      },
+      {
+        "role": "operations",
+        "area": "settings",
+        "level": "none"
+      },
+      {
+        "role": "transport",
+        "area": "compliance",
+        "level": "own"
+      },
+      {
+        "role": "transport",
+        "area": "cost",
+        "level": "none"
+      },
+      {
+        "role": "transport",
+        "area": "dashboard",
+        "level": "own"
+      },
+      {
+        "role": "transport",
+        "area": "hs",
+        "level": "full"
+      },
+      {
+        "role": "transport",
+        "area": "payroll",
+        "level": "none"
+      },
+      {
+        "role": "transport",
+        "area": "people",
+        "level": "own"
+      },
+      {
+        "role": "transport",
+        "area": "people_detail",
+        "level": "none"
+      },
+      {
+        "role": "transport",
+        "area": "pnl",
+        "level": "none"
+      },
+      {
+        "role": "transport",
+        "area": "records",
+        "level": "own"
+      },
+      {
+        "role": "transport",
+        "area": "service",
+        "level": "own"
+      },
+      {
+        "role": "transport",
+        "area": "settings",
+        "level": "none"
+      },
+      {
+        "role": "warehouse",
+        "area": "compliance",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "cost",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "dashboard",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "hs",
+        "level": "full"
+      },
+      {
+        "role": "warehouse",
+        "area": "payroll",
+        "level": "none"
+      },
+      {
+        "role": "warehouse",
+        "area": "people",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "people_detail",
+        "level": "none"
+      },
+      {
+        "role": "warehouse",
+        "area": "pnl",
+        "level": "none"
+      },
+      {
+        "role": "warehouse",
+        "area": "records",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "service",
+        "level": "own"
+      },
+      {
+        "role": "warehouse",
+        "area": "settings",
+        "level": "none"
+      }
+    ]
+  },
+  "mfaCheck": {
+    "jobsWithoutCode": 0,
+    "jobsWithCode": 10
+  }
+};
+const LABEL = {dashboard:'Dashboard',hs:'Health and Safety',service:'Service',cost:'Cost',people:'People',compliance:'Compliance',pnl:'Company P&L',payroll:'Payroll',people_detail:'Disciplinary detail',records:'Records',settings:'Users and settings'};
+const QUAD = {hs:'Health and Safety',service:'Service',cost:'Cost',people:'People',compliance:'Compliance'};
+const STATUS = {green:'On target',amber:'Watch',red:'Action needed',no_data:'No data',no_target:'Target not set',stale:'Not updated',no_access:'No access'};
+const COLOR = {green:'var(--green)',amber:'var(--amber)',red:'var(--red)',no_data:'var(--grey)',no_target:'var(--slate)',stale:'var(--grey)',no_access:'var(--grey)'};
+const FILL = {green:'var(--green-bg)',amber:'var(--amber-bg)',red:'var(--red-bg)',no_data:'var(--grey-bg)',no_target:'var(--slate-bg)',stale:'var(--grey-bg)',no_access:'var(--grey-bg)'};
+const TABLES = [['jobs','Jobs'],['job_costs','Job costs (£)'],['warehouse_daily','Warehouse days'],['cost_daily','Operational costs (£)'],['pnl_lines','Company P&L (£)'],['payroll_periods','Payroll (£)'],['staff','Staff'],['people_events','Holiday, absence, overtime'],['hr_cases','Disciplinary and grievance detail'],['incidents','Accidents and near misses'],['infringements','Infringements'],['compliance_items','Compliance due dates'],['defects','Vehicle defects']];
+const FEED = {customers:'Customers',jobs:'Jobs',job_costs:'Job costs',infringements:'Infringements',people_events:'Holiday, absence, overtime',defects:'Defects',compliance_items:'Compliance dates',pnl_lines:'Company P&L',cost_daily:'Costs',staff:'Staff',incidents:'Accidents and near misses',hr_cases:'Disciplinary and grievance',payroll_periods:'Payroll',warehouse_daily:'Warehouse activity'};
+const NAV = ['dashboard','hs','service','cost','people','compliance','records','settings'];
+let who = 'director', view = 'dashboard', quad = null;
+try { const s = localStorage.getItem('preview.who'); if (s && DATA.users[s]) who = s; } catch (e) {}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = (v, unit) => v == null ? '—' : unit === '%' ? `${Number(v).toFixed(1)}%` : unit === '£' ? `£${Number(v).toFixed(2)}` : Number(v).toLocaleString('en-GB');
+const pill = s => `<span class="pill s-${s}">${STATUS[s] || s}</span>`;
+const target = m => m.green_at == null ? 'No target yet' : `Green ${m.better === 'higher' ? '≥' : '≤'} ${fmt(m.green_at, m.unit)} · amber ${m.better === 'higher' ? '≥' : '≤'} ${fmt(m.amber_at, m.unit)}`;
+document.getElementById('day').textContent = new Date(DATA.day).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+function renderWho() {
+  document.getElementById('who').innerHTML = ['director','consultant','operations','transport','warehouse','admin']
+    .map(k => `<button type="button" id="who-${k}" data-who="${k}" aria-pressed="${k === who}">${esc(DATA.users[k].label)}</button>`).join('');
+}
+function renderNav() {
+  const u = DATA.users[who];
+  const a = u.access.areas;
+  const items = who === 'admin' ? ['admin'] : NAV;
+  document.getElementById('nav').innerHTML = `<div class="co"><b>${who === 'admin' ? 'All companies' : 'Demo Haulage Ltd'}</b><span>${esc(u.label)} · two-factor on</span></div>` +
+    items.map(k => {
+      if (k === 'admin') return `<button type="button" class="on">Admin console</button>`;
+      const lvl = a[k] || 'none';
+      const off = lvl === 'none';
+      return `<button type="button" data-view="${k}" class="${view === k ? 'on' : ''}" ${off ? 'disabled aria-disabled="true"' : ''}><span>${LABEL[k]}</span><small>${off ? 'No access' : lvl === 'own' ? 'Own area' : ''}</small></button>`;
+    }).join('');
+}
+
+function bullseye(q) {
+  const cx = 210, cy = 210, R = 196, r = 84;
+  const pt = (rad, deg) => [cx + rad * Math.cos(deg * Math.PI / 180), cy + rad * Math.sin(deg * Math.PI / 180)];
+  const wedge = (a1, a2, key) => {
+    const s = q[key].status; const [x1, y1] = pt(R, a1 + 2), [x2, y2] = pt(R, a2 - 2), [x3, y3] = pt(r, a2 - 2), [x4, y4] = pt(r, a1 + 2);
+    const [lx, ly] = pt((R + r) / 2, (a1 + a2) / 2);
+    return `<g data-quad="${key}" role="button" tabindex="0" aria-label="${QUAD[key]}: ${STATUS[s]}" style="cursor:pointer">
+      <path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 0 0 ${x4} ${y4}Z" fill="${FILL[s]}" stroke="${COLOR[s]}" stroke-width="${quad === key ? 3.5 : 1.75}" ${s === 'no_access' ? 'stroke-dasharray="5 4"' : ''}/>
+      <text x="${lx}" y="${ly - 4}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">${QUAD[key]}</text>
+      <text x="${lx}" y="${ly + 14}" text-anchor="middle" font-size="12" fill="var(--muted)">${STATUS[s]}${q[key].incomplete && s !== 'no_access' ? ' *' : ''}</text></g>`;
+  };
+  const h = q.hs.status;
+  return `<svg class="bull" viewBox="0 0 420 420" role="img" aria-label="Bullseye: Health and Safety ${STATUS[h]}">
+    ${wedge(-90, 0, 'service')}${wedge(0, 90, 'compliance')}${wedge(90, 180, 'people')}${wedge(180, 270, 'cost')}
+    <g data-quad="hs" role="button" tabindex="0" aria-label="Health and Safety: ${STATUS[h]}" style="cursor:pointer">
+      <circle cx="${cx}" cy="${cy}" r="${r - 8}" fill="${FILL[h]}" stroke="${COLOR[h]}" stroke-width="${quad === 'hs' ? 3.5 : 2}"/>
+      <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">Health and</text>
+      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">Safety</text>
+      <text x="${cx}" y="${cy + 32}" text-anchor="middle" font-size="12" fill="var(--muted)">${STATUS[h]}</text></g></svg>`;
+}
+
+function measureList(d, only) {
+  return Object.keys(QUAD).filter(k => !only || k === only).map(k => {
+    const ms = d.measures.filter(m => m.quadrant === k);
+    const st = d.quadrants[k].status;
+    const body = ms.length ? ms.map(m => `<div class="m"><div class="nm">${esc(m.name)}<small>${esc(target(m))}${m.scope !== 'all' ? ` · ${m.scope} figures only` : ''}</small></div><div class="v">${fmt(m.value, m.unit)}</div><div>${pill(m.status)}</div></div>`).join('')
+      : `<p class="note">This login has no access to ${QUAD[k]} figures.</p>`;
+    return `<div class="qgroup"><div class="qhead"><h3>${QUAD[k]}</h3>${pill(st)}</div>${body}</div>`;
+  }).join('');
+}
+
+function dashboardView() {
+  const u = DATA.users[who], d = u.dashboard;
+  const heads = d.measures.filter(m => m.headline);
+  return `<section class="card"><h2>Dashboard</h2><p class="sub">Click a quadrant to see the figures behind its colour. A quadrant takes the worst colour of the figures this person can see. * means some figures have no data or no target yet.</p>
+    <div class="dash"><div>${bullseye(d.quadrants)}
+      <div class="heads">${heads.map(m => `<div class="tile"><span class="l">${esc(m.name)}</span><span class="n">${fmt(m.value, m.unit)}</span>${pill(m.status)}</div>`).join('') || '<p class="note">No headline figures for this login.</p>'}</div></div>
+      <div><div class="segs" role="group" aria-label="Show">${['all', ...Object.keys(QUAD)].map(k => `<button type="button" class="seg" data-quad="${k === 'all' ? '' : k}" aria-pressed="${(quad || '') === (k === 'all' ? '' : k)}">${k === 'all' ? 'All' : QUAD[k]}</button>`).join('')}</div>
+      ${measureList(d, quad)}</div></div></section>` + accessView();
+}
+
+function accessView() {
+  const u = DATA.users[who];
+  const rows = TABLES.map(([t, l]) => { const n = u.counts[t]; const all = DATA.users.director.counts[t];
+    return `<tr><td>${l}</td><td class="num">${n === 0 && all > 0 ? '<span class="hidden">Hidden</span>' : n}</td><td class="num">${all}</td></tr>`; }).join('');
+  const ORDER = ['dashboard','hs','service','cost','pnl','people','people_detail','payroll','compliance','records','settings'];
+  const areas = Object.entries(u.access.areas).sort((x, y) => ORDER.indexOf(x[0]) - ORDER.indexOf(y[0])).map(([k, v]) => `<tr><td>${LABEL[k]}</td><td><span class="lvl lvl-${v}">${v === 'full' ? 'Full' : v === 'own' ? `Own area (${u.access.division})` : 'None'}</span></td></tr>`).join('');
+  return `<div class="grid2"><section class="card"><h2>What this login can read</h2><p class="sub">Rows the database returns to this person, against the company total. "Hidden" is enforced by the database, not by the screen.</p>
+      <div class="tbl"><table><thead><tr><th>Records</th><th class="num">Visible</th><th class="num">Company total</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+    <section class="card"><h2>Access levels</h2><p class="sub">The defaults agreed in the meeting. The Director can change them for their company.</p>
+      <div class="tbl"><table><tbody>${areas}</tbody></table></div>
+      <p class="banner">Two-factor check: without the authenticator code this Director's login reads <b>${DATA.mfaCheck.jobsWithoutCode}</b> jobs; with it, <b>${DATA.mfaCheck.jobsWithCode}</b>.</p></section></div>`;
+}
+
+function pageView(k) {
+  const d = DATA.users[who].dashboard;
+  if (QUAD[k]) return `<section class="card"><h2>${QUAD[k]}</h2><p class="sub">The figures behind this quadrant, for ${esc(DATA.users[who].label)}. The full page (records, comments, actions) is the next part of the build.</p>${measureList(d, k)}</section>`;
+  return `<section class="card"><h2>${LABEL[k]}</h2><p class="sub">This page is the next part of the build. The data and access rules behind it are already in place.</p></section>` + accessView();
+}
+
+function adminView() {
+  const A = DATA.admin;
+  const conn = A.connections.map(c => `<tr><td><b>${esc(c.label)}</b><br><span class="note">${esc(c.notes)}</span></td><td>${c.method.replace('_', ' ')}</td><td>${esc(c.feeds.map(f => FEED[f] || f).join(', ') || 'Cash view (add-on)')}</td><td><span class="pill s-no_data">${c.status === 'waiting_access' ? 'Waiting for access' : esc(c.status)}</span></td><td>${c.verified ? '<span class="ok">Public API</span>' : 'Needs supplier details'}</td></tr>`).join('');
+  const roles = ['director','consultant','operations','transport','warehouse'];
+  const ORDER = ['dashboard','hs','service','cost','pnl','people','people_detail','payroll','compliance','records','settings'];
+  const areas = [...new Set(A.matrix.map(r => r.area))].sort((x, y) => ORDER.indexOf(x) - ORDER.indexOf(y));
+  const lv = (r, a) => (A.matrix.find(x => x.role === r && x.area === a) || {}).level || 'none';
+  return `<section class="card"><h2>Admin console</h2><p class="sub">Sam's master access: every company, its users, its connections and the access matrix.</p>
+    <div class="tbl"><table><thead><tr><th>Company</th><th>Deal</th><th class="num">Setup</th><th class="num">Monthly</th><th>Status</th></tr></thead><tbody>${A.companies.map(c => `<tr><td>${esc(c.name)}</td><td>${c.deal === 'founding' ? 'Founding' : 'Standard'}</td><td class="num">£${c.setup_fee.toLocaleString('en-GB')}</td><td class="num">£${c.monthly_fee}</td><td>${esc(c.status)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><h2>Connections: Demo Haulage Ltd</h2><p class="sub">The eight systems Trans Haul runs, plus warehouse figures, set up the way Trans Haul's will start: waiting for access. Until a connection is live and its checks pass, its figures show as "not updated", never as green.</p>
+    <div class="tbl"><table><thead><tr><th>System</th><th>How</th><th>Fills</th><th>Status</th><th>Details</th></tr></thead><tbody>${conn}</tbody></table></div></section>
+    <section class="card"><h2>Users</h2><div class="tbl"><table><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Status</th></tr></thead><tbody>${A.users.map(p => `<tr><td>${esc(p.name)}${p.is_test ? ' <span class="note">(test login)</span>' : ''}</td><td>${esc(p.company || 'All')}</td><td>${esc(p.role.replace('_', ' '))}</td><td>${esc(p.status)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><h2>Access matrix</h2><p class="sub">Full, own area (own division) or none, per role. These are the proposed defaults until Paul confirms.</p><div class="tbl"><table><thead><tr><th>Area</th>${roles.map(r => `<th>${r}</th>`).join('')}</tr></thead><tbody>${areas.map(a => `<tr><td>${LABEL[a]}</td>${roles.map(r => `<td><span class="lvl lvl-${lv(r, a)}">${lv(r, a)}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+}
+
+function render() {
+  renderWho(); renderNav();
+  const main = document.getElementById('main');
+  main.innerHTML = who === 'admin' ? adminView() : view === 'dashboard' ? dashboardView() : pageView(view);
+}
+document.addEventListener('click', e => {
+  const w = e.target.closest('[data-who]'); if (w) { who = w.dataset.who; view = 'dashboard'; quad = null; try { localStorage.setItem('preview.who', who); } catch (x) {} return render(); }
+  const v = e.target.closest('[data-view]'); if (v && !v.disabled) { view = v.dataset.view; quad = null; return render(); }
+  const q = e.target.closest('[data-quad]'); if (q) { const k = q.dataset.quad || null; quad = quad === k ? null : k; if (DATA.users[who].dashboard.quadrants[k]?.status === 'no_access') quad = k; return render(); }
+});
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('g[data-quad]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', {bubbles: true})); } });
+render();
+</script>

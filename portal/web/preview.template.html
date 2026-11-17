@@ -1,0 +1,214 @@
+<title>Operations Platform Preview</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap">
+<style>
+/* Layout: app frame (side menu + main) under a sticky login switcher; dashboard = bullseye left, measures right. */
+:root{
+  --bg:#F2F4F3; --panel:#FFFFFF; --ink:#18201D; --muted:#5B6662; --line:#D8DEDB; --soft:#E9EEEC;
+  --nav:#17221F; --nav-ink:#DDE6E2; --nav-muted:#8FA19A; --accent:#1C7A62;
+  --green:#2E8B57; --amber:#D99A1E; --red:#C8412F; --grey:#9AA6A1; --slate:#6E7F95;
+  --green-bg:#E3F2E9; --amber-bg:#FBF0D9; --red-bg:#F8E2DE; --grey-bg:#EEF1F0; --slate-bg:#E7ECF3;
+  --display:"Space Grotesk",system-ui,sans-serif; --body:"Inter",system-ui,-apple-system,sans-serif;
+}
+@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){
+  --bg:#0F1513; --panel:#18201D; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2B3532; --soft:#202A27;
+  --nav:#0B100E; --nav-ink:#DDE6E2; --nav-muted:#7F918A; --accent:#4FC3A1;
+  --green:#4CC183; --amber:#E9B24A; --red:#EF6F5C; --grey:#7D8A85; --slate:#8FA2BE;
+  --green-bg:#173225; --amber-bg:#3A2E14; --red-bg:#3D1F1A; --grey-bg:#232C29; --slate-bg:#212A38; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0F1513; --panel:#18201D; --ink:#E6ECE9; --muted:#9AA8A2; --line:#2B3532; --soft:#202A27;
+  --nav:#0B100E; --nav-ink:#DDE6E2; --nav-muted:#7F918A; --accent:#4FC3A1;
+  --green:#4CC183; --amber:#E9B24A; --red:#EF6F5C; --grey:#7D8A85; --slate:#8FA2BE;
+  --green-bg:#173225; --amber-bg:#3A2E14; --red-bg:#3D1F1A; --grey-bg:#232C29; --slate-bg:#212A38; color-scheme:dark}
+*{box-sizing:border-box}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:14px;line-height:1.5;margin:0}
+h1,h2,h3{font-family:var(--display);margin:0;text-wrap:balance;line-height:1.2}
+.top{position:sticky;top:env(safe-area-inset-top,0px);z-index:5;background:var(--panel);border-bottom:1px solid var(--line);padding-block:12px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:10;background:var(--panel)}
+.top-in{max-width:1280px;margin:0 auto;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:center;justify-content:space-between}
+.brand h1{font-size:1.1rem}.brand p{margin:0;color:var(--muted);font-size:.8rem}
+.who{display:flex;flex-wrap:wrap;gap:6px}
+.who button{font:inherit;font-size:.82rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:6px 10px;border-radius:999px;cursor:pointer}
+.who button[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:#fff}
+.who button:focus-visible,.nav button:focus-visible,.seg:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.frame{max-width:1280px;margin:16px auto 48px;display:grid;grid-template-columns:220px minmax(0,1fr);gap:16px;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+@media (max-width:860px){.frame{grid-template-columns:minmax(0,1fr)}}
+.nav{align-self:start;background:var(--nav);color:var(--nav-ink);border-radius:12px;padding:14px 10px;display:grid;gap:2px;align-content:start}
+.nav .co{padding:4px 8px 12px;border-bottom:1px solid #ffffff1a;margin-bottom:8px}
+.nav .co b{display:block;font-family:var(--display)}.nav .co span{color:var(--nav-muted);font-size:.78rem}
+.nav button{all:unset;display:flex;justify-content:space-between;gap:8px;padding:8px 10px;border-radius:8px;cursor:pointer;font-size:.88rem}
+.nav button.on{background:#ffffff14}
+.nav button[disabled]{color:var(--nav-muted);cursor:not-allowed}
+.nav small{font-size:.7rem;color:var(--nav-muted)}
+@media (max-width:860px){.nav{grid-template-columns:repeat(auto-fit,minmax(130px,1fr))}.nav .co{grid-column:1/-1}}
+main{display:grid;gap:16px;min-width:0}
+.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:18px;min-width:0}
+.card h2{font-size:1.05rem;margin-bottom:4px}.card .sub{color:var(--muted);font-size:.84rem;margin:0 0 12px}
+.dash{display:grid;grid-template-columns:minmax(0,420px) minmax(0,1fr);gap:20px;align-items:start}
+@media (max-width:1060px){.dash{grid-template-columns:minmax(0,1fr)}}
+svg.bull{width:100%;max-width:420px;height:auto;display:block;margin:0 auto}
+svg.bull text{font-family:var(--body)}
+.heads{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:10px;margin-top:14px}
+.tile{border:1px solid var(--line);border-radius:10px;padding:10px 12px;display:grid;gap:2px}
+.tile .n{font-family:var(--display);font-size:1.4rem;font-variant-numeric:tabular-nums}
+.tile .l{font-size:.78rem;color:var(--muted)}
+.pill{display:inline-flex;align-items:center;gap:6px;font-size:.74rem;font-weight:600;padding:2px 8px;border-radius:999px;white-space:nowrap}
+.pill::before{content:"";width:7px;height:7px;border-radius:50%;background:currentColor}
+.s-green{color:var(--green);background:var(--green-bg)}.s-amber{color:var(--amber);background:var(--amber-bg)}.s-red{color:var(--red);background:var(--red-bg)}
+.s-no_data,.s-stale,.s-no_access{color:var(--grey);background:var(--grey-bg)}.s-no_target{color:var(--slate);background:var(--slate-bg)}
+.qgroup{display:grid;gap:6px;margin-bottom:14px}
+.qhead{display:flex;justify-content:space-between;align-items:center;gap:8px;border-bottom:1px solid var(--line);padding-bottom:4px}
+.qhead h3{font-size:.95rem}
+.m{display:grid;grid-template-columns:minmax(0,1fr) auto auto;gap:4px 12px;align-items:center;padding:6px 0;border-bottom:1px dashed var(--soft)}
+.m .nm{min-width:0}.m .nm small{display:block;color:var(--muted);font-size:.74rem}
+.m .v{font-family:var(--display);font-variant-numeric:tabular-nums;text-align:right;font-weight:600}
+.segs{display:flex;flex-wrap:wrap;gap:6px;margin-bottom:12px}
+.seg{font:inherit;font-size:.78rem;border:1px solid var(--line);background:var(--panel);color:var(--ink);padding:4px 10px;border-radius:999px;cursor:pointer}
+.seg[aria-pressed="true"]{border-color:var(--accent);color:var(--accent);font-weight:600}
+.grid2{display:grid;grid-template-columns:repeat(auto-fit,minmax(300px,1fr));gap:16px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-size:.84rem}
+th,td{text-align:left;padding:7px 8px;border-bottom:1px solid var(--line);vertical-align:top}
+th{font-size:.74rem;text-transform:uppercase;letter-spacing:.05em;color:var(--muted);font-weight:600}
+td.num{text-align:right;font-variant-numeric:tabular-nums}
+.hidden{color:var(--muted)}
+.lvl{font-size:.74rem;font-weight:600;padding:2px 6px;border-radius:6px}
+.lvl-full{color:var(--green);background:var(--green-bg)}.lvl-own{color:var(--amber);background:var(--amber-bg)}.lvl-none{color:var(--grey);background:var(--grey-bg)}
+.note{font-size:.82rem;color:var(--muted)}
+.banner{display:block;margin:12px 0 0;background:var(--slate-bg);border-radius:10px;padding:10px 12px;font-size:.84rem}
+.ok{color:var(--green);font-weight:600}
+</style>
+
+<header class="top"><div class="top-in">
+  <div class="brand"><h1>Operations platform: setup preview</h1><p>Demo Haulage Ltd, a fictional test company. Every figure below came straight from the platform's database on <span id="day"></span>.</p></div>
+  <div class="who" id="who" role="group" aria-label="Sign in as"></div>
+</div></header>
+
+<div class="frame">
+  <nav class="nav" id="nav" aria-label="Menu"></nav>
+  <main id="main"></main>
+</div>
+
+<script>
+const DATA = __DATA__;
+const LABEL = {dashboard:'Dashboard',hs:'Health and Safety',service:'Service',cost:'Cost',people:'People',compliance:'Compliance',pnl:'Company P&L',payroll:'Payroll',people_detail:'Disciplinary detail',records:'Records',settings:'Users and settings'};
+const QUAD = {hs:'Health and Safety',service:'Service',cost:'Cost',people:'People',compliance:'Compliance'};
+const STATUS = {green:'On target',amber:'Watch',red:'Action needed',no_data:'No data',no_target:'Target not set',stale:'Not updated',no_access:'No access'};
+const COLOR = {green:'var(--green)',amber:'var(--amber)',red:'var(--red)',no_data:'var(--grey)',no_target:'var(--slate)',stale:'var(--grey)',no_access:'var(--grey)'};
+const FILL = {green:'var(--green-bg)',amber:'var(--amber-bg)',red:'var(--red-bg)',no_data:'var(--grey-bg)',no_target:'var(--slate-bg)',stale:'var(--grey-bg)',no_access:'var(--grey-bg)'};
+const TABLES = [['jobs','Jobs'],['job_costs','Job costs (£)'],['warehouse_daily','Warehouse days'],['cost_daily','Operational costs (£)'],['pnl_lines','Company P&L (£)'],['payroll_periods','Payroll (£)'],['staff','Staff'],['people_events','Holiday, absence, overtime'],['hr_cases','Disciplinary and grievance detail'],['incidents','Accidents and near misses'],['infringements','Infringements'],['compliance_items','Compliance due dates'],['defects','Vehicle defects']];
+const FEED = {customers:'Customers',jobs:'Jobs',job_costs:'Job costs',infringements:'Infringements',people_events:'Holiday, absence, overtime',defects:'Defects',compliance_items:'Compliance dates',pnl_lines:'Company P&L',cost_daily:'Costs',staff:'Staff',incidents:'Accidents and near misses',hr_cases:'Disciplinary and grievance',payroll_periods:'Payroll',warehouse_daily:'Warehouse activity'};
+const NAV = ['dashboard','hs','service','cost','people','compliance','records','settings'];
+let who = 'director', view = 'dashboard', quad = null;
+try { const s = localStorage.getItem('preview.who'); if (s && DATA.users[s]) who = s; } catch (e) {}
+const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = (v, unit) => v == null ? '—' : unit === '%' ? `${Number(v).toFixed(1)}%` : unit === '£' ? `£${Number(v).toFixed(2)}` : Number(v).toLocaleString('en-GB');
+const pill = s => `<span class="pill s-${s}">${STATUS[s] || s}</span>`;
+const target = m => m.green_at == null ? 'No target yet' : `Green ${m.better === 'higher' ? '≥' : '≤'} ${fmt(m.green_at, m.unit)} · amber ${m.better === 'higher' ? '≥' : '≤'} ${fmt(m.amber_at, m.unit)}`;
+document.getElementById('day').textContent = new Date(DATA.day).toLocaleDateString('en-GB', {day:'numeric', month:'long', year:'numeric'});
+
+function renderWho() {
+  document.getElementById('who').innerHTML = ['director','consultant','operations','transport','warehouse','admin']
+    .map(k => `<button type="button" id="who-${k}" data-who="${k}" aria-pressed="${k === who}">${esc(DATA.users[k].label)}</button>`).join('');
+}
+function renderNav() {
+  const u = DATA.users[who];
+  const a = u.access.areas;
+  const items = who === 'admin' ? ['admin'] : NAV;
+  document.getElementById('nav').innerHTML = `<div class="co"><b>${who === 'admin' ? 'All companies' : 'Demo Haulage Ltd'}</b><span>${esc(u.label)} · two-factor on</span></div>` +
+    items.map(k => {
+      if (k === 'admin') return `<button type="button" class="on">Admin console</button>`;
+      const lvl = a[k] || 'none';
+      const off = lvl === 'none';
+      return `<button type="button" data-view="${k}" class="${view === k ? 'on' : ''}" ${off ? 'disabled aria-disabled="true"' : ''}><span>${LABEL[k]}</span><small>${off ? 'No access' : lvl === 'own' ? 'Own area' : ''}</small></button>`;
+    }).join('');
+}
+
+function bullseye(q) {
+  const cx = 210, cy = 210, R = 196, r = 84;
+  const pt = (rad, deg) => [cx + rad * Math.cos(deg * Math.PI / 180), cy + rad * Math.sin(deg * Math.PI / 180)];
+  const wedge = (a1, a2, key) => {
+    const s = q[key].status; const [x1, y1] = pt(R, a1 + 2), [x2, y2] = pt(R, a2 - 2), [x3, y3] = pt(r, a2 - 2), [x4, y4] = pt(r, a1 + 2);
+    const [lx, ly] = pt((R + r) / 2, (a1 + a2) / 2);
+    return `<g data-quad="${key}" role="button" tabindex="0" aria-label="${QUAD[key]}: ${STATUS[s]}" style="cursor:pointer">
+      <path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 0 0 ${x4} ${y4}Z" fill="${FILL[s]}" stroke="${COLOR[s]}" stroke-width="${quad === key ? 3.5 : 1.75}" ${s === 'no_access' ? 'stroke-dasharray="5 4"' : ''}/>
+      <text x="${lx}" y="${ly - 4}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">${QUAD[key]}</text>
+      <text x="${lx}" y="${ly + 14}" text-anchor="middle" font-size="12" fill="var(--muted)">${STATUS[s]}${q[key].incomplete && s !== 'no_access' ? ' *' : ''}</text></g>`;
+  };
+  const h = q.hs.status;
+  return `<svg class="bull" viewBox="0 0 420 420" role="img" aria-label="Bullseye: Health and Safety ${STATUS[h]}">
+    ${wedge(-90, 0, 'service')}${wedge(0, 90, 'compliance')}${wedge(90, 180, 'people')}${wedge(180, 270, 'cost')}
+    <g data-quad="hs" role="button" tabindex="0" aria-label="Health and Safety: ${STATUS[h]}" style="cursor:pointer">
+      <circle cx="${cx}" cy="${cy}" r="${r - 8}" fill="${FILL[h]}" stroke="${COLOR[h]}" stroke-width="${quad === 'hs' ? 3.5 : 2}"/>
+      <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">Health and</text>
+      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-weight="600" font-size="15" fill="var(--ink)">Safety</text>
+      <text x="${cx}" y="${cy + 32}" text-anchor="middle" font-size="12" fill="var(--muted)">${STATUS[h]}</text></g></svg>`;
+}
+
+function measureList(d, only) {
+  return Object.keys(QUAD).filter(k => !only || k === only).map(k => {
+    const ms = d.measures.filter(m => m.quadrant === k);
+    const st = d.quadrants[k].status;
+    const body = ms.length ? ms.map(m => `<div class="m"><div class="nm">${esc(m.name)}<small>${esc(target(m))}${m.scope !== 'all' ? ` · ${m.scope} figures only` : ''}</small></div><div class="v">${fmt(m.value, m.unit)}</div><div>${pill(m.status)}</div></div>`).join('')
+      : `<p class="note">This login has no access to ${QUAD[k]} figures.</p>`;
+    return `<div class="qgroup"><div class="qhead"><h3>${QUAD[k]}</h3>${pill(st)}</div>${body}</div>`;
+  }).join('');
+}
+
+function dashboardView() {
+  const u = DATA.users[who], d = u.dashboard;
+  const heads = d.measures.filter(m => m.headline);
+  return `<section class="card"><h2>Dashboard</h2><p class="sub">Click a quadrant to see the figures behind its colour. A quadrant takes the worst colour of the figures this person can see. * means some figures have no data or no target yet.</p>
+    <div class="dash"><div>${bullseye(d.quadrants)}
+      <div class="heads">${heads.map(m => `<div class="tile"><span class="l">${esc(m.name)}</span><span class="n">${fmt(m.value, m.unit)}</span>${pill(m.status)}</div>`).join('') || '<p class="note">No headline figures for this login.</p>'}</div></div>
+      <div><div class="segs" role="group" aria-label="Show">${['all', ...Object.keys(QUAD)].map(k => `<button type="button" class="seg" data-quad="${k === 'all' ? '' : k}" aria-pressed="${(quad || '') === (k === 'all' ? '' : k)}">${k === 'all' ? 'All' : QUAD[k]}</button>`).join('')}</div>
+      ${measureList(d, quad)}</div></div></section>` + accessView();
+}
+
+function accessView() {
+  const u = DATA.users[who];
+  const rows = TABLES.map(([t, l]) => { const n = u.counts[t]; const all = DATA.users.director.counts[t];
+    return `<tr><td>${l}</td><td class="num">${n === 0 && all > 0 ? '<span class="hidden">Hidden</span>' : n}</td><td class="num">${all}</td></tr>`; }).join('');
+  const ORDER = ['dashboard','hs','service','cost','pnl','people','people_detail','payroll','compliance','records','settings'];
+  const areas = Object.entries(u.access.areas).sort((x, y) => ORDER.indexOf(x[0]) - ORDER.indexOf(y[0])).map(([k, v]) => `<tr><td>${LABEL[k]}</td><td><span class="lvl lvl-${v}">${v === 'full' ? 'Full' : v === 'own' ? `Own area (${u.access.division})` : 'None'}</span></td></tr>`).join('');
+  return `<div class="grid2"><section class="card"><h2>What this login can read</h2><p class="sub">Rows the database returns to this person, against the company total. "Hidden" is enforced by the database, not by the screen.</p>
+      <div class="tbl"><table><thead><tr><th>Records</th><th class="num">Visible</th><th class="num">Company total</th></tr></thead><tbody>${rows}</tbody></table></div></section>
+    <section class="card"><h2>Access levels</h2><p class="sub">The defaults agreed in the meeting. The Director can change them for their company.</p>
+      <div class="tbl"><table><tbody>${areas}</tbody></table></div>
+      <p class="banner">Two-factor check: without the authenticator code this Director's login reads <b>${DATA.mfaCheck.jobsWithoutCode}</b> jobs; with it, <b>${DATA.mfaCheck.jobsWithCode}</b>.</p></section></div>`;
+}
+
+function pageView(k) {
+  const d = DATA.users[who].dashboard;
+  if (QUAD[k]) return `<section class="card"><h2>${QUAD[k]}</h2><p class="sub">The figures behind this quadrant, for ${esc(DATA.users[who].label)}. The full page (records, comments, actions) is the next part of the build.</p>${measureList(d, k)}</section>`;
+  return `<section class="card"><h2>${LABEL[k]}</h2><p class="sub">This page is the next part of the build. The data and access rules behind it are already in place.</p></section>` + accessView();
+}
+
+function adminView() {
+  const A = DATA.admin;
+  const conn = A.connections.map(c => `<tr><td><b>${esc(c.label)}</b><br><span class="note">${esc(c.notes)}</span></td><td>${c.method.replace('_', ' ')}</td><td>${esc(c.feeds.map(f => FEED[f] || f).join(', ') || 'Cash view (add-on)')}</td><td><span class="pill s-no_data">${c.status === 'waiting_access' ? 'Waiting for access' : esc(c.status)}</span></td><td>${c.verified ? '<span class="ok">Public API</span>' : 'Needs supplier details'}</td></tr>`).join('');
+  const roles = ['director','consultant','operations','transport','warehouse'];
+  const ORDER = ['dashboard','hs','service','cost','pnl','people','people_detail','payroll','compliance','records','settings'];
+  const areas = [...new Set(A.matrix.map(r => r.area))].sort((x, y) => ORDER.indexOf(x) - ORDER.indexOf(y));
+  const lv = (r, a) => (A.matrix.find(x => x.role === r && x.area === a) || {}).level || 'none';
+  return `<section class="card"><h2>Admin console</h2><p class="sub">Sam's master access: every company, its users, its connections and the access matrix.</p>
+    <div class="tbl"><table><thead><tr><th>Company</th><th>Deal</th><th class="num">Setup</th><th class="num">Monthly</th><th>Status</th></tr></thead><tbody>${A.companies.map(c => `<tr><td>${esc(c.name)}</td><td>${c.deal === 'founding' ? 'Founding' : 'Standard'}</td><td class="num">£${c.setup_fee.toLocaleString('en-GB')}</td><td class="num">£${c.monthly_fee}</td><td>${esc(c.status)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><h2>Connections: Demo Haulage Ltd</h2><p class="sub">The eight systems Trans Haul runs, plus warehouse figures, set up the way Trans Haul's will start: waiting for access. Until a connection is live and its checks pass, its figures show as "not updated", never as green.</p>
+    <div class="tbl"><table><thead><tr><th>System</th><th>How</th><th>Fills</th><th>Status</th><th>Details</th></tr></thead><tbody>${conn}</tbody></table></div></section>
+    <section class="card"><h2>Users</h2><div class="tbl"><table><thead><tr><th>Name</th><th>Company</th><th>Role</th><th>Status</th></tr></thead><tbody>${A.users.map(p => `<tr><td>${esc(p.name)}${p.is_test ? ' <span class="note">(test login)</span>' : ''}</td><td>${esc(p.company || 'All')}</td><td>${esc(p.role.replace('_', ' '))}</td><td>${esc(p.status)}</td></tr>`).join('')}</tbody></table></div></section>
+    <section class="card"><h2>Access matrix</h2><p class="sub">Full, own area (own division) or none, per role. These are the proposed defaults until Paul confirms.</p><div class="tbl"><table><thead><tr><th>Area</th>${roles.map(r => `<th>${r}</th>`).join('')}</tr></thead><tbody>${areas.map(a => `<tr><td>${LABEL[a]}</td>${roles.map(r => `<td><span class="lvl lvl-${lv(r, a)}">${lv(r, a)}</span></td>`).join('')}</tr>`).join('')}</tbody></table></div></section>`;
+}
+
+function render() {
+  renderWho(); renderNav();
+  const main = document.getElementById('main');
+  main.innerHTML = who === 'admin' ? adminView() : view === 'dashboard' ? dashboardView() : pageView(view);
+}
+document.addEventListener('click', e => {
+  const w = e.target.closest('[data-who]'); if (w) { who = w.dataset.who; view = 'dashboard'; quad = null; try { localStorage.setItem('preview.who', who); } catch (x) {} return render(); }
+  const v = e.target.closest('[data-view]'); if (v && !v.disabled) { view = v.dataset.view; quad = null; return render(); }
+  const q = e.target.closest('[data-quad]'); if (q) { const k = q.dataset.quad || null; quad = quad === k ? null : k; if (DATA.users[who].dashboard.quadrants[k]?.status === 'no_access') quad = k; return render(); }
+});
+document.addEventListener('keydown', e => { if ((e.key === 'Enter' || e.key === ' ') && e.target.matches('g[data-quad]')) { e.preventDefault(); e.target.dispatchEvent(new MouseEvent('click', {bubbles: true})); } });
+render();
+</script>

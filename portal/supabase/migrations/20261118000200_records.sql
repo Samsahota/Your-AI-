@@ -208,10 +208,15 @@ begin
   end loop;
 end $$;
 
--- People events follow the person's division.
+-- People events follow the person's division. The lookup must bypass staff's own row security:
+-- otherwise a manager who can't see a colleague gets "no division" back, which reads as
+-- company-wide and would leak that colleague's absences.
+create or replace function app.staff_division(p_staff uuid) returns division
+language sql stable security definer set search_path = public as $$ select division from staff where id = p_staff $$;
 alter table people_events enable row level security;
 create policy read_rows on people_events for select using (
-  app.sees(company_id, 'people', (select s.division from staff s where s.id = staff_id)));
+  app.sees(company_id, 'people', app.staff_division(staff_id))
+  and (app.access('people') = 'full' or app.is_admin() or app.staff_division(staff_id) is not null));
 grant select on people_events to authenticated;
 
 -- Counts of open disciplinary and grievance cases, for anyone with People access.

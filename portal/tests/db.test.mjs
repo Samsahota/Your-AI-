@@ -73,6 +73,9 @@ test('Transport Manager: transport figures only, no money, no personal detail', 
   }
   assert.equal(await count(U.transport, 'jobs'), 10);
   assert.equal(await count(U.transport, 'staff'), 10);                 // transport staff only
+  assert.equal(await count(U.transport, 'people_events'), 2);          // transport absences and overtime only
+  assert.equal(await count(U.warehouse, 'people_events'), 2);          // warehouse holidays only
+  assert.equal(await count(U.ops, 'people_events'), 4);
   assert.equal(await count(U.transport, 'compliance_items'), 1);       // the MOT, not the BRC action
   const counts = await as(U.transport, `select * from hr_case_counts()`);
   assert.deepEqual(counts.map(c => [c.division, c.kind, Number(c.open_cases)]), [['transport', 'disciplinary', 1]]);
@@ -86,6 +89,7 @@ test('Warehouse Manager: warehouse cost per case yes, transport jobs and company
   assert.equal(measure(d, 'cost.revenue_vs_plan'), undefined);
   assert.equal(measure(d, 'cost.job_cost_vs_plan'), undefined);
   assert.equal(measure(d, 'people.holiday_pct').value, 20);
+  assert.equal(d.quadrants.service.status, 'no_target');                // figures exist, targets not set yet
   assert.equal(await count(U.warehouse, 'jobs'), 0);
   assert.equal(await count(U.warehouse, 'job_costs'), 0);
   assert.equal(await count(U.warehouse, 'warehouse_daily'), 1);
