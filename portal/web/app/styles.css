@@ -1,4 +1,4 @@
-/* Operations platform. Layout: dark side menu + content column; cards for each section. */
+/* Clearpath. Layout: dark side menu + content column; cards for each section. */
 :root{
   --bg:#F2F4F3; --panel:#FFFFFF; --ink:#18201D; --muted:#5B6662; --line:#D8DEDB; --soft:#E9EEEC;
   --nav:#17221F; --nav-ink:#DDE6E2; --nav-muted:#8FA19A; --accent:#1C7A62; --accent-ink:#FFFFFF;
@@ -118,3 +118,6 @@ dialog.dlg .actions{display:flex;justify-content:flex-end;gap:8px}
 .toast{background:var(--ink);color:var(--bg);padding:10px 14px;border-radius:10px;font-size:.88rem;max-width:380px;box-shadow:0 6px 20px #0003}
 .toast-error{background:var(--red);color:#fff}
 @media (prefers-reduced-motion:no-preference){.tile,.attn a,.btn{transition:border-color .15s}}
+.brand{font-family:var(--display);font-weight:700;font-size:1.15rem;letter-spacing:.01em;color:var(--accent);margin:0}
+.side-brand{color:var(--nav-ink);padding:0 10px 10px;font-size:1.2rem}
+@media (max-width:900px){.side-brand{flex-basis:100%}}

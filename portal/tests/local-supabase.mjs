@@ -79,7 +79,7 @@ export function startLocalSupabase({ port = 54410, pgUrl, rootDir, config }) {
         const f = { id: crypto.randomUUID(), secret: newSecret(), status: 'unverified' };
         factors.set(c.sub, [...(factors.get(c.sub) || []).filter(x => x.status === 'verified'), f]);
         const email = (await userJson(c.sub)).email;
-        const uri = `otpauth://totp/Operations%20Platform:${encodeURIComponent(email)}?secret=${f.secret}&issuer=Operations%20Platform`;
+        const uri = `otpauth://totp/Clearpath:${encodeURIComponent(email)}?secret=${f.secret}&issuer=Clearpath`;
         const qr = `data:image/svg+xml;utf8,${encodeURIComponent('<svg xmlns="http://www.w3.org/2000/svg" width="160" height="160"><rect width="160" height="160" fill="#eee"/><text x="80" y="76" font-size="12" text-anchor="middle">Local test:</text><text x="80" y="94" font-size="12" text-anchor="middle">enter the key</text></svg>')}`;
         return send(res, 200, { id: f.id, type: 'totp', totp: { qr_code: qr, secret: f.secret, uri } });
       }

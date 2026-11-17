@@ -16,7 +16,7 @@ export const isManager = () => ctx.isAdmin || ['director', 'operations', 'consul
 // ---------------------------------------------------------------- sign-in
 function signInScreen(msg) {
   app.innerHTML = `<main class="auth"><form class="card auth-card" id="signin" novalidate>
-    <h1>Sign in</h1><p class="sub">Operations platform</p>
+    <p class="brand">Clearpath</p><h1>Sign in</h1>
     <label class="fld" for="email"><span>Email</span><input id="email" type="email" autocomplete="username" required></label>
     <label class="fld" for="password"><span>Password</span><input id="password" type="password" autocomplete="current-password" required></label>
     <p class="form-error" role="alert" ${msg ? '' : 'hidden'}>${esc(msg || '')}</p>
@@ -43,7 +43,7 @@ async function twoFactor() {
   const verified = factors.find(f => f.status === 'verified');
   if (verified) {
     app.innerHTML = `<main class="auth"><form class="card auth-card" id="mfa" novalidate><h1>Enter your code</h1>
-      <p class="sub">Open your authenticator app and enter the six-digit code for the operations platform.</p>
+      <p class="sub">Open your authenticator app and enter the six-digit code for Clearpath.</p>
       <label class="fld" for="code"><span>Code</span><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
       <p class="form-error" role="alert" hidden></p><button class="btn primary wide" type="submit">Sign in</button>
       <button class="btn ghost wide" type="button" id="cancel">Use a different account</button></form></main>`;
@@ -102,7 +102,7 @@ async function start() {
   if (!auth.signedIn()) return signInScreen();
   if (auth.aal() !== 'aal2') return twoFactor().catch(x => signInScreen(x.message));
   let p = await rpc('my_profile');
-  if (!p) return blocked('There is no operations platform account for this email. Ask your director to invite you.');
+  if (!p) return blocked('There is no Clearpath account for this email. Ask your director to invite you.');
   if (p.status === 'invited') { await rpc('accept_invitation'); p = await rpc('my_profile'); }
   if (p.status === 'suspended') return blocked('Your account has been suspended. Contact your director if you think this is a mistake.');
   ctx.profile = p; ctx.isAdmin = p.role === 'platform_admin';
@@ -128,7 +128,7 @@ export async function openCompany(id) {
 }
 
 function blocked(msg) {
-  app.innerHTML = `<main class="auth"><div class="card auth-card"><h1>Can't open the platform</h1><p>${esc(msg)}</p>
+  app.innerHTML = `<main class="auth"><div class="card auth-card"><h1>Can't open Clearpath</h1><p>${esc(msg)}</p>
     <button class="btn ghost wide" id="out">Sign out</button></div></main>`;
   $('#out').onclick = async () => { await auth.signOut(); signInScreen(); };
 }
@@ -152,7 +152,7 @@ function layout(active) {
     `<a class="nav-item ${active === 'me' ? 'on' : ''}" href="#/me">My account</a>`,
   ].join('');
   app.innerHTML = `<div class="shell">
-    <nav class="side" aria-label="Menu"><div class="co"><b>${esc(ctx.dash?.company || (ctx.isAdmin ? 'All companies' : p.company || ''))}</b>
+    <nav class="side" aria-label="Menu"><p class="brand side-brand">Clearpath</p><div class="co"><b>${esc(ctx.dash?.company || (ctx.isAdmin ? 'All companies' : p.company || ''))}</b>
       <span>${esc(p.name)} · ${esc(roleName(p.role))}${p.demo_view ? ' · demo view' : ''}</span></div>
       ${items}<div class="sep"></div>${manage}<button class="nav-item btn-link" id="signout" type="button">Sign out</button></nav>
     <main class="main" id="main" tabindex="-1"><p class="loading">Loading…</p></main></div>`;
