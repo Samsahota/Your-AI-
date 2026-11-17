@@ -29,6 +29,17 @@ async function as(user, sql, params = [], aal = 'aal2') {
     return r.rows;
   } catch (e) { await db.query('rollback to savepoint q'); await db.query('reset role'); throw e; }
 }
+// As the platform's own server functions run (the service key).
+async function asService(sql, params = []) {
+  await db.query('savepoint s');
+  try {
+    await db.query(`select set_config('request.jwt.claims', $1, true)`, [JSON.stringify({ role: 'service_role' })]);
+    await db.query('set local role service_role');
+    const r = await db.query(sql, params);
+    await db.query('reset role'); await db.query('release savepoint s');
+    return r.rows;
+  } catch (e) { await db.query('rollback to savepoint s'); await db.query('reset role'); throw e; }
+}
 const count = async (user, table, aal) => (await as(user, `select count(*)::int n from ${table}`, [], aal))[0].n;
 // A direct (superuser) query inside its own savepoint, so an expected error doesn't abort the test run.
 async function raw(sql, params = []) {
@@ -162,7 +173,8 @@ test('Connections: a failing feed marks its figures as not updated; secrets are 
   await rejects(as(U.director, `select save_connection($1, 'vigo', 'Jobs', 'api', '{jobs}')`, [A]), /Only the platform admin/);
   await rejects(as(U.admin, `select save_connection($1, 'vigo', 'Jobs', 'api', '{jobs}', 'nightly', '{"api_key": "abc"}')`, [A]), /vault/);
   const [{ id }] = await as(U.admin, `select save_connection($1, 'vigo', 'Jobs', 'api', '{jobs,job_costs}', 'nightly', '{"mapping": {}}', 'VIGO_KEY_DEMO') id`, [A]);
-  await as(U.admin, `select record_run($1, 'ok', 10, 10, '[{"name": "job count", "expected": 10, "actual": 9, "passed": false}]')`, [id]);
+  await rejects(as(U.admin, `select record_run($1, 'ok', 1, 1)`, [id]), /permission denied/);   // server only
+  await asService(`select record_run($1, 'ok', 10, 10, '[{"name": "job count", "expected": 10, "actual": 9, "passed": false}]')`, [id]);
   const [c] = await as(U.admin, `select status, last_error from connections where id = $1`, [id]);
   assert.equal(c.status, 'failing');
   const d = await dash(U.director);
@@ -170,7 +182,7 @@ test('Connections: a failing feed marks its figures as not updated; secrets are 
   assert.equal(measure(d, 'cost.job_cost_vs_plan').status, 'stale');
   assert.equal(d.quadrants.service.incomplete, true);
   assert.deepEqual(d.stale_sources.sort(), ['job_costs', 'jobs']);
-  await as(U.admin, `select record_run($1, 'ok', 10, 10, '[{"name": "job count", "expected": 10, "actual": 10, "passed": true}]')`, [id]);
+  await asService(`select record_run($1, 'ok', 10, 10, '[{"name": "job count", "expected": 10, "actual": 10, "passed": true}]')`, [id]);
   // Back to trusted figures. (Green, because the earlier test lowered the OTIF target to 75%.)
   assert.equal(measure(await dash(U.director), 'service.otif').status, 'green');
   assert.equal(await count(U.transport, 'connections'), 0);
@@ -274,4 +286,12 @@ test('File import: only checked records are written; a failed check writes nothi
   await as(U.admin, `select import_records($1, 'incidents', $2, '[{"name":"rows readable","passed":true}]', 1)`, [id, recs]);   // same file again: updates, no duplicate
   assert.equal((await as(U.director, `select count(*)::int n from incidents where source = 'sharepoint'`))[0].n, 1);
   assert.equal((await as(U.admin, `select status from connections where id = $1`, [id]))[0].status, 'connected');
+});
+
+test('Signed-in users cannot write to or empty any table directly; everything goes through checked functions', async () => {
+  await rejects(as(U.director, `insert into incidents (company_id, kind, occurred_at, description) values ($1, 'near_miss', now(), 'x')`, [A]), /permission denied/);
+  await rejects(as(U.director, `update jobs set status = 'cancelled'`), /permission denied/);
+  await rejects(as(U.director, `delete from comments`), /permission denied/);
+  await rejects(as(U.admin, `truncate audit_log`), /permission denied/);
+  await rejects(as(U.director, `select add_profile_for_invite($1, $1, $2, 'transport', 'X', 'x@x.test', null, 'transport', false)`, [U.director, A]), /permission denied/);
 });

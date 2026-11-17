@@ -12,6 +12,8 @@ const CORS = { 'Access-Control-Allow-Origin': APP_URL, 'Access-Control-Allow-Hea
 const reply = (status: number, body: unknown) => new Response(JSON.stringify(body), { status, headers: { ...CORS, 'Content-Type': 'application/json' } });
 
 Deno.serve(async (req) => {
+  // Not set up yet: refuse rather than send an invitation with a broken link.
+  if (!APP_URL || !/^https:\/\//.test(APP_URL)) return new Response(JSON.stringify({ error: 'Invitations are not switched on yet.' }), { status: 503, headers: { 'Content-Type': 'application/json' } });
   if (req.method === 'OPTIONS') return new Response(null, { headers: CORS });
   if (req.method !== 'POST') return reply(405, { error: 'Use POST' });
   try {
