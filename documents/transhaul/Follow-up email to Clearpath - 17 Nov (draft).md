@@ -18,7 +18,7 @@ Thank you both for today. Here's what I took away, and what I need from you so t
 - **Reports:** an automatic daily email covering the previous day, and a weekly report every Monday.
 - **Access:** separate levels for Director, Transport Manager, Operations Manager, Warehouse Manager and a consultant with full access, with two-factor sign-in for everyone.
 - **Later add-ons:** a driver portal (only if it meets DVSA requirements) and a customer portal.
-- **Price:** £3,000 setup and £300 a month, shared with Clearpath as we discussed. I'll confirm the split in writing with the agreement.
+- **Price:** £3,000 setup and £300 a month for Trans Haul, shared with Clearpath as we discussed. I'll confirm the split, and the standard pricing for other hauliers, in writing with the agreement.
 
 **What I need from you**
 
@@ -47,11 +47,11 @@ Please don't email passwords. When it comes to logins, I'll send a secure link t
 
 **Paperwork**
 
-I'll send back the NDA this week with the changes we discussed, including adding Pritesh and a sensible limit on the indemnity, together with a short agreement between Clearpath and Your AI covering ownership, the revenue split and responsibilities. I'm also arranging professional indemnity and cyber insurance for Your AI.
+I'll send back the NDA this week with the changes we discussed, including adding Pritesh and a sensible limit on the indemnity, together with a short agreement between Clearpath and Your AI covering ownership, the revenue split and responsibilities. Your AI will have professional indemnity and cyber insurance in place before go-live.
 
 **Next steps**
 
-I'll start on the platform foundations now (logins, access levels and two-factor sign-in), since they don't depend on anything above. Each system connection starts as soon as its access comes through. I'll keep you updated weekly, and I'll show you the first working screens on Trans Haul's own data before anything goes to the wider team.
+I'm starting on the platform foundations now (logins, access levels and two-factor sign-in), since they don't depend on anything above. Each system connection starts as soon as its access comes through. I'll keep you updated weekly, and I'll show you the first working screens on Trans Haul's own data before anything goes to the wider team.
 
 Thanks again,
 
