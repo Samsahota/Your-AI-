@@ -209,6 +209,20 @@ test('Platform admin: open a company, add a connection, import a file, see the f
   await page.close();
 });
 
+test('Sign out: the sign-in screen stays, and nothing from the last person is redrawn', async () => {
+  const page = await signIn('director@demo.test');
+  await page.click('#signout');
+  await page.waitForSelector('#signin');
+  await page.waitForTimeout(500);                                  // give any late redraw time to happen
+  assert.equal(await page.locator('#signin').count(), 1);
+  assert.equal(await page.locator('.side').count(), 0);
+  assert.doesNotMatch(await page.locator('body').innerText(), /Demo Haulage|Dashboard/);
+  await page.evaluate(() => { location.hash = '#/cost'; });        // typing an address doesn't bring it back
+  await page.waitForTimeout(300);
+  assert.equal(await page.locator('.side').count(), 0);
+  await page.close();
+});
+
 test('Phone width: no sideways scrolling on the dashboard and pages', async () => {
   const page = await signIn('director@demo.test', { width: 390 });
   for (const h of ['#/dashboard', '#/hs', '#/compliance', '#/settings/access']) {

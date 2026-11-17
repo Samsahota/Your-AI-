@@ -156,12 +156,13 @@ function layout(active) {
       <span>${esc(p.name)} · ${esc(roleName(p.role))}${p.demo_view ? ' · demo view' : ''}</span></div>
       ${items}<div class="sep"></div>${manage}<button class="nav-item btn-link" id="signout" type="button">Sign out</button></nav>
     <main class="main" id="main" tabindex="-1"><p class="loading">Loading…</p></main></div>`;
-  $('#signout').onclick = async () => { await auth.signOut(); sessionStorage.removeItem('portal.company'); location.hash = ''; signInScreen(); };
+  $('#signout').onclick = () => signOutNow();
 }
 
 export const roleName = r => ({ platform_admin: 'Platform admin', director: 'Director', consultant: 'Consultant', operations: 'Operations Manager', transport: 'Transport Manager', warehouse: 'Warehouse Manager' }[r] || r);
 
 async function route() {
+  if (!auth.signedIn() || !ctx.profile) return signInScreen();
   const [page, tab] = location.hash.replace(/^#\//, '').split('/');
   const key = page || 'dashboard';
   layout(['settings', 'admin', 'me'].includes(key) ? key : key);
@@ -227,9 +228,17 @@ let lastActive = Date.now();
 ['click', 'keydown', 'scroll', 'pointermove', 'touchstart'].forEach(ev => addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true }));
 setInterval(async () => {
   if (auth.signedIn() && Date.now() - lastActive > IDLE_MINUTES * 60000) {
-    await auth.signOut(); sessionStorage.removeItem('portal.company'); history.replaceState(null, '', location.pathname);
-    signInScreen(`You were signed out after ${IDLE_MINUTES} minutes without activity.`);
+    await signOutNow(`You were signed out after ${IDLE_MINUTES} minutes without activity.`);
   }
 }, 30000);
+
+// Ends the session and forgets everything held in memory, so nothing from the last person is redrawn.
+async function signOutNow(msg) {
+  window.onhashchange = null;
+  await auth.signOut(); sessionStorage.removeItem('portal.company');
+  Object.assign(ctx, { profile: null, access: null, dash: null, company: null, day: null, isAdmin: false, name: namer(false) });
+  history.replaceState(null, '', location.pathname + location.search);
+  signInScreen(msg);
+}
 
 start().catch(x => signInScreen(x.message));
