@@ -1,12 +1,12 @@
 // App shell: sign-in with two-factor, the menu, page routing, the dashboard and My account.
 import { auth, rpc, select, ApiError } from './api.js';
-import { esc, pill, fmtValue, bullseye, measureRows, toast, namer, date, todayUK, QUAD } from './ui.js';
+import { esc, pill, fmtValue, bullseye, measureRows, toast, namer, date, todayUK, target, icon, QUAD } from './ui.js';
 import { PAGES } from './pages.js';
 import { MANAGE } from './manage.js';
 
 const $ = s => document.querySelector(s);
 const app = $('#app');
-export const ctx = { profile: null, access: null, dash: null, company: null, day: null, isAdmin: false, name: namer(false) };
+export const ctx = { profile: null, access: null, dash: null, company: null, day: null, noFigures: false, isAdmin: false, name: namer(false) };
 
 // Company-scoped read: always filtered to the company in view (the database also enforces it).
 export const q = (table, params = {}) => select(table, { company_id: `eq.${ctx.company}`, ...params });
@@ -16,7 +16,7 @@ export const isManager = () => ctx.isAdmin || ['director', 'operations', 'consul
 // ---------------------------------------------------------------- sign-in
 function signInScreen(msg) {
   app.innerHTML = `<main class="auth"><form class="card auth-card" id="signin" novalidate>
-    <p class="brand">Clearpath</p><h1>Sign in</h1>
+    <div class="auth-brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-word">Clearpath</span></div><h1>Sign in</h1>
     <label class="fld" for="email"><span>Email</span><input id="email" type="email" autocomplete="username" required></label>
     <label class="fld" for="password"><span>Password</span><input id="password" type="password" autocomplete="current-password" required></label>
     <p class="form-error" role="alert" ${msg ? '' : 'hidden'}>${esc(msg || '')}</p>
@@ -42,7 +42,7 @@ async function twoFactor() {
   const factors = await auth.factors();
   const verified = factors.find(f => f.status === 'verified');
   if (verified) {
-    app.innerHTML = `<main class="auth"><form class="card auth-card" id="mfa" novalidate><h1>Enter your code</h1>
+    app.innerHTML = `<main class="auth"><form class="card auth-card" id="mfa" novalidate><div class="auth-brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-word">Clearpath</span></div><h1>Enter your code</h1>
       <p class="sub">Open your authenticator app and enter the six-digit code for Clearpath.</p>
       <label class="fld" for="code"><span>Code</span><input id="code" inputmode="numeric" autocomplete="one-time-code" maxlength="6" required></label>
       <p class="form-error" role="alert" hidden></p><button class="btn primary wide" type="submit">Sign in</button>
@@ -50,7 +50,7 @@ async function twoFactor() {
     return codeForm(verified.id);
   }
   const f = await auth.enrol();
-  app.innerHTML = `<main class="auth"><form class="card auth-card" id="mfa" novalidate><h1>Set up two-factor sign-in</h1>
+  app.innerHTML = `<main class="auth"><form class="card auth-card" id="mfa" novalidate><div class="auth-brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-word">Clearpath</span></div><h1>Set up two-factor sign-in</h1>
     <p class="sub">Every login is protected with a code from your phone. You only set this up once.</p>
     <ol class="steps"><li>Install <b>Microsoft Authenticator</b> or <b>Google Authenticator</b> on your phone.</li>
     <li>In the app, add an account and scan this code. If you can't scan it, type in the key below.</li></ol>
@@ -78,7 +78,7 @@ function codeForm(factorId) {
 // From an invitation or reset email: choose a password, then set up two-factor.
 function passwordScreen(kind) {
   app.innerHTML = `<main class="auth"><form class="card auth-card" id="pw" novalidate>
-    <h1>${kind === 'invite' ? 'Welcome: choose a password' : 'Choose a new password'}</h1>
+    <div class="auth-brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-word">Clearpath</span></div><h1>${kind === 'invite' ? 'Welcome: choose a password' : 'Choose a new password'}</h1>
     <p class="sub">At least 12 characters. A short sentence is easier to remember than a jumble.</p>
     <label class="fld" for="pw1"><span>New password</span><input id="pw1" type="password" autocomplete="new-password" required></label>
     <label class="fld" for="pw2"><span>Type it again</span><input id="pw2" type="password" autocomplete="new-password" required></label>
@@ -130,7 +130,7 @@ export async function openCompany(id) {
 }
 
 function blocked(msg) {
-  app.innerHTML = `<main class="auth"><div class="card auth-card"><h1>Can't open Clearpath</h1><p>${esc(msg)}</p>
+  app.innerHTML = `<main class="auth"><div class="card auth-card"><div class="auth-brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-word">Clearpath</span></div><h1>Can't open Clearpath</h1><p>${esc(msg)}</p>
     <button class="btn ghost wide" id="out">Sign out</button></div></main>`;
   $('#out').onclick = async () => { await auth.signOut(); signInScreen(); };
 }
@@ -141,24 +141,52 @@ const MENU = [
   ['people', 'People', 'people'], ['compliance', 'Compliance', 'compliance'], ['records', 'Records', 'records'], ['links', 'Links', null],
 ];
 
+const MENU_ICON = { dashboard: 'home', hs: 'shield', service: 'truck', cost: 'chart', people: 'people', compliance: 'clipboard', records: 'table', links: 'link' };
+const SYSTEM = { vigo: 'Vigo', tachomaster: 'Tachomaster', falcon: 'Falcon Tracking', predrive: 'PreDrive', xero: 'Xero', sharepoint: 'SharePoint', brightpay: 'BrightPay', bibby: 'Bibby', warehouse: 'Warehouse figures', other: 'Other' };
+const CONN = { connected: ['green', 'Connected'], failing: ['red', 'Failing'], waiting_access: ['no_data', 'Waiting for access'], configured: ['no_target', 'Set up, first run due'], paused: ['no_data', 'Paused'] };
+const ukNow = opts => new Date().toLocaleString('en-GB', { timeZone: 'Europe/London', ...opts });
+
 function layout(active) {
   const p = ctx.profile;
+  const company = ctx.dash?.company || (ctx.isAdmin ? 'All companies' : p.company || '');
+  const link = (k, label, href, ic, extra = '') =>
+    `<a class="nav-item ${active === k ? 'on' : ''}" href="${href}" ${active === k ? 'aria-current="page"' : ''}>${icon(ic)}<span class="nv">${label}</span>${extra}</a>`;
   const items = ctx.company ? MENU.map(([k, l, area]) => {
-    const lv = area ? level(area) : 'full'; const off = lv === 'none';
-    return off ? `<span class="nav-item off" aria-disabled="true">${l}<small>No access</small></span>`
-      : `<a class="nav-item ${active === k ? 'on' : ''}" href="#/${k}">${l}${lv === 'own' ? '<small>Own area</small>' : ''}</a>`;
+    const lv = area ? level(area) : 'full';
+    return lv === 'none' ? `<span class="nav-item off" aria-disabled="true">${icon(MENU_ICON[k])}<span class="nv">${l}</span><small>No access</small></span>`
+      : link(k, l, `#/${k}`, MENU_ICON[k], lv === 'own' ? '<small>Own area</small>' : '');
   }).join('') : '';
   const manage = [
-    level('settings') === 'full' && ctx.company ? `<a class="nav-item ${active === 'settings' ? 'on' : ''}" href="#/settings/users">Users and settings</a>` : '',
-    ctx.isAdmin ? `<a class="nav-item ${active === 'admin' ? 'on' : ''}" href="#/admin/companies">Admin console</a>` : '',
-    `<a class="nav-item ${active === 'me' ? 'on' : ''}" href="#/me">My account</a>`,
+    level('settings') === 'full' && ctx.company ? link('settings', 'Users and settings', '#/settings/users', 'sliders') : '',
+    ctx.isAdmin ? link('admin', 'Admin console', '#/admin/companies', 'server') : '',
+    link('me', 'My account', '#/me', 'user'),
   ].join('');
+  const initials = String(p.name || '?').split(/\s+/).filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
   app.innerHTML = `<div class="shell">
-    <nav class="side" aria-label="Menu"><p class="brand side-brand">Clearpath</p><div class="co"><b>${esc(ctx.dash?.company || (ctx.isAdmin ? 'All companies' : p.company || ''))}</b>
-      <span>${esc(p.name)} · ${esc(roleName(p.role))}${p.demo_view ? ' · demo view' : ''}</span></div>
-      ${items}<div class="sep"></div>${manage}<button class="nav-item btn-link" id="signout" type="button">Sign out</button></nav>
-    <main class="main" id="main" tabindex="-1"><p class="loading">Loading…</p></main></div>`;
+    <nav class="side" id="side" aria-label="Menu">
+      <div class="brand"><span class="brand-flag" aria-hidden="true"></span><span class="brand-mark"><span class="brand-word">Clearpath</span><span class="brand-sub">${esc(company)}</span></span>
+        <button class="menu-btn" id="menu-btn" type="button" aria-expanded="false" aria-controls="side">${icon('menu')}Menu</button></div>
+      ${items ? `<div class="nav">${items}</div>` : ''}
+      <p class="nav-label">Manage</p><div class="nav">${manage}</div>
+      <div class="nav-foot"><div class="user"><span class="avatar" aria-hidden="true">${esc(initials)}</span><span><b>${esc(p.name)}</b><span>${esc(roleName(p.role))}${p.demo_view ? ' · demo view' : ''}</span></span></div>
+        <button class="btn-side" id="signout" type="button">${icon('signout')}Sign out</button></div>
+    </nav>
+    <div class="content"><header class="topbar">${topChips()}</header>
+      <main class="main" id="main" tabindex="-1"><p class="loading">Loading…</p></main></div></div>`;
   $('#signout').onclick = () => signOutNow();
+  $('#menu-btn').onclick = () => { const open = $('#side').classList.toggle('open'); $('#menu-btn').setAttribute('aria-expanded', String(open)); };
+}
+
+// The bar above every page: whether the figures can be trusted right now, and today's date.
+function topChips() {
+  const d = ctx.dash; let chip;
+  if (!d) chip = `<span class="status-chip"><i></i>${ctx.isAdmin ? 'Platform admin: choose a company' : 'No company open'}</span>`;
+  else if (!d.day) chip = `<span class="status-chip warn"><i></i>Waiting for data: no system connected yet</span>`;
+  else if (d.stale_sources.length) chip = `<span class="status-chip bad"><i></i>Some figures not updated: a connection is failing</span>`;
+  else chip = `<span class="status-chip ok"><i></i>Figures for ${date(d.day)}</span>`;
+  const conns = d?.connections;
+  const connChip = conns && conns.length ? `<span class="status-chip">${icon('plug')}${conns.filter(c => c.status === 'connected').length} of ${conns.length} systems connected</span>` : '';
+  return `${chip}${connChip}<span class="when">${icon('clock')}${ukNow({ weekday: 'short', day: 'numeric', month: 'short' })}</span>`;
 }
 
 export const roleName = r => ({ platform_admin: 'Platform admin', director: 'Director', consultant: 'Consultant', operations: 'Operations Manager', transport: 'Transport Manager', warehouse: 'Warehouse Manager' }[r] || r);
@@ -188,21 +216,37 @@ async function route() {
 
 // ---------------------------------------------------------------- dashboard
 function dashboard() {
-  const d = ctx.dash;
+  const d = ctx.dash; const p = ctx.profile;
   const heads = d.measures.filter(m => m.headline);
-  const stale = d.stale_sources.length ? `<p class="banner warn">Some figures are not updated because a connection is failing. They are greyed out until it is fixed.</p>` : '';
-  return `<header class="page-head"><div><h1>Dashboard</h1><p class="sub">${esc(d.company)} · ${d.day ? `figures for ${date(d.day)}` : 'no figures yet: they appear here once its systems are connected'}</p></div></header>${stale}
+  const reds = d.measures.filter(m => m.status === 'red'), ambers = d.measures.filter(m => m.status === 'amber');
+  const hour = Number(ukNow({ hour: 'numeric', hour12: false }));
+  const first = p.name && p.name !== roleName(p.role) ? `, ${p.name.split(/\s+/)[0]}` : '';
+  const conns = d.connections;
+  const connected = conns ? conns.filter(c => c.status === 'connected').length : 0;
+  let summary;
+  if (!d.day) summary = `<section class="card summary">${icon('plug')}<p><b>No figures yet.</b> They appear here as each of ${esc(d.company)}'s systems is connected${conns ? `: ${connected} of ${conns.length} connected so far` : ''}. Until then every figure shows "Waiting for data", and nothing is estimated.</p></section>`;
+  else if (reds.length || ambers.length) summary = `<section class="card summary ${reds.length ? 'bad' : 'warn'}">${icon('alert')}<p>${reds.length ? `<b>${reds.length} figure${reds.length === 1 ? '' : 's'} need${reds.length === 1 ? 's' : ''} action</b>` : ''}${reds.length && ambers.length ? ' and ' : ''}${ambers.length ? `<b>${ambers.length} to watch</b>` : ''}${reds.length ? `, led by ${esc(reds[0].name.toLowerCase())} at <b>${fmtValue(reds[0].value, reds[0].unit)}</b>` : ''}.${d.stale_sources.length ? ' Some figures are not updated because a connection is failing.' : ''}</p></section>`;
+  else summary = `<section class="card summary ok">${icon('shield')}<p><b>Everything you can see is on target</b> for ${date(d.day)}.</p></section>`;
+
+  const tiles = heads.map(m => `<a class="tile" href="#/${m.quadrant}"><span class="l">${esc(m.name)}</span><span class="n">${fmtValue(m.value, m.unit)}</span><span class="t">${esc(target(m))}</span>${pill(m.status)}</a>`).join('');
+  const attnCard = `<section class="card flush"><div class="card-head"><h2>Requires attention</h2><span class="note">${reds.length + ambers.length} open</span></div>${attention(d)}</section>`;
+  const connCard = conns ? `<section class="card flush"><div class="card-head"><h2>Data connections</h2>${level('settings') === 'full' ? `<a href="#/settings/connections">Manage</a>` : ''}</div>
+    <ul class="conn-list">${conns.map(c => { const [s, l] = CONN[c.status] || ['no_data', c.status]; return `<li><div class="tx"><b>${esc(SYSTEM[c.system] || c.system)}</b><small>${esc(c.label)}${c.last_success_at ? ` · last good update ${date(c.last_success_at)}` : ''}</small></div>${pill(s, l)}</li>`; }).join('') || '<li><span class="note">No connections set up yet.</span></li>'}</ul></section>` : '';
+  return `<header class="page-head"><div><p class="eyebrow">${icon('clock')}${ukNow({ weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })} · ${esc(d.company)}</p>
+      <h1>${hour < 12 ? 'Good morning' : hour < 18 ? 'Good afternoon' : 'Good evening'}${esc(first)}</h1></div></header>
+    ${summary}
     <section class="card"><div class="dash"><div>${bullseye(d.quadrants)}
-      <p class="note center">Click any part to open its page. * means some figures have no data or no target yet.</p></div>
-      <div><h2>Headline figures</h2><div class="heads">${heads.map(m => `<a class="tile" href="#/${m.quadrant}"><span class="l">${esc(m.name)}</span><span class="n">${fmtValue(m.value, m.unit)}</span>${pill(m.status)}</a>`).join('') || '<p class="empty">No headline figures for your login.</p>'}</div>
-      <h2 class="mt">Needs attention</h2>${attention(d)}</div></div></section>
+      <p class="note center">Select any part to open its page. * means some figures have no data or no target yet.</p></div>
+      <div><h2>Headline figures</h2><p class="sub below">${d.day ? `For ${date(d.day)}` : 'Waiting for data'}</p><div class="heads">${tiles || '<p class="empty">No headline figures for your login.</p>'}</div></div></div></section>
+    ${connCard ? `<div class="grid2">${attnCard}${connCard}</div>` : attnCard}
+    <div class="sec-title"><h2>By area</h2><span class="sub">Every figure you can see, with its target</span></div>
     <div class="quads">${Object.keys(QUAD).map(k => `<section class="card"><div class="qhead"><h2><a href="#/${k}">${QUAD[k]}</a></h2>${pill(d.quadrants[k].status)}</div>${measureRows(d.measures.filter(m => m.quadrant === k))}</section>`).join('')}</div>`;
 }
 
 function attention(d) {
-  const reds = d.measures.filter(m => m.status === 'red' || m.status === 'amber').sort((a, b) => (a.status === 'red' ? 0 : 1) - (b.status === 'red' ? 0 : 1));
-  if (!reds.length) return `<p class="empty">Nothing red or amber for your login.</p>`;
-  return `<ul class="attn">${reds.map(m => `<li><a href="#/${m.quadrant}">${pill(m.status)} <span>${esc(m.name)}: <b>${fmtValue(m.value, m.unit)}</b></span></a></li>`).join('')}</ul>`;
+  const list = d.measures.filter(m => m.status === 'red' || m.status === 'amber').sort((a, b) => (a.status === 'red' ? 0 : 1) - (b.status === 'red' ? 0 : 1));
+  if (!list.length) return `<p class="empty pad">${d.day ? 'Nothing red or amber for your login.' : 'Nothing to flag until figures arrive.'}</p>`;
+  return `<ul class="attn">${list.map(m => `<li><a href="#/${m.quadrant}"><span class="dot ${m.status}"></span><span class="tx"><b>${esc(m.name)}: ${fmtValue(m.value, m.unit)}</b><small>${esc(QUAD[m.quadrant])} · ${esc(target(m))}</small></span>${pill(m.status)}</a></li>`).join('')}</ul>`;
 }
 
 // ---------------------------------------------------------------- my account

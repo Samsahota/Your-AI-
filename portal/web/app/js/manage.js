@@ -5,6 +5,8 @@ import { ctx, q, roleName, openCompany, loadDashboard } from './app.js';
 import { processCsv, sha256 } from '/connectors/core.mjs';
 import { CATALOGUE, TEMPLATES } from '/connectors/catalogue.mjs';
 
+const METHOD = { api: 'Supplier API', oauth: 'Approved read-only sign-in', email_report: 'Scheduled emailed report', file: 'File upload' };
+const SCHEDULE = { every_15_min: 'Every 15 minutes', hourly: 'Hourly', nightly: 'Nightly', on_receipt: 'When a file arrives' };
 const head = (title, sub, actions = '') => `<header class="page-head"><div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div><div class="head-actions">${actions}</div></header>`;
 const tabs = (base, list, on) => `<nav class="tabs" aria-label="Sections">${list.map(([k, l]) => `<a href="#/${base}/${k}" class="${k === on ? 'on' : ''}">${l}</a>`).join('')}</nav>`;
 const card = (title, body, sub = '') => `<section class="card"><h2>${esc(title)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${body}</section>`;
@@ -94,7 +96,7 @@ async function connections(pane, adminView = false) {
   const byConn = Object.fromEntries(conns.map(c => [c.id, c]));
   pane.innerHTML = card('Connections', table(conns, [
     { label: 'System', cell: c => `<b>${esc(c.label)}</b><br><span class="note">${esc(CATALOGUE[c.system]?.notes || '')}</span>` },
-    { label: 'How', cell: c => esc(label(c.method)) + `<br><span class="note">${esc(label(c.schedule))}</span>` },
+    { label: 'How', cell: c => esc(METHOD[c.method] || label(c.method)) + `<br><span class="note">${esc(SCHEDULE[c.schedule] || label(c.schedule))}</span>` },
     { label: 'Status', cell: c => connPill(c.status) + (c.last_error ? `<br><span class="note warn-text">${esc(c.last_error)}</span>` : '') },
     { label: 'Last good update', cell: c => c.last_success_at ? dateTime(c.last_success_at) : '—' },
     ...(adminView ? [{ label: '', cell: c => `<button class="btn small ghost" data-edit="${c.id}">Edit</button>` }] : []),

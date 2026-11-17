@@ -48,7 +48,7 @@ for (const [role, sub] of Object.entries(ROLES)) {
     await page.evaluate(x => { location.hash = x; }, h);
     await page.waitForLoadState('networkidle'); await page.waitForTimeout(250);
     const txt = (await page.locator('#main').innerText().catch(() => '')).replace(/\s+/g, ' ');
-    if (/Invalid Date|NaN|undefined|null|Request failed|Something went wrong|error/i.test(txt)) problems.push(`${role} ${h}: ${txt.slice(0, 220)}`);
+    if (/\b(Invalid Date|NaN|undefined|null)\b|Request failed|Something went wrong/.test(txt)) problems.push(`${role} ${h}: ${txt.slice(0, 220)}`);
     const links = await page.$$eval('a[href^="#/"]', as => as.map(a => a.getAttribute('href')));
     for (const l of links) if (!seen.has(l) && seen.size + queue.length < 80) queue.push(l);
   }

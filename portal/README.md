@@ -37,7 +37,7 @@ Enforced by the database itself, not by hiding screens:
 | Real connectors for each supplier | Waiting for access and sample files (file import works now for spreadsheets and exports) |
 | Other edge functions (report inbox, nightly schedule, daily and weekly emails, Xero, Microsoft) | Not started (November versions to adapt) |
 | Uploading document files (PDFs) to the library | Switched on with hosting (storage) |
-| Supabase project `clearpath-production` (London, Your AI Ltd Pro organisation) | Set up 17 Nov 2026: all 7 migrations applied, security checker clear apart from the intended signed-in functions (each checks access itself), no companies or users yet |
+| Supabase project `clearpath-production` (London, Your AI Ltd Pro organisation) | Set up 17 Nov 2026: all 7 migrations applied, security checker clear apart from the intended signed-in functions (each checks access itself). Trans Haul added 17 Nov (founding deal, nine connections waiting for access); no users yet |
 | Web hosting and email | Not set up |
 
 Connectors marked `verified: false` in `connectors/catalogue.mjs` are based on public information only. None goes live until a real sample from Trans Haul has been mapped and checked.

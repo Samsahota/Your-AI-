@@ -100,7 +100,7 @@ test('Director: report an incident, comment, change a target, change access, inv
   await page.click('dialog [type=submit]');
   await page.waitForSelector('.toast >> text=Target saved');
   await go(page, '#/dashboard');
-  assert.match(await text(page), /On time in full\s*80\.0%\s*On target/);
+  assert.match(await text(page), /On time in full\s*80\.0%\s*Green at or above 75\.0%[^\n]*?On target/);   // the tile now shows its target too
 
   await go(page, '#/settings/access');
   await page.selectOption('select[data-role="transport"][data-area="cost"]', 'own');
@@ -135,7 +135,7 @@ test('Invited user: the email link asks for a password, then two-factor, then ac
   await link.close();
   const page = await signIn('monica@demo.test');
   assert.match(await page.textContent('.side'), /Transport Manager/);
-  assert.match(await text(page), /Dashboard/);
+  assert.match(await text(page), /Good (morning|afternoon|evening), Monica/);   // lands on her dashboard
   await page.close();
 });
 
@@ -220,7 +220,7 @@ test('New company with no figures yet: every page opens and says it is waiting f
   });
   await page.evaluate(x => { sessionStorage.setItem('portal.company', x); location.hash = '#/dashboard'; }, id);
   await page.reload(); await page.waitForSelector('#main h1');
-  assert.match(await page.locator('#main').innerText(), /Empty Haulier Ltd · no figures yet/);
+  assert.match(await page.locator('#main').innerText(), /Empty Haulier Ltd[\s\S]*No figures yet/);
   for (const h of ['#/hs', '#/service', '#/cost', '#/people', '#/compliance', '#/records/jobs', '#/links', '#/admin/connections', '#/admin/import']) {
     await page.evaluate(x => { location.hash = x; }, h);
     await page.waitForLoadState('networkidle'); await page.waitForTimeout(150);

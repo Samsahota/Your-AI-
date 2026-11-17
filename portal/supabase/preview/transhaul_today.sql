@@ -15,12 +15,12 @@ insert into companies (id, name, slug, deal, setup_fee, monthly_fee, status, set
   ('20000000-0000-4000-8000-00000000000a', 'Trans Haul', 'trans-haul', 'founding', 3000, 300, 'setup', '{"timezone": "Europe/London"}');
 
 insert into profiles (user_id, company_id, role, name, email, division, status, is_test) values
-  ('10000000-0000-4000-8000-000000000001', null, 'platform_admin', 'Your AI', 'admin@yourai.test', null, 'active', false),
-  ('10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-00000000000a', 'director', 'Preview login', 'director@transhaul.test', null, 'active', false),
-  ('10000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-00000000000a', 'consultant', 'Preview login', 'consultant@transhaul.test', null, 'active', false),
-  ('10000000-0000-4000-8000-000000000004', '20000000-0000-4000-8000-00000000000a', 'operations', 'Preview login', 'ops@transhaul.test', null, 'active', false),
-  ('10000000-0000-4000-8000-000000000005', '20000000-0000-4000-8000-00000000000a', 'transport', 'Preview login', 'transport@transhaul.test', 'transport', 'active', false),
-  ('10000000-0000-4000-8000-000000000006', '20000000-0000-4000-8000-00000000000a', 'warehouse', 'Preview login', 'warehouse@transhaul.test', 'warehouse', 'active', false);
+  ('10000000-0000-4000-8000-000000000001', null, 'platform_admin', 'Platform admin', 'admin@yourai.test', null, 'active', false),
+  ('10000000-0000-4000-8000-000000000002', '20000000-0000-4000-8000-00000000000a', 'director', 'Director', 'director@transhaul.test', null, 'active', false),
+  ('10000000-0000-4000-8000-000000000003', '20000000-0000-4000-8000-00000000000a', 'consultant', 'Consultant', 'consultant@transhaul.test', null, 'active', false),
+  ('10000000-0000-4000-8000-000000000004', '20000000-0000-4000-8000-00000000000a', 'operations', 'Operations Manager', 'ops@transhaul.test', null, 'active', false),
+  ('10000000-0000-4000-8000-000000000005', '20000000-0000-4000-8000-00000000000a', 'transport', 'Transport Manager', 'transport@transhaul.test', 'transport', 'active', false),
+  ('10000000-0000-4000-8000-000000000006', '20000000-0000-4000-8000-00000000000a', 'warehouse', 'Warehouse Manager', 'warehouse@transhaul.test', 'warehouse', 'active', false);
 
 insert into connections (company_id, system, label, method, status, feeds, schedule, notes) values
   ('20000000-0000-4000-8000-00000000000a', 'vigo', 'Jobs, customers and costs', 'api', 'waiting_access', '{customers,jobs,job_costs}', 'every_15_min', 'Waiting for API access from Vigo'),

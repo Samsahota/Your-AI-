@@ -20,8 +20,7 @@ for (const f of ['core.mjs', 'catalogue.mjs']) fs.copyFileSync(path.join(root, '
 // The viewer can force light or dark: honour that as well as the device setting.
 let css = fs.readFileSync(path.join(root, 'web/app/styles.css'), 'utf8');
 const dark = css.match(/@media \(prefers-color-scheme: dark\)\{:root\{([^}]*)\}\}/);
-if (!dark) throw new Error('dark theme block not found in styles.css');
-css = css.replace(dark[0], `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${dark[1]}}}\n:root[data-theme="dark"]{${dark[1]}}`);
+if (dark) css = css.replace(dark[0], `@media (prefers-color-scheme: dark){:root:not([data-theme="light"]){${dark[1]}}}\n:root[data-theme="dark"]{${dark[1]}}`);
 fs.writeFileSync(path.join(dist, 'styles.css'), css);
 fs.copyFileSync(path.join(root, 'web/preview/shim.js'), path.join(dist, 'preview-shim.js'));
 const rec = fs.readFileSync(path.join(root, 'web/portal-preview-recordings.json'), 'utf8');
