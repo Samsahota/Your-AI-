@@ -209,6 +209,27 @@ test('Platform admin: open a company, add a connection, import a file, see the f
   await page.close();
 });
 
+test('New company with no figures yet: every page opens and says it is waiting for data', async () => {
+  // The platform admin adds a brand-new company (as on day one for a new haulier) and opens it.
+  const page = await signIn('admin@example.test');
+  const id = await page.evaluate(async () => {
+    const s = JSON.parse(sessionStorage.getItem('portal.session'));
+    const r = await fetch('/rest/v1/rpc/create_company', { method: 'POST', headers: { 'Content-Type': 'application/json', apikey: 'local', Authorization: `Bearer ${s.access_token}` },
+      body: JSON.stringify({ p_name: 'Empty Haulier Ltd', p_slug: 'empty-haulier', p_deal: 'standard', p_setup_fee: 5000, p_monthly_fee: 500 }) });
+    return r.json();
+  });
+  await page.evaluate(x => { sessionStorage.setItem('portal.company', x); location.hash = '#/dashboard'; }, id);
+  await page.reload(); await page.waitForSelector('#main h1');
+  assert.match(await page.locator('#main').innerText(), /Empty Haulier Ltd · no figures yet/);
+  for (const h of ['#/hs', '#/service', '#/cost', '#/people', '#/compliance', '#/records/jobs', '#/links', '#/admin/connections', '#/admin/import']) {
+    await page.evaluate(x => { location.hash = x; }, h);
+    await page.waitForLoadState('networkidle'); await page.waitForTimeout(150);
+    const text = await page.locator('#main').innerText();
+    assert.doesNotMatch(text, /Something went wrong|Invalid (Date|time)/, `${h} broke`);
+  }
+  await page.close();
+});
+
 test('Sign out: the sign-in screen stays, and nothing from the last person is redrawn', async () => {
   const page = await signIn('director@demo.test');
   await page.click('#signout');

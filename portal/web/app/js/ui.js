@@ -2,7 +2,7 @@
 export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
 
 export const QUAD = { hs: 'Health and Safety', service: 'Service', cost: 'Cost', people: 'People', compliance: 'Compliance' };
-export const STATUS = { green: 'On target', amber: 'Watch', red: 'Action needed', no_data: 'No data', no_target: 'Target not set', stale: 'Not updated', no_access: 'No access' };
+export const STATUS = { green: 'On target', amber: 'Watch', red: 'Action needed', no_data: 'Waiting for data', no_target: 'Target not set', stale: 'Not updated', no_access: 'No access' };
 const COLOR = { green: 'var(--green)', amber: 'var(--amber)', red: 'var(--red)', no_data: 'var(--grey)', no_target: 'var(--slate)', stale: 'var(--grey)', no_access: 'var(--grey)' };
 const FILL = { green: 'var(--green-bg)', amber: 'var(--amber-bg)', red: 'var(--red-bg)', no_data: 'var(--grey-bg)', no_target: 'var(--slate-bg)', stale: 'var(--grey-bg)', no_access: 'var(--grey-bg)' };
 
@@ -12,6 +12,8 @@ export const money = (v, dp = 0) => v == null ? '—' : (v < 0 ? '−' : '') + '
 export const date = d => d ? new Date(d.length === 10 ? d + 'T12:00:00Z' : d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'Europe/London' }) : '—';
 export const dateTime = d => d ? new Date(d).toLocaleString('en-GB', { day: 'numeric', month: 'short', hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' }) : '—';
 export const time = d => d ? new Date(d).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', timeZone: 'Europe/London' }) : '—';
+/** Today's date in the UK (YYYY-MM-DD). */
+export const todayUK = () => new Intl.DateTimeFormat('en-CA', { timeZone: 'Europe/London', year: 'numeric', month: '2-digit', day: '2-digit' }).format(new Date());
 export const addDays = (d, n) => { const x = new Date(d + 'T12:00:00Z'); x.setUTCDate(x.getUTCDate() + n); return x.toISOString().slice(0, 10); };
 export const daysBetween = (a, b) => Math.round((new Date(b + 'T12:00:00Z') - new Date(a + 'T12:00:00Z')) / 864e5);
 export const target = m => m.green_at == null ? 'No target set yet' : `Green ${m.better === 'higher' ? 'at or above' : 'at or below'} ${fmtValue(m.green_at, m.unit)}; amber ${m.better === 'higher' ? 'at or above' : 'at or below'} ${fmtValue(m.amber_at, m.unit)}`;

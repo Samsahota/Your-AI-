@@ -5,7 +5,7 @@ import { esc, pill, fmtValue, money, date, dateTime, time, addDays, daysBetween,
 import { ctx, q, level, isManager, loadDashboard } from './app.js';
 
 const head = (title, sub, actions = '') => `<header class="page-head"><div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div><div class="head-actions">${actions}</div></header>`;
-const figures = k => `<section class="card"><div class="qhead"><h2>Figures for ${date(ctx.day)}</h2>${pill(ctx.dash.quadrants[k].status)}</div>${measureRows(ctx.dash.measures.filter(m => m.quadrant === k))}</section>`;
+const figures = k => `<section class="card"><div class="qhead"><h2>${ctx.noFigures ? 'Figures: waiting for data' : `Figures for ${date(ctx.day)}`}</h2>${pill(ctx.dash.quadrants[k].status)}</div>${measureRows(ctx.dash.measures.filter(m => m.quadrant === k))}</section>`;
 const card = (title, body, sub = '') => `<section class="card"><h2>${esc(title)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${body}</section>`;
 const byId = rows => Object.fromEntries(rows.map(r => [r.id, r]));
 const KIND = { accident: 'Accident', personal_accident: 'Personal accident', near_miss: 'Near miss' };

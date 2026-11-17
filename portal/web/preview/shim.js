@@ -1,18 +1,19 @@
 // PREVIEW ONLY. Stands in for Supabase so the real Clearpath screens run in a browser with no server.
-// Every answer is a recording of what the real database returned to that role (fictional test data),
+// Every answer is a recording of what the real database returned to that role for Trans Haul as it stands
+// before its systems are connected (no figures yet),
 // made by scripts/record-preview.mjs. Changes are refused politely: nothing is saved anywhere.
 (function () {
   const BASE = 'https://preview.clearpath.invalid';
   const ROLES = {
-    director: { sub: '10000000-0000-4000-8000-000000000002', email: 'director@demo.test', label: 'Director' },
-    consultant: { sub: '10000000-0000-4000-8000-000000000003', email: 'consultant@demo.test', label: 'Consultant (Clearpath)' },
-    operations: { sub: '10000000-0000-4000-8000-000000000004', email: 'ops@demo.test', label: 'Operations manager' },
-    transport: { sub: '10000000-0000-4000-8000-000000000005', email: 'transport@demo.test', label: 'Transport manager' },
-    warehouse: { sub: '10000000-0000-4000-8000-000000000006', email: 'warehouse@demo.test', label: 'Warehouse manager' },
-    admin: { sub: '10000000-0000-4000-8000-000000000001', email: 'admin@example.test', label: 'Platform admin (Your AI)' },
+    director: { sub: '10000000-0000-4000-8000-000000000002', email: 'director@transhaul.test', label: 'Director' },
+    consultant: { sub: '10000000-0000-4000-8000-000000000003', email: 'consultant@transhaul.test', label: 'Consultant (Clearpath)' },
+    operations: { sub: '10000000-0000-4000-8000-000000000004', email: 'ops@transhaul.test', label: 'Operations manager' },
+    transport: { sub: '10000000-0000-4000-8000-000000000005', email: 'transport@transhaul.test', label: 'Transport manager' },
+    warehouse: { sub: '10000000-0000-4000-8000-000000000006', email: 'warehouse@transhaul.test', label: 'Warehouse manager' },
+    admin: { sub: '10000000-0000-4000-8000-000000000001', email: 'admin@yourai.test', label: 'Platform admin (Your AI)' },
   };
   const COMPANY_A = '20000000-0000-4000-8000-00000000000a';
-  const SAVED_MSG = 'This is a preview with made-up data, so changes aren\'t saved. In the live portal this would be saved and logged.';
+  const SAVED_MSG = 'This is a preview, so changes aren\'t saved. In the live portal this would be saved and logged.';
   const WRITES = ['add_comment', 'acknowledge_document', 'log_incident', 'update_incident', 'set_user_status', 'set_access_override',
     'set_threshold', 'save_connection', 'create_document', 'publish_document_version', 'set_subscription', 'create_company',
     'set_company_status', 'compute_measures', 'import_records', 'record_run'];
@@ -100,14 +101,14 @@
     const rec = (REC[who] || {})[`${method} ${p}${url.search} ${body}`];
     if (rec) return reply(rec.status, rec.body);
     if (method === 'GET') return reply(200, '[]');
-    return reply(400, { message: 'This view isn\'t included in the preview. Open Demo Haulage Ltd to see its figures.' });
+    return reply(400, { message: 'This view isn\'t included in the preview.' });
   };
 
   // ---------------------------------------------------------------- the preview bar
   function bar() {
     const el = document.createElement('div');
     el.className = 'pv-bar';
-    el.innerHTML = `<span class="pv-tag">Preview</span><span class="pv-text">Made-up data for two fictional hauliers. Nothing is saved.</span>
+    el.innerHTML = `<span class="pv-tag">Preview</span><span class="pv-text">Trans Haul's portal as it stands today: figures appear as each system is connected. Changes aren't saved in this preview.</span>
       <label class="pv-pick"><span>View as</span><select id="pv-role">${Object.keys(ROLES).map(k => `<option value="${k}" ${k === role ? 'selected' : ''}>${ROLES[k].label}</option>`).join('')}</select></label>`;
     document.body.prepend(el);
     el.querySelector('#pv-role').onchange = e => { seed(e.target.value); location.hash = ''; location.reload(); };

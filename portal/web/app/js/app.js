@@ -1,6 +1,6 @@
 // App shell: sign-in with two-factor, the menu, page routing, the dashboard and My account.
 import { auth, rpc, select, ApiError } from './api.js';
-import { esc, pill, fmtValue, bullseye, measureRows, toast, namer, date, QUAD } from './ui.js';
+import { esc, pill, fmtValue, bullseye, measureRows, toast, namer, date, todayUK, QUAD } from './ui.js';
 import { PAGES } from './pages.js';
 import { MANAGE } from './manage.js';
 
@@ -116,10 +116,12 @@ async function start() {
 }
 
 export async function loadDashboard() {
-  ctx.dash = null; ctx.day = null;
+  ctx.dash = null; ctx.day = null; ctx.noFigures = false;
   if (!ctx.company) return;
   ctx.dash = await rpc('dashboard', { p_company: ctx.isAdmin ? ctx.company : null });
-  ctx.day = ctx.dash.day;
+  // No figures yet (a new company before its systems are connected): pages work from today instead.
+  ctx.noFigures = !ctx.dash.day;
+  ctx.day = ctx.dash.day || todayUK();
 }
 
 export async function openCompany(id) {
@@ -189,7 +191,7 @@ function dashboard() {
   const d = ctx.dash;
   const heads = d.measures.filter(m => m.headline);
   const stale = d.stale_sources.length ? `<p class="banner warn">Some figures are not updated because a connection is failing. They are greyed out until it is fixed.</p>` : '';
-  return `<header class="page-head"><div><h1>Dashboard</h1><p class="sub">${esc(d.company)} · figures for ${date(d.day)}</p></div></header>${stale}
+  return `<header class="page-head"><div><h1>Dashboard</h1><p class="sub">${esc(d.company)} · ${d.day ? `figures for ${date(d.day)}` : 'no figures yet: they appear here once its systems are connected'}</p></div></header>${stale}
     <section class="card"><div class="dash"><div>${bullseye(d.quadrants)}
       <p class="note center">Click any part to open its page. * means some figures have no data or no target yet.</p></div>
       <div><h2>Headline figures</h2><div class="heads">${heads.map(m => `<a class="tile" href="#/${m.quadrant}"><span class="l">${esc(m.name)}</span><span class="n">${fmtValue(m.value, m.unit)}</span>${pill(m.status)}</a>`).join('') || '<p class="empty">No headline figures for your login.</p>'}</div>
@@ -236,7 +238,7 @@ setInterval(async () => {
 async function signOutNow(msg) {
   window.onhashchange = null;
   await auth.signOut(); sessionStorage.removeItem('portal.company');
-  Object.assign(ctx, { profile: null, access: null, dash: null, company: null, day: null, isAdmin: false, name: namer(false) });
+  Object.assign(ctx, { profile: null, access: null, dash: null, company: null, day: null, noFigures: false, isAdmin: false, name: namer(false) });
   history.replaceState(null, '', location.pathname + location.search);
   signInScreen(msg);
 }
