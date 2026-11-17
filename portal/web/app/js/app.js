@@ -219,4 +219,17 @@ function bindMyAccount() {
   };
 }
 
+// ---------------------------------------------------------------- automatic sign-out
+// After 30 minutes without a click, key press or scroll, the session ends and the screen clears,
+// so an unattended office PC doesn't stay signed in.
+const IDLE_MINUTES = 30;
+let lastActive = Date.now();
+['click', 'keydown', 'scroll', 'pointermove', 'touchstart'].forEach(ev => addEventListener(ev, () => { lastActive = Date.now(); }, { passive: true }));
+setInterval(async () => {
+  if (auth.signedIn() && Date.now() - lastActive > IDLE_MINUTES * 60000) {
+    await auth.signOut(); sessionStorage.removeItem('portal.company'); history.replaceState(null, '', location.pathname);
+    signInScreen(`You were signed out after ${IDLE_MINUTES} minutes without activity.`);
+  }
+}, 30000);
+
 start().catch(x => signInScreen(x.message));

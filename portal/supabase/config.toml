@@ -1,0 +1,43 @@
+# Supabase settings for the Clearpath project (applied with the Supabase CLI: `supabase link`, `supabase config push`).
+# Every setting here is a security choice; see documents/clearpath "Licences, security and running costs".
+project_id = "clearpath"
+
+[auth]
+site_url = "https://portal.clearpathinsights.co.uk"   # the live address (to agree with Paul)
+additional_redirect_urls = []
+enable_signup = false                                  # invitation only: nobody can create their own account
+jwt_expiry = 3600                                      # sign-in tokens last one hour, then renew
+enable_refresh_token_rotation = true                   # a stolen refresh token stops working once used
+refresh_token_reuse_interval = 10
+minimum_password_length = 12
+password_requirements = "lower_upper_letters_digits"
+
+[auth.rate_limit]
+sign_in_sign_ups = 30                                  # per 5 minutes per IP: slows password guessing
+token_verifications = 30
+email_sent = 30
+
+[auth.email]
+enable_signup = false
+double_confirm_changes = true                          # changing email needs confirmation at both addresses
+secure_password_change = true                          # changing password needs a recent sign-in
+otp_expiry = 3600                                      # invitation and reset links last one hour, single use
+
+[auth.mfa]
+max_enrolled_factors = 3
+[auth.mfa.totp]
+enroll_enabled = true                                  # authenticator apps (required by the database for every role)
+verify_enabled = true
+[auth.mfa.phone]
+enroll_enabled = false                                 # no text-message codes: weaker, and they cost per message
+verify_enabled = false
+
+# The function checks the caller's session and two-factor itself.
+[functions.invite-user]
+verify_jwt = true
+
+# Set in the Supabase dashboard (not available in this file):
+#  - Authentication > Providers > Email > "Leaked password protection": ON (checks HaveIBeenPwned)
+#  - Database > Settings > "Enforce SSL": ON
+#  - Database > Network restrictions: allow only Your AI's IP addresses for direct database connections
+#  - Authentication > SMTP: Resend, sending from a Clearpath or Your AI domain (not Supabase's test mailer)

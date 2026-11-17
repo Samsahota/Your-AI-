@@ -150,11 +150,15 @@ export function startLocalSupabase({ port = 54410, pgUrl, rootDir, config }) {
       // ---------------------------------------------------------------- the app (static files)
       let f = u.pathname === '/' ? 'web/app/index.html' : u.pathname.slice(1);
       const p = path.join(rootDir, f);
-      if (!p.startsWith(rootDir) || !fs.existsSync(p) || fs.statSync(p).isDirectory()) return send(res, 404, 'not found');
+      if (!p.startsWith(rootDir) || !fs.existsSync(p) || fs.statSync(p).isDirectory() || /(^|\/)(tests|supabase|scripts|node_modules)\//.test(f)) return send(res, 404, 'not found');
       let body = fs.readFileSync(p);
-      if (f.endsWith('index.html')) body = Buffer.from(body.toString().replace('window.PORTAL_CONFIG = null;', `window.PORTAL_CONFIG = ${JSON.stringify(config)};`));
+      if (f === 'web/app/config.js') body = Buffer.from(`window.PORTAL_CONFIG = ${JSON.stringify(config)};\n`);
       const type = f.endsWith('.js') || f.endsWith('.mjs') ? 'text/javascript' : f.endsWith('.css') ? 'text/css' : f.endsWith('.svg') ? 'image/svg+xml' : 'text/html';
-      res.writeHead(200, { 'Content-Type': type + '; charset=utf-8' }); res.end(body);
+      // The same security headers the live hosting sends (web/app/_headers), minus HTTPS-only rules on plain local http.
+      const sec = Object.fromEntries(fs.readFileSync(path.join(rootDir, 'web/app/_headers'), 'utf8').split('\n')
+        .filter(l => /^\s+[A-Za-z-]+:/.test(l)).map(l => { const i = l.indexOf(':'); return [l.slice(0, i).trim(), l.slice(i + 1).trim()]; })
+        .filter(([k]) => k !== 'Strict-Transport-Security').map(([k, v]) => [k, v.replace('; upgrade-insecure-requests', '')]));
+      res.writeHead(200, { ...sec, 'Content-Type': type + '; charset=utf-8' }); res.end(body);
     } catch (e) { send(res, 400, { message: e.message, code: e.code || 'P0001' }); }
   });
   return new Promise(r => server.listen(port, () => r({ url: `http://localhost:${port}`, close: () => { server.close(); pool.end(); } })));

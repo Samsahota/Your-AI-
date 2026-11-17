@@ -218,4 +218,14 @@ test('Phone width: no sideways scrolling on the dashboard and pages', async () =
   await page.close();
 });
 
-test('No script errors on any screen', () => { assert.deepEqual(errors, []); });
+test('Security headers are sent, and source files are not served', async () => {
+  const r = await fetch(`http://localhost:${PORT}/`);
+  const csp = r.headers.get('content-security-policy');
+  assert.match(csp, /script-src 'self';/);
+  assert.match(csp, /frame-ancestors 'none'/);
+  assert.equal(r.headers.get('x-frame-options'), 'DENY');
+  assert.equal(r.headers.get('x-content-type-options'), 'nosniff');
+  for (const p of ['/tests/e2e.test.mjs', '/supabase/config.toml', '/scripts/serve-local.mjs']) assert.equal((await fetch(`http://localhost:${PORT}${p}`)).status, 404, p);
+});
+
+test('No script errors or blocked content on any screen', () => { assert.deepEqual(errors, []); });
