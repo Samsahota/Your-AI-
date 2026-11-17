@@ -30,6 +30,12 @@ async function as(user, sql, params = [], aal = 'aal2') {
   } catch (e) { await db.query('rollback to savepoint q'); await db.query('reset role'); throw e; }
 }
 const count = async (user, table, aal) => (await as(user, `select count(*)::int n from ${table}`, [], aal))[0].n;
+// A direct (superuser) query inside its own savepoint, so an expected error doesn't abort the test run.
+async function raw(sql, params = []) {
+  await db.query('savepoint r');
+  try { const r = await db.query(sql, params); await db.query('release savepoint r'); return r.rows; }
+  catch (e) { await db.query('rollback to savepoint r'); throw e; }
+}
 const rejects = async (p, re) => assert.rejects(p, e => re.test(e.message), `expected error ${re}`);
 const dash = async (user, day = DAY) => (await as(user, `select dashboard($1) d`, [day]))[0].d;
 const measure = (d, code) => d.measures.find(m => m.code === code);
@@ -195,4 +201,77 @@ test('Users: directors suspend leavers in their own company only', async () => {
   assert.equal(await count(U.ops, 'jobs'), 0);
   await rejects(as(U.second, `select set_user_status($1, 'active')`, [U.ops]), /permission/);
   await rejects(as(U.director, `select set_user_status($1, 'suspended')`, [U.director]), /own status/);
+});
+
+// ---------------------------------------------------------------- screen functions
+test('Incidents: anyone with H&S access reports; only managers close, and only with no open actions', async () => {
+  await rejects(as(U.transport, `select log_incident('near_miss', now() + interval '1 day', 'x')`), /future/);
+  await rejects(as(U.transport, `select log_incident('near_miss', now(), '  ')`), /Describe/);
+  const [{ id }] = await as(U.transport, `select log_incident('near_miss', '2026-11-17 08:00+00', 'Forklift reversed without banksman', 'warehouse') id`);
+  await as(U.warehouse, `select log_incident('personal_accident', '2026-11-17 09:00+00', 'Cut hand on stretch-wrap cutter', 'warehouse', 'minor')`);
+  assert.equal((await as(U.second, `select count(*)::int n from incidents where id = $1`, [id]))[0].n, 0);
+  await rejects(as(U.transport, `select update_incident($1, 'closed', 0)`, [id]), /Only a director/);
+  await rejects(as(U.consultant, `select update_incident($1, 'closed', 2)`, [id]), /Close the open actions/);
+  await as(U.consultant, `select update_incident($1, 'closed', 0)`, [id]);
+  assert.equal((await as(U.director, `select status from incidents where id = $1`, [id]))[0].status, 'closed');
+});
+
+test('Library status: everyone sees their own signature; only full Compliance access sees the counts', async () => {
+  const doc = '60000000-0000-4000-8000-000000000001';
+  await as(U.admin, `select publish_document_version($1, 'library/mh-v2.pdf', 'Second issue')`, [doc]);
+  await as(U.transport, `select acknowledge_document($1)`, [doc]);
+  const [t] = await as(U.transport, `select * from library_status()`);
+  assert.deepEqual([t.title, t.i_signed, t.signed_count, t.user_count], ['Manual handling policy', true, null, null]);
+  const [d] = await as(U.director, `select * from library_status()`);
+  assert.equal(d.i_signed, false);
+  assert.deepEqual([d.signed_count, d.user_count], [1, 5]);   // 5 active users (two suspended earlier); 1 has signed version 2
+  assert.equal((await as(U.second, `select * from library_status()`)).length, 0);
+  assert.equal((await as(U.admin, `select * from library_status($1)`, [A])).length, 1);
+  await rejects(as(U.director, `select create_document(null, 'hr', 'Master doc', 'x')`), /Only the platform admin/);
+  const [{ id }] = await as(U.director, `select create_document($1, 'hr', 'Holiday booking procedure', 'Dana Director') id`, [A]);
+  assert.ok(id);
+  await rejects(as(U.second, `select create_document($1, 'hr', 'x', 'y')`, [A]), /Only a director/);
+});
+
+test('Companies and invitations: platform admin creates companies; directors invite only into their own', async () => {
+  await rejects(as(U.director, `select create_company('X Ltd', 'x-ltd', 'standard', 5000, 500)`), /Only the platform admin/);
+  const [{ id: co }] = await as(U.admin, `select create_company('Third Haulage Ltd', 'third-haulage', 'standard', 5000, 500) id`);
+  assert.equal((await as(U.admin, `select status from companies where id = $1`, [co]))[0].status, 'setup');
+  // The invite function runs with the service key; here we call the same database step directly.
+  await raw(`insert into auth.users (id, email) values ('10000000-0000-4000-8000-0000000000aa', 'newtm@demo.test'), ('10000000-0000-4000-8000-0000000000ab', 'x@demo.test')`);
+  await raw(`select app.add_profile($1, '10000000-0000-4000-8000-0000000000aa', $2, 'transport', 'New Transport', 'NewTM@demo.test', null, 'transport', false)`, [U.director, A]);
+  await assert.rejects(raw(`select app.add_profile($1, '10000000-0000-4000-8000-0000000000ab', $2, 'transport', 'X', 'x@demo.test', null, 'transport', false)`, [U.director, B]), /Only a director or the platform admin/);
+  await assert.rejects(raw(`select app.add_profile($1, '10000000-0000-4000-8000-0000000000ab', $2, 'platform_admin', 'X', 'x@demo.test', null, null, false)`, [U.admin, A]), /Your AI only/);
+  await assert.rejects(raw(`select app.add_profile($1, '10000000-0000-4000-8000-0000000000ab', $2, 'warehouse', 'X', 'x@demo.test', null, null, false)`, [U.director, A]), /transport or warehouse/);
+  await rejects(as(U.director, `select add_profile_for_invite($1, '10000000-0000-4000-8000-0000000000ab', $2, 'transport', 'X', 'x@demo.test', null, 'transport', false)`, [U.director, A]), /permission denied/);
+  const NEW = '10000000-0000-4000-8000-0000000000aa';
+  assert.equal(await count(NEW, 'jobs'), 0);                                   // invited, not yet active
+  await rejects(as(NEW, `select accept_invitation()`, [], 'aal1'), /two-factor/);
+  await as(NEW, `select accept_invitation()`);
+  assert.equal(await count(NEW, 'jobs'), 10);
+  const [{ p }] = await as(NEW, `select my_profile() p`);
+  assert.deepEqual([p.email, p.status, p.company], ['newtm@demo.test', 'active', 'Demo Haulage Ltd']);
+});
+
+test('Dashboard: the platform admin picks a company; nobody else can', async () => {
+  const d = (await as(U.admin, `select dashboard('2026-11-17', $1) d`, [B]))[0].d;
+  assert.equal(d.company, 'Second Haulier Ltd');
+  const own = (await as(U.director, `select dashboard('2026-11-17', $1) d`, [B]))[0].d;
+  assert.equal(own.company, 'Demo Haulage Ltd');
+  await rejects(as(U.admin, `select dashboard('2026-11-17')`), /Choose a company/);
+});
+
+test('File import: only checked records are written; a failed check writes nothing and flags the connection', async () => {
+  const [{ id }] = await as(U.admin, `select save_connection($1, 'sharepoint', 'Accident log', 'file', '{incidents}', 'on_receipt', '{}'::jsonb, null, 'configured') id`, [A]);
+  const recs = JSON.stringify([{ external_ref: 'SP-1', kind: 'Near miss', occurred_at: '2026-11-16T10:00:00Z', division: 'Transport', description: 'Trailer door swung open', status: 'Open', actions_open: 1 }]);
+  await rejects(as(U.director, `select import_records($1, 'incidents', $2, '[]', 1)`, [id, recs]), /Only the platform/);
+  await rejects(as(U.admin, `select import_records($1, 'jobs', $2, '[]', 1)`, [id, recs]), /does not fill jobs/);
+  const bad = (await as(U.admin, `select import_records($1, 'incidents', $2, '[{"name":"rows readable","passed":false}]', 1) r`, [id, recs]))[0].r;
+  assert.deepEqual([bad.status, bad.written], ['check_failed', 0]);
+  assert.equal((await as(U.admin, `select status from connections where id = $1`, [id]))[0].status, 'failing');
+  const ok = (await as(U.admin, `select import_records($1, 'incidents', $2, '[{"name":"rows readable","passed":true}]', 1) r`, [id, recs]))[0].r;
+  assert.deepEqual([ok.status, ok.written], ['ok', 1]);
+  await as(U.admin, `select import_records($1, 'incidents', $2, '[{"name":"rows readable","passed":true}]', 1)`, [id, recs]);   // same file again: updates, no duplicate
+  assert.equal((await as(U.director, `select count(*)::int n from incidents where source = 'sharepoint'`))[0].n, 1);
+  assert.equal((await as(U.admin, `select status from connections where id = $1`, [id]))[0].status, 'connected');
 });

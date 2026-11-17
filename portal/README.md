@@ -30,12 +30,32 @@ Enforced by the database itself, not by hiding screens:
 | Connections: setup, run records, failing feeds mark figures "not updated", secrets refused | Built, tested |
 | Comments, policy library (master and company documents, read and sign) | Built, tested |
 | Connection engine: CSV and report reading, UK dates and times, mapping, checks | Built, tested |
-| Screens (dashboard, pages, admin console) | Not started |
-| Real connectors for each supplier | Waiting for access and sample files |
-| Edge functions (inbox, schedules, invitations, Xero) | Not started (November versions to adapt) |
+| Screens: sign-in with two-factor, invitation and password reset, dashboard, Health and Safety, Service, Cost, People, Compliance, Links, Records, comments, My account (demo view) | Built, tested in a browser |
+| Users and settings (directors): users and invitations, access levels, targets, connections, documents, activity | Built, tested in a browser |
+| Admin console: companies, connections, file import with checks, master library, health | Built, tested in a browser |
+| Invitation edge function | Written; runs once hosted |
+| Real connectors for each supplier | Waiting for access and sample files (file import works now for spreadsheets and exports) |
+| Other edge functions (report inbox, nightly schedule, daily and weekly emails, Xero, Microsoft) | Not started (November versions to adapt) |
+| Uploading document files (PDFs) to the library | Switched on with hosting (storage) |
 | Hosting (Supabase, web hosting, email) | Not set up: needs accounts in Your AI's name |
 
 Connectors marked `verified: false` in `connectors/catalogue.mjs` are based on public information only. None goes live until a real sample from Trans Haul has been mapped and checked.
+
+## Trying it locally
+
+Uses the local test database and fictional companies (Demo Haulage Ltd, Second Haulier Ltd).
+
+```bash
+npm run db:reset
+```
+
+```bash
+npm run serve
+```
+
+Open http://localhost:54410 and sign in with `director@demo.test` (or `consultant@`, `ops@`, `transport@`, `warehouse@demo.test`, or `admin@example.test`). The password is printed when the server starts. Two-factor works as it will live: add the key it shows to an authenticator app and enter the code.
+
+Screenshots of every screen are in `web/screens/`.
 
 ## Running the tests locally
 
@@ -56,5 +76,11 @@ npm run test:db
 ```bash
 npm run test:unit
 ```
+
+```bash
+npm run test:e2e
+```
+
+The browser tests need a fresh database (`npm run db:reset`) and drive every screen in Chromium, including two-factor sign-in.
 
 The test data is fictional (Demo Haulage Ltd and Second Haulier Ltd). No Trans Haul data is used in tests.

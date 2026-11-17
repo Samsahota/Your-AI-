@@ -98,6 +98,38 @@ export const TEMPLATES = {
       actions_open: { from: 'Open actions', type: 'int' },
     },
   },
+  staff: {
+    target: 'staff', key: 'employee_no',
+    fields: {
+      employee_no: { from: 'Employee number', type: 'text', required: true },
+      name: { from: 'Name', type: 'text', required: true },
+      job_title: { from: 'Job title', type: 'text' },
+      division: { from: 'Area', type: 'text' },                      // Transport, Warehouse
+      is_driver: { from: 'Driver', type: 'bool' },                   // Yes, No
+      contracted_hours: { from: 'Contracted hours', type: 'number' },
+    },
+  },
+  compliance: {
+    target: 'compliance_items', key: 'external_ref',
+    fields: {
+      external_ref: { from: 'Reference', type: 'text', required: true },
+      kind: { from: 'Type', type: 'text', required: true },          // mot, pmi, tacho_calibration, licence_check, cpc, training, o_licence, brc, fors, other
+      subject: { from: 'For', type: 'text', required: true },        // registration, person or action
+      division: { from: 'Area', type: 'text' },
+      due_date: { from: 'Due', type: 'date', format: 'DD/MM/YYYY', required: true },
+      done_date: { from: 'Done', type: 'date', format: 'DD/MM/YYYY' },
+    },
+  },
+  warehouse: {
+    target: 'warehouse_daily', key: 'day',
+    fields: {
+      day: { from: 'Date', type: 'date', format: 'DD/MM/YYYY', required: true },
+      cases: { from: 'Cases', type: 'int', required: true },
+      picks: { from: 'Picks', type: 'int' },
+      units: { from: 'Units', type: 'int' },
+      labour_hours: { from: 'Labour hours', type: 'number', required: true },
+    },
+  },
   absence: {
     target: 'people_events', key: 'external_ref',
     fields: {
