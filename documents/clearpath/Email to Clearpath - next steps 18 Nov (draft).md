@@ -1,78 +1,77 @@
 ---
 title: "Email to Clearpath: next steps (draft)"
-date: "18 November 2026 · draft, not sent"
+date: "18 November 2026 · draft for Sam to review, not sent"
 ---
 
 **From:** sam@yourailtd.co.uk
 **To:** paul@clearpathinsights.co.uk; sam@clearpathinsights.co.uk
-**Attach:** NDA with our proposed changes (marked up) · Clearpath - how the data connections work.pdf · Trans Haul data request.xlsx
-**Subject:** Clearpath: where the build is, what I need, and the paperwork
+**Attach:** Mutual NDA - Clearpath and Your AI (amended draft).pdf · Mutual NDA - summary of changes (draft).pdf · Trans Haul data request.xlsx
+**Subject:** Clearpath: information needed, NDA and next steps
 
 Hi Paul, Samantha,
 
-A quick update on Clearpath, then what I need from you to get Trans Haul's figures flowing, and the paperwork.
+Thank you both again for Monday. The build is well under way on our side. Before I show you anything, I want it running on Trans Haul's own systems and figures, not sample data. To get there, I need the information and access below, and the paperwork in place.
 
-**Where the build is**
+**1. System access**
 
-- **The platform is built.** That covers every page we agreed (the bullseye dashboard with Health and Safety at the centre, Cost, Service, People, Compliance, Records and Links), the access levels for each role, two-factor sign-in, comments and the policy library.
-- **"Raise action" is in,** as you liked in the first build. Any red or amber figure, incident, compliance item or defect can have an action with an owner, a priority and a follow-up date. Progress is tracked until it's complete.
-- **Trans Haul is set up** on the live, secure database (hosted in London). Its nine system connections are recorded and waiting for access.
-- **No manual uploads day to day.** Six systems connect directly: Vigo, Tachomaster, Falcon, PreDrive, Xero and SharePoint. BrightPay, Bibby and the warehouse figures have no usable API, so their files are picked up automatically from a SharePoint folder instead. The attached document explains how each connection works.
-- **Nothing is estimated.** Until each system is connected, its figures show "Waiting for data".
+Each connection is read-only: Clearpath will never change anything in Trans Haul's systems. Where a supplier charges for API access, an integration module or an extra user, Trans Haul will need to buy or enable it, as it's part of Trans Haul's own subscription.
 
-I'd like to walk you both through it on a short call this week. Let me know what suits.
+1. **Vigo:** thanks for sorting this. Please send the read-only API documentation and a key for Trans Haul's data, or the contact at Vigo, plus anything Vigo charges to switch the API on. Vigo is the most important connection: it drives jobs, on-time delivery and job costs.
+2. **Road Tech (Tachomaster, Falcon Tracking and PreDrive):** one request to Road Tech for read-only API access for Your AI Ltd on Trans Haul's behalf, and the contact there. If Road Tech can't offer an API for any of the three, a scheduled daily report emailed to Clearpath works instead.
+3. **Microsoft 365 and SharePoint:** who is Trans Haul's Microsoft 365 administrator? They'll need to approve read-only access to named SharePoint sites only, with one approval link I'll send. The same approval also lets Clearpath pick up files saved into SharePoint folders automatically, so nobody uploads anything.
+4. **Xero:** who is Trans Haul's Xero administrator? They'll approve a read-only connection with a link I'll send. Also, is the monthly revenue budget kept in Xero? If not, it can be entered in Clearpath.
+5. **BrightPay:** BrightPay has no general API, so payroll costs will come through Xero. For hours, overtime and absence, who runs the monthly payroll, and could they save the monthly export into a SharePoint folder as part of the pay run?
+6. **Bibby:** could the monthly Bibby statement be saved into a SharePoint folder each month, or emailed to Clearpath?
+7. **Warehouse figures:** where are picking, volumes and labour hours kept today? Is it a warehouse system or a spreadsheet? Who is the Warehouse Manager?
+8. **Supplier authorisation:** a short email from Trans Haul to each supplier confirming that Your AI Ltd may access Trans Haul's data on its behalf, read-only. The wording is in the data request workbook.
 
-**What I need from you (and Trans Haul)**
+**2. Information**
 
-1. **Vigo:** thanks for sorting the Vigo access. When you have them, I need the read-only API details and a key for Trans Haul's data, or the name of the person at Vigo to speak to. Vigo is the most important connection: it drives jobs, on-time delivery and job costs.
-2. **Road Tech:** one request covering Tachomaster, Falcon Tracking and PreDrive: read-only API access for Your AI Ltd on Trans Haul's behalf, plus a contact there.
-3. **Microsoft 365:** Trans Haul's Microsoft admin needs to approve read-only access to named SharePoint sites only. I'll send a one-click approval link. One approval covers both the HR, incident and compliance spreadsheets and the folder pick-up.
-4. **Folder names:** where the monthly BrightPay export, the Bibby statement and the warehouse figures should be saved, and who runs the monthly BrightPay export.
-5. **Warehouse figures:** where picking, volumes and hours are kept today. Is it a warehouse system or a spreadsheet? Who is the Warehouse Manager?
-6. **Xero:** Trans Haul's Xero admin approves a read-only connection (I'll send the link). Is the revenue budget kept in Xero? If not, the monthly plan can be entered in Clearpath.
-7. **Logins:** names, emails and roles for everyone who needs access (there's a tab for this in the data request workbook).
-8. **Web address and email:** who looks after the clearpathinsights.co.uk domain. I'll need one DNS record so the portal can run at portal.clearpathinsights.co.uk, and one so the daily and Monday report emails come from a Clearpath address.
-9. **Branding:** Clearpath's logo and brand colours, if you have them, so the platform carries them.
-10. **The rest of the data request:** the workbook I sent previously still applies (spreadsheets, targets for red, amber and green, and the morning report Paul receives).
+9. **Folder names:** where in SharePoint the payroll export, the Bibby statement and the warehouse figures should go.
+10. **Spreadsheets:** copies or SharePoint links of the sheets used today for holiday, absence, overtime, accidents, near misses, training and compliance dates, plus the fleet list and staff list.
+11. **The morning report:** a copy of the daily email Paul receives each morning, and who sends it, so we can check our figures against it.
+12. **Targets:** what turns each area red, amber or green. The workbook suggests starting levels.
+13. **Logins:** names, email addresses and roles for everyone who needs access. There's a tab for this in the workbook.
+14. **Web address and email:** who looks after the clearpathinsights.co.uk domain. I'll need one record added so the portal can run at portal.clearpathinsights.co.uk, and one so the daily and Monday report emails come from a Clearpath address.
+15. **Branding:** Clearpath's logo and brand colours, if you have them.
 
-Please don't email any passwords or keys. I'll send a secure way to share them, or the supplier can create a separate read-only user for Your AI.
+Please don't email any passwords, keys or login details. I'll send a secure way to share them, or the supplier can create a separate read-only user for Your AI.
 
-**Paperwork**
+**3. Paperwork**
 
-- **NDA:** attached with the changes we discussed:
-  - a sensible limit on the indemnity;
-  - the non-compete narrowed to misuse of confidential information;
-  - confirmation that Your AI's platform and code stay Your AI's;
-  - AI and hosting tools allowed only on business terms that don't train on or share the data;
-  - Pritesh added;
-  - Samantha's notice address changed to her Clearpath email.
+- **NDA:** attached is your NDA with a few changes, plus a one-page summary of each change. It stays mutual. The changes:
+  - **Ownership, both ways:** each of us keeps what we bring. Clearpath's concept, brand, content and customer relationships stay Clearpath's; Your AI's platform and software stay Your AI's.
+  - **6.1:** now matches the restriction in 6.2.
+  - **Indemnity:** limited to a sensible, insurable amount, the same for both of us.
+  - **Cloud and AI services:** allowed, as long as they keep data confidential and don't train on it.
+  - **System licences and access:** Trans Haul provides them, read-only.
+  - **Signatures:** Pritesh added for Your AI, and Samantha's notice address changed to her Clearpath email.
 
-  If you're happy, let's get it signed this week.
-- **Clearpath and Your AI agreement:** I'd like to keep this light, two or three pages in plain English. In short:
-  - **Who does what:** Clearpath owns the brand, the concept, the policy content and the customer relationships, and sells and demos. Your AI builds, hosts, connects and supports the platform and owns the code.
-  - **Trans Haul (founding):** £3,000 setup split 50/50. £300 a month, with £100 to Your AI for running costs and the remaining £200 split 50/50.
-  - **Other hauliers:** £5,000 setup split 60/40 to Your AI, and £500 a month split 50/50. Add-ons and extra connections are priced separately.
-  - **Invoicing:** Your AI invoices customers, and Clearpath invoices its share once paid.
-  - **Data:** each haulier owns its data, and Your AI acts as data processor.
-  - **Liability:** a cap on liability, and a fair exit that protects existing customers.
+  Have a read and let me know if you're happy, and we can all sign electronically.
+- **Agreement between Clearpath and Your AI:** I'll send a short agreement, two or three pages in plain English, covering:
+  - who does what;
+  - ownership;
+  - the revenue split we agreed;
+  - invoicing;
+  - data protection;
+  - a cap on liability.
 
-  I'll send the draft for you to look over, and we can each have a solicitor glance at it.
+  We can each have a solicitor look over it.
 - **Insurance:** Your AI will have professional indemnity and cyber cover in place before go-live.
 
-**Invoice**
+**4. Invoice**
 
-As agreed, the setup fee is invoiced 50% now and 50% on go-live, and the monthly fee starts from go-live. I'm ready to issue the first invoice to THEL (Midlands) Ltd: £1,500 plus VAT, half of the £3,000 setup. Could you confirm:
+As agreed, the £3,000 setup fee is invoiced 50% now and 50% on go-live, and the £300 monthly fee starts from go-live. I'm ready to issue the first invoice to THEL (Midlands) Ltd for £1,500. Could you confirm:
 
 - THEL's billing address and who should receive invoices;
 - whether a purchase order number is needed.
 
-The second £1,500 plus VAT is invoiced on go-live, and the £300 a month starts from go-live. Clearpath's share of each payment is invoiced to Your AI once Trans Haul has paid.
+**5. Next steps**
 
-**Next steps**
-
-1. This week: a walkthrough call; the NDA signed; the supplier access requests sent; the folder names agreed.
-2. As each connection is approved, I connect it, check the figures against Trans Haul's own reports, and switch it on.
-3. Then the Trans Haul team gets their logins, in small groups, with the Monday report starting from go-live.
+1. The NDA agreed and signed.
+2. The supplier access requests and approvals above.
+3. As each system connects, I'll check its figures against Trans Haul's own reports before switching it on.
+4. Once it's running on Trans Haul's real data, I'll take you both through it before anyone else sees it.
 
 Thanks both,
 
