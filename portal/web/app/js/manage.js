@@ -5,7 +5,7 @@ import { ctx, q, level, roleName, openCompany, loadDashboard } from './app.js';
 import { processCsv, sha256 } from '/connectors/core.mjs';
 import { CATALOGUE, TEMPLATES } from '/connectors/catalogue.mjs';
 
-const METHOD = { api: 'Supplier API', oauth: 'Approved read-only sign-in', email_report: 'Scheduled emailed report', file: 'File upload' };
+const METHOD = { api: 'Supplier API', oauth: 'Approved read-only sign-in', sharepoint_folder: 'SharePoint folder (automatic)', email_report: 'Scheduled emailed report (automatic)', file: 'File upload' };
 const SCHEDULE = { every_15_min: 'Every 15 minutes', hourly: 'Hourly', nightly: 'Nightly', weekly: 'Weekly', monthly: 'Monthly', on_receipt: 'When a file arrives' };
 const head = (title, sub, actions = '') => `<header class="page-head"><div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div><div class="head-actions">${actions}</div></header>`;
 const tabs = (base, list, on) => `<nav class="tabs" aria-label="Sections">${list.map(([k, l]) => `<a href="#/${base}/${k}" class="${k === on ? 'on' : ''}">${l}</a>`).join('')}</nav>`;
@@ -138,15 +138,24 @@ async function connections(pane, adminView = false) {
     intro: c ? '' : 'Pick the system. Most start as "waiting for access" until the supplier provides it.',
     fields: [
       ...(c ? [] : [{ name: 'system', label: 'System', type: 'select', options: Object.entries(CATALOGUE).map(([k, v]) => [k, v.name]), required: true }, { name: 'label', label: 'Name (e.g. "Accident log")', required: true }]),
-      { name: 'method', label: 'How data arrives', type: 'select', options: [['api', 'API (key in the vault)'], ['oauth', 'Allow button (Xero, Microsoft)'], ['email_report', 'Emailed report'], ['file', 'File upload']], value: c?.method || 'file', required: true },
+      { name: 'method', label: 'How data arrives', type: 'select', options: [['api', 'API (key in the vault)'], ['oauth', 'Allow button (Xero, Microsoft)'], ['sharepoint_folder', 'SharePoint folder (picked up automatically)'], ['email_report', 'Emailed report'], ['file', 'File upload']], value: c?.method || CATALOGUE[c?.system]?.preferred || 'file', required: true },
       { name: 'schedule', label: 'How often', type: 'select', options: [['nightly', 'Nightly'], ['hourly', 'Hourly'], ['every_15_min', 'Every 15 minutes'], ['weekly', 'Weekly'], ['monthly', 'Monthly (e.g. payroll export)'], ['on_receipt', 'When a file or report arrives']], value: c?.schedule || 'nightly' },
       { name: 'secret_name', label: 'Vault secret name (API connections only)', value: c?.secret_name || '', hint: 'The name only, e.g. VIGO_KEY_TRANSHAUL. Never paste a key here.' },
       { name: 'status', label: 'Status', type: 'select', options: [['waiting_access', 'Waiting for access'], ['configured', 'Set up, not yet run'], ['paused', 'Paused']], value: c && ['waiting_access', 'configured', 'paused'].includes(c.status) ? c.status : 'waiting_access' },
+      // SharePoint folder pick-up: where the files are saved, and what they contain.
+      { name: 'sp_site', label: 'SharePoint site (folder pick-up only)', value: c?.config?.sharepoint?.site || '', hint: 'e.g. transhaul.sharepoint.com:/sites/Finance' },
+      { name: 'sp_folder', label: 'Folder', value: c?.config?.sharepoint?.folder || '', hint: 'e.g. Clearpath/Payroll. Every CSV or Excel file saved here is picked up.' },
+      { name: 'sp_target', label: 'What the files contain', type: 'select', options: [['', 'Choose']].concat((c?.feeds || []).filter(t => TARGETS[t]).map(t => [t, TARGETS[t].label]), [['keep', 'Keep the files only (no figures yet)']]), value: c?.config?.sharepoint?.target || '' },
+      { name: 'sp_sheet', label: 'Worksheet (Excel files only)', value: c?.config?.sharepoint?.sheet || '', hint: 'Leave empty for "Sheet1".' },
     ],
     onSubmit: async v => {
       const sys = c?.system || v.system;
+      if (v.method === 'sharepoint_folder' && v.status === 'configured' && !(v.sp_site && v.sp_folder && v.sp_target))
+        throw new Error('Add the SharePoint site, the folder and what the files contain before marking it set up.');
       await rpc('save_connection', { p_company: ctx.company, p_system: sys, p_label: c?.label || v.label, p_method: v.method, p_feeds: c?.feeds || CATALOGUE[sys].feeds,
-        p_schedule: v.schedule, p_config: c?.config || {}, p_secret_name: v.secret_name || null, p_status: v.status });
+        p_schedule: v.schedule, p_config: v.method === 'sharepoint_folder'
+          ? { ...(c?.config || {}), sharepoint: { site: v.sp_site, folder: v.sp_folder, target: v.sp_target, ...(v.sp_sheet ? { sheet: v.sp_sheet } : {}) } }
+          : (c?.config || {}), p_secret_name: v.secret_name || null, p_status: v.status });
       toast('Connection saved'); connections(pane, true);
     },
   });
