@@ -7,8 +7,10 @@ This is a short, plain-English agreement for how Clearpath and Your AI work toge
 
 # Parties
 
-1. **Clearpath Insights Ltd**, company number [ ], registered office [ ] (**Clearpath**).
-2. **Your AI Ltd**, company number [ ], registered office [ ] (**Your AI**).
+1. **Clearpath Insights Ltd**, a company registered in England and Wales, company number [ ], registered office [ ] (**Clearpath**).
+2. **Your AI Ltd**, a company registered in England and Wales, company number [ ], registered office [ ] (**Your AI**).
+
+Each Party confirms it is a company registered at Companies House on the date it signs. A company that does not yet exist cannot sign, and anyone signing for it would be personally liable (Companies Act 2006, section 51).
 
 Each a **Party**, together the **Parties**.
 
@@ -64,6 +66,10 @@ c. Each customer owns its own data.
 
 3.4 Your AI may reuse its connectors and platform for other customers of the Service. That is what makes each new haulier quicker and cheaper to set up.
 
+3.5 **Promises about what each Party brings.** Each Party confirms that it owns, or is licensed to use and to let customers use, what it brings to the Service. In particular, Clearpath confirms that the licence for any HR and health and safety documents it bought from a third party allows them to be shared with customers through the Service, and will give Your AI a copy of that licence on request.
+
+3.6 **If someone claims infringement.** Each Party will protect the other against claims by a third party that what it brought to the Service infringes that third party's intellectual property, and will pay the resulting damages and reasonable costs, as long as the other Party tells it promptly, lets it handle the claim and helps reasonably.
+
 # 4. Working together
 
 4.1 **Exclusivity.** While Clearpath is selling actively, Your AI supplies the platform to UK hauliers only through Clearpath. If Clearpath brings in fewer than [ ] new customers in any 12 months, either Party may end this exclusivity by giving written notice.
@@ -71,6 +77,8 @@ c. Each customer owns its own data.
 4.2 **Prices** are set out in Schedule 1. Either Party may propose a change, and changes apply once both agree in writing. Prices to customers rise once a year, in line with inflation and suppliers' costs.
 
 4.3 **Customer terms.** Each customer signs short customer terms and a data processing agreement before go-live. The minimum term is 12 months from go-live, then rolling monthly with 3 months' notice.
+
+4.4 **The NDA's non-compete.** While this agreement is in force, it is the signed definitive agreement referred to in clause 6.1 of the NDA, so the Service may be supplied under it. If exclusivity ends under clause 4.1 because the minimum was not met, clause 6.1 of the NDA no longer prevents Your AI from supplying its platform to UK hauliers directly, as long as it does not use Clearpath's Confidential Information or approach customers Clearpath introduced. *[Recommended addition: delete if you would rather not raise it.]*
 
 # 5. Money
 
@@ -84,7 +92,13 @@ c. Each customer owns its own data.
 
 5.5 **Setup timing.** Setup fees are invoiced 50% on order and 50% on go-live. Monthly fees start from go-live.
 
-5.6 **Running costs.**
+5.6 **VAT.** All prices exclude VAT. VAT is added if, and from when, the invoicing Party is registered for VAT.
+
+5.7 **Late payment.** Late payments between the Parties carry interest under the Late Payment of Commercial Debts (Interest) Act 1998.
+
+5.8 **Checking the figures.** Once a year, either Party may ask to see the invoices and payment records behind the statements, and the other Party will provide them within 14 days.
+
+5.9 **Running costs.**
 
 a. For Trans Haul, £100 of each monthly fee covers the platform's running costs and goes to Your AI before the split. If running costs for Trans Haul go above £100 a month, the excess also comes off before the split.
 
@@ -100,21 +114,29 @@ b. For every other customer, Your AI pays the running costs out of its share.
 
 6.4 Your AI is not responsible for a supplier's own system, prices or changes. If a supplier changes its system significantly, Your AI quotes for the rework.
 
+6.5 **Operators' own duties.** The Service brings together and highlights information from each customer's own systems. It does not replace any operator's legal duties, such as drivers' hours and tachograph rules, operator licence undertakings, vehicle maintenance and walkaround checks, or health and safety and employment law. Customer terms will say so. Figures are only as accurate as the source systems they come from, and neither Party is responsible for errors in a customer's own data.
+
 # 7. Data protection
 
 7.1 Each customer is the data controller of its data. Your AI processes it on the customer's behalf under a data processing agreement with that customer.
 
-7.2 Clearpath may see a customer's data only through its own login to the platform, with the customer's agreement, and only for supporting that customer.
+7.2 Clearpath may see a customer's data only through its own login to the platform, with the customer's agreement recorded in the customer terms, and only for supporting that customer. When it does, Clearpath acts on the customer's instructions and keeps the data confidential and secure.
 
-7.3 Each Party keeps its own registration with the Information Commissioner's Office.
+7.3 Customer data can include sensitive information, such as absence and accident details (health data) and drivers' infringements. Both Parties will limit who sees it to those who need to, which the platform's access levels enforce.
+
+7.4 Each Party tells the other within 24 hours of becoming aware of any personal data breach affecting a customer, so the customer can be told and, where required, the Information Commissioner's Office within 72 hours.
+
+7.5 Each Party keeps its own registration with the Information Commissioner's Office.
 
 # 8. Liability
 
-8.1 Each Party's total liability to the other under this agreement in any 12 months is limited to the amount it received under this agreement in the previous 12 months.
+8.1 Each Party's total liability to the other under this agreement in any 12 months is limited to the greater of £10,000 and the amount it received under this agreement in the previous 12 months.
 
-8.2 Neither Party is liable to the other for indirect or consequential loss, or for loss of profit.
+8.2 For breaches of confidentiality or data protection, and under clause 3.6, each Party's total liability is limited instead to £25,000, the same limit as the NDA.
 
-8.3 Nothing in this agreement limits liability for fraud, or for death or personal injury caused by negligence, or anything else that cannot legally be limited.
+8.3 Neither Party is liable to the other for indirect or consequential loss, or for loss of profit, except that Clearpath's share of fees under clause 5 is not "loss of profit" for this purpose.
+
+8.4 Nothing in this agreement limits liability for fraud, or for death or personal injury caused by negligence, or anything else that cannot legally be limited.
 
 # 9. Term and ending
 
@@ -140,7 +162,7 @@ d. each Party stops using the other's name, brand and content, except as needed 
 
 10.1 **Disputes.** The Parties will first try to settle any disagreement by talking, director to director. If that fails within 30 days, they will try mediation before going to court.
 
-10.2 **Relationship.** This agreement does not create a partnership, joint venture or employment. Neither Party may bind the other.
+10.2 **Relationship.** This agreement does not create a partnership, joint venture or employment. Neither Party may bind the other. Clearpath introduces and resells the Service as an independent business, not as Your AI's commercial agent. The Service is an online subscription service, not goods, so the Commercial Agents (Council Directive) Regulations 1993 are not intended to apply. If they are ever found to apply, Clearpath's continuing share under clause 9.3(b) counts towards any compensation or indemnity due.
 
 10.3 **Changes** to this agreement must be in writing and signed by both Parties.
 
@@ -213,5 +235,5 @@ Name: Sam Sahota · Position: Director
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
-Name: Pritesh [surname] · Position: [position]
+Name: Pritesh Patel · Position: Co-founder
 

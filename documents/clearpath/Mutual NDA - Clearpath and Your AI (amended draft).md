@@ -74,7 +74,7 @@ g. notify the Disclosing Party promptly on becoming aware of any unauthorised us
 
 2.3 **Service Providers.** Either Party may store and process Confidential Information using reputable hosting, cloud, database, email and AI service providers (**Service Providers**), as long as each one is bound by written terms that keep the information confidential, do not allow it to be used to train AI models, and do not allow it to be shared with anyone else. Each Party shall tell the other, on request, which Service Providers it uses.
 
-2.4 **Systems and access.** Each Party is responsible, at its own cost, for obtaining and keeping in place the licences, subscriptions and user accounts for its own systems, and Clearpath shall procure the same for its Affiliates (including THEL (Midlands) Limited). Where the Purpose needs Your AI to read data from a Clearpath or Affiliate system (for example Vigo, Tachomaster, Falcon Tracking, PreDrive, Xero, Microsoft 365 and SharePoint, BrightPay or Bibby), Clearpath shall procure that the relevant Party:
+2.4 **Systems and access.** Each Party is responsible, at its own cost, for obtaining and keeping in place the licences, subscriptions and user accounts for its own systems, and Clearpath shall procure the same for its Affiliates (including THEL (Midlands) Limited). Where the Purpose needs Your AI to read data from a Clearpath or Affiliate system (for example Vigo, Tachomaster, Falcon Tracking, PreDrive, Xero, Microsoft 365 and SharePoint, BrightPay or Bibby), Clearpath shall procure (or, for any Affiliate it does not control, use all reasonable endeavours to procure) that the relevant Party:
 
 a. purchases or enables any API, integration module or additional user licence that the system's supplier charges for;
 
@@ -132,11 +132,11 @@ c. data belonging to Clearpath's Affiliates or customers remains theirs.
 
 These restrictions last from the date of this Agreement until 24 months after the end of discussions under clause 7.2 (the **Restricted Period**).
 
-6.1 During the Restricted Period, Your AI shall not use Clearpath's Confidential Information (including its customer lists, pricing, commercial strategy and existing portal) to develop, build, market, license or operate, or to brief any third party to do so, any product or service for the UK haulage or road transport sector delivering the Clearpath Concept, except under a signed definitive agreement with Clearpath.
+6.1 During the Restricted Period, Your AI shall not, directly or indirectly, alone or with any other person, develop, build, market, license or operate any product or service for the UK haulage or road transport sector that is based on, derived from or substantially similar to the Clearpath Concept, except under a signed definitive agreement with Clearpath.
 
 6.2 During the Restricted Period, Clearpath shall not use Your AI's Confidential Information (including its architecture, code or technical methods) to build, or to brief any third party to build, a platform delivering the Clearpath Concept.
 
-6.3 Clauses 6.1 and 6.2 do not stop either Party from developing products or services itself or with another provider, provided it does not use the other Party's Confidential Information.
+6.3 Clause 6.2 does not stop Clearpath from developing the Clearpath Concept itself or with another provider, provided it does not use Your AI's Confidential Information.
 
 6.4 During the Restricted Period, neither Party shall, without the other's prior written consent, solicit, approach or deal with any customer, prospective customer, supplier or business contact introduced by the other Party in connection with the Purpose, for a product or service competing with the Clearpath Concept.
 
@@ -218,5 +218,5 @@ Name: Sam Sahota · Position: Director · Email for notices: sam@yourailtd.co.uk
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
-Name: Pritesh [surname] · Position: [position] · Email for notices: [email]
+Name: Pritesh Patel · Position: Co-founder · Email for notices: pritesh@yourailtd.co.uk
 
