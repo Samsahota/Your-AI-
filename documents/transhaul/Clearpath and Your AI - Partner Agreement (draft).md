@@ -1,6 +1,6 @@
 ---
 title: "Partner Agreement"
-subtitle: "Clearpath Insights Ltd and Your AI Ltd · draft for discussion · 18 November 2026"
+subtitle: "Clearpath Insights Ltd and YourAI Ltd · draft for discussion · 18 November 2026"
 ---
 
 This is a short, plain-English agreement for how Clearpath and Your AI work together to sell and run the Clearpath platform for UK hauliers. It is a working draft, not legal advice. Each Party should have a solicitor look over it before signing.
@@ -8,7 +8,7 @@ This is a short, plain-English agreement for how Clearpath and Your AI work toge
 # Parties
 
 1. **Clearpath Insights Ltd**, a company registered in England and Wales, company number [ ], registered office [ ] (**Clearpath**).
-2. **Your AI Ltd**, a company registered in England and Wales, company number [ ], registered office [ ] (**Your AI**).
+2. **YourAI Ltd**, a company registered in England and Wales, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**).
 
 Each Party confirms it is a company registered at Companies House on the date it signs. A company that does not yet exist cannot sign, and anyone signing for it would be personally liable (Companies Act 2006, section 51).
 
@@ -227,13 +227,13 @@ Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date
 
 Name: Samantha Hardy · Position: Director
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 Name: Sam Sahota · Position: Director
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 

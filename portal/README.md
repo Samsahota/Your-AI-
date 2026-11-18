@@ -41,10 +41,12 @@ Enforced by the database itself, not by hiding screens:
 | Design: Clearpath's own look, statistic tiles, trend lines, charts, view and date drop-downs, account menu | Built, tested in a browser |
 | SharePoint folder pick-up (files saved to a named folder are checked, kept and imported automatically; Excel read directly); BrightPay, Bibby and warehouse use it | Built and tested (`npm run test:sharepoint`); deploy and schedule hourly with hosting, once Microsoft access is approved |
 | Real connectors for each supplier | Waiting for access and sample files (file import works now for spreadsheets and exports) |
-| Other edge functions (report inbox, nightly schedule, daily and weekly emails, Xero, Microsoft) | Not started (November versions to adapt) |
+| Daily and Monday report emails (each person sees only their own figures; their own on/off switch; sent once, retried up to three times) | Built and tested (`npm run test:reports`); database part live; function deployed and scheduled at go-live (`hosting/GO-LIVE.md`) |
+| Nightly recalculation of figures | Built and tested; database part live; scheduled at go-live |
+| Other server functions (report inbox, Xero, Microsoft) | Not started (November versions to adapt) |
 | Uploading document files (PDFs) to the library | Switched on with hosting (storage) |
 | Supabase project `clearpath-production` (London, Your AI Ltd Pro organisation) | Set up 17 Nov 2026: all 10 migrations applied (18 Nov), security checker clear apart from the intended signed-in functions (each checks access itself). Trans Haul added 17 Nov (founding deal, nine connections waiting for access; BrightPay monthly, Xero also brings the revenue plan; BrightPay, Bibby and warehouse by SharePoint folder); no users yet |
-| Web hosting and email | Not set up |
+| Web hosting | Build ready (`npm run build:site`, tested with `npm run test:site`): Cloudflare Pages or Vercel, strict headers, live settings. Waiting on the host choice and access to Clearpath's domain |
 
 Connectors marked `verified: false` in `connectors/catalogue.mjs` are based on public information only. None goes live until a real sample from Trans Haul has been mapped and checked.
 

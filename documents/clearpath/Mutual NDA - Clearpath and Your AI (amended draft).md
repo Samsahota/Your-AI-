@@ -8,7 +8,7 @@ This Agreement is dated [date of signature] and protects the confidential inform
 # Parties
 
 1. **Clearpath Insights Ltd** (**Clearpath**).
-2. **Your AI Ltd** (**Your AI**).
+2. **YourAI Ltd**, a company registered in England and Wales, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**).
 
 Each a **Party** and together the **Parties**. Each Party may be a Disclosing Party or a Receiving Party.
 
@@ -208,13 +208,13 @@ Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date
 
 Name: Samantha Hardy · Position: Director · Email for notices: sam@clearpathinsights.co.uk
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 Name: Sam Sahota · Position: Director · Email for notices: sam@yourailtd.co.uk
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 

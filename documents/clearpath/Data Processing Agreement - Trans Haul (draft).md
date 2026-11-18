@@ -1,6 +1,6 @@
 ---
 title: "Data Processing Agreement"
-subtitle: "Your AI Ltd and THEL (Midlands) Ltd · draft for discussion · 18 November 2026"
+subtitle: "YourAI Ltd and THEL (Midlands) Ltd · draft for discussion · 18 November 2026"
 ---
 
 This agreement forms part of the Clearpath Customer Terms between the same parties. It sets out how Your AI handles personal data for Trans Haul, as required by Article 28 of the UK GDPR. It is a working draft, not legal advice: have it reviewed before signing.
@@ -9,7 +9,7 @@ This agreement forms part of the Clearpath Customer Terms between the same parti
 
 1.1 **THEL (Midlands) Ltd** (**Trans Haul**) is the controller of the personal data in the Service. It decides why and how its data is used.
 
-1.2 **Your AI Ltd** (**Your AI**) is the processor. It processes the data only to provide the Service, on Trans Haul's documented instructions.
+1.2 **YourAI Ltd** (**Your AI**) is the processor. It processes the data only to provide the Service, on Trans Haul's documented instructions.
 
 1.3 The Customer Terms, this agreement and Trans Haul's use of the Service's settings (such as user access levels) are Trans Haul's instructions. If Your AI believes an instruction breaks data protection law, it will say so.
 
@@ -110,7 +110,7 @@ Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date
 
 Name: [ ] · Position: Director
 
-**Signed for Your AI Ltd (processor)**
+**Signed for YourAI Ltd (processor)**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 

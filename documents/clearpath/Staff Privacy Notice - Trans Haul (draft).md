@@ -28,7 +28,7 @@ We use this information to run the business safely and legally, and to manage ou
 # Who can see it
 
 - **Our managers,** according to their role. For example, a Transport Manager sees transport information for their own area. Disciplinary, grievance and payroll detail is seen only by the Director and our consultant.
-- **Your AI Ltd,** which runs the system for us under a data processing agreement. It can only use your information to provide the system, and never to train AI.
+- **YourAI Ltd,** which runs the system for us under a data processing agreement. It can only use your information to provide the system, and never to train AI.
 - **Clearpath Insights Ltd,** our consultant, which supports us with the system.
 
 Your information is stored securely in the UK. Every user signs in with two-factor sign-in, and every change is recorded.

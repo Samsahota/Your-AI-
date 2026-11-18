@@ -8,7 +8,7 @@ These notes review the documents as a commercial solicitor working with hauliers
 # 1. Before anyone signs
 
 1. **Check Clearpath Insights Ltd exists.** I couldn't find it on Companies House. If it isn't incorporated, it can't sign, and whoever signs for it becomes personally liable (Companies Act 2006, section 51). The email asks Paul for its company number and registered office.
-2. **Add Your AI Ltd's company number and registered office** to the NDA, the agreement and the invoices. I couldn't confirm them: the only close match online (YourAI Ltd, 16874666, Leicester) belongs to someone else.
+2. **Done: YourAI Ltd's details** (company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP) are now in the NDA, both agreements, the Trans Haul documents and the invoices. The registered name is one word (YOURAI LTD), so the legal documents say "YourAI Ltd" and use "Your AI" as the short name. Before signing, check the officers listed on Companies House: Sam signs as a director, and if Pritesh isn't listed as a director, his signature block should read "Co-founder (authorised signatory)".
 3. **Pritesh signs as Co-founder.** That's fine for these documents, as long as Your AI authorises him to sign for it. If he is not a registered director, record that authority in a short board minute or email from you.
 4. **Confirm THEL's details** (THEL (Midlands) Ltd, company 12359081, 68 Nottingham Road, Eastwood, Nottingham NG16 3NQ, from its Companies House filing history), and who receives its invoices.
 

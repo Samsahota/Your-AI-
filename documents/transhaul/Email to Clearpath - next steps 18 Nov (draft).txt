@@ -1,10 +1,4 @@
-From: sam@yourailtd.co.uk
-To: paul@clearpathinsights.co.uk; sam@clearpathinsights.co.uk
-Attach: Mutual NDA - Clearpath and Your AI (amended draft).pdf
-        Mutual NDA - summary of changes (draft).pdf
-        Clearpath and Your AI - Partner Agreement (draft).pdf
-        Trans Haul data request.xlsx
-Subject: Clearpath: information needed, NDA and next steps
+From: sam@yourailtd.co.uk To: paul@clearpathinsights.co.uk; sam@clearpathinsights.co.uk Attach: Mutual NDA - Clearpath and Your AI (amended draft).pdf · Mutual NDA - summary of changes (draft).pdf · Clearpath and Your AI - Partner Agreement (draft).pdf · Data Agreement - Clearpath and Your AI (draft).pdf · Trans Haul data request.xlsx Subject: Clearpath: information needed, NDA and next steps
 
 Hi Paul, Samantha,
 
@@ -15,13 +9,13 @@ Thank you both again for Monday. The build is well under way on our side. Before
 Each connection is read-only: Clearpath will never change anything in Trans Haul’s systems. Where a supplier charges for API access, an integration module or an extra user, Trans Haul will need to buy or enable it, as it’s part of Trans Haul’s own subscription.
 
 1.  Vigo: thanks for sorting this. Please send the read-only API documentation and a key for Trans Haul’s data, or the contact at Vigo, plus anything Vigo charges to switch the API on. Vigo is the most important connection: it drives jobs, on-time delivery and job costs.
-2.  Road Tech (Tachomaster, Falcon Tracking and PreDrive): one request to Road Tech for read-only API access for Your AI Ltd on Trans Haul’s behalf, and the contact there. If Road Tech can’t offer an API for any of the three, a scheduled daily report emailed to Clearpath works instead.
+2.  Road Tech (Tachomaster, Falcon Tracking and PreDrive): one request to Road Tech for read-only API access for YourAI Ltd on Trans Haul’s behalf, and the contact there. If Road Tech can’t offer an API for any of the three, a scheduled daily report emailed to Clearpath works instead.
 3.  Microsoft 365 and SharePoint: who is Trans Haul’s Microsoft 365 administrator? They’ll need to approve read-only access to named SharePoint sites only, with one approval link I’ll send. The same approval also lets Clearpath pick up files saved into SharePoint folders automatically, so nobody uploads anything.
 4.  Xero: who is Trans Haul’s Xero administrator? They’ll approve a read-only connection with a link I’ll send. Also, is the monthly revenue budget kept in Xero? If not, it can be entered in Clearpath.
 5.  BrightPay: BrightPay has no general API, so payroll costs will come through Xero. For hours, overtime and absence, who runs the monthly payroll, and could they save the monthly export into a SharePoint folder as part of the pay run?
 6.  Bibby: could the monthly Bibby statement be saved into a SharePoint folder each month, or emailed to Clearpath?
 7.  Warehouse figures: where are picking, volumes and labour hours kept today? Is it a warehouse system or a spreadsheet? Who is the Warehouse Manager?
-8.  Supplier authorisation: a short email from Trans Haul to each supplier confirming that Your AI Ltd may access Trans Haul’s data on its behalf, read-only. The wording is in the data request workbook.
+8.  Supplier authorisation: a short email from Trans Haul to each supplier confirming that YourAI Ltd may access Trans Haul’s data on its behalf, read-only. The wording is in the data request workbook.
 
 2. Information
 
@@ -30,7 +24,7 @@ Each connection is read-only: Clearpath will never change anything in Trans Haul
 11. The morning report: a copy of the daily email Paul receives each morning, and who sends it, so we can check our figures against it.
 12. Targets: what turns each area red, amber or green. The workbook suggests starting levels.
 13. Logins: names, email addresses and roles for everyone who needs access. There’s a tab for this in the workbook.
-14. Web address and email: who looks after the clearpathinsights.co.uk domain. I’ll need one record added so the portal can run at portal.clearpathinsights.co.uk, and one so the daily and Monday report emails come from a Clearpath address.
+14. Website and domain access: which company hosts the clearpathinsights.co.uk website and domain (for example GoDaddy, 123 Reg, Wix or Squarespace), and who holds the login? Could you request access to that account for us? Ideally, add sam@yourailtd.co.uk as a user or delegate, so nobody has to share their own password. I’ll add a few records there: one so the portal runs at portal.clearpathinsights.co.uk, and some so the daily and Monday report emails come from a Clearpath address. Nothing on the existing website or your email will change.
 15. Branding: Clearpath’s logo and brand colours, if you have them.
 
 Please don’t email any passwords, keys or login details. I’ll send a secure way to share them, or the supplier can create a separate read-only user for Your AI.
@@ -44,6 +38,7 @@ Please don’t email any passwords, keys or login details. I’ll send a secure 
     -   Cloud and AI services: allowed, as long as they keep data confidential and don’t train on it.
     -   System licences and access: Trans Haul provides them, read-only.
     -   Signatures: Pritesh added for Your AI, and Samantha’s notice address changed to her Clearpath email.
+    -   Company details: YourAI Ltd’s company number and registered office added.
 
     Have a read and let me know if you’re happy, and we can all sign electronically.
 -   Agreement between Clearpath and Your AI: a short draft is attached, in plain English. It covers:
@@ -55,7 +50,8 @@ Please don’t email any passwords, keys or login details. I’ll send a secure 
     -   data protection, a cap on liability, and what happens if we ever part ways, so no customer is left without a system.
 
     A few blanks are for us to agree, such as the exclusivity minimum and the day rate. We can each have a solicitor look over it.
--   Company details: could you send Clearpath Insights Ltd’s company number and registered office address for the NDA and the agreement?
+-   Data Agreement between Clearpath and Your AI: a short companion to the agreement, also attached. It sets out how we both look after customers’ data (security, breaches within 24 hours, no AI training), and covers either invoicing option.
+-   Company details: could you send Clearpath Insights Ltd’s company number and registered office address for the NDA and the agreements? YourAI’s are already in.
 -   Insurance: Your AI will have professional indemnity and cyber cover in place before go-live.
 
 4. Invoicing
@@ -84,4 +80,4 @@ Thanks both,
 
 Sam
 
-Sam Sahota Director, Your AI Ltd sam@yourailtd.co.uk
+Sam Sahota Director, YourAI Ltd sam@yourailtd.co.uk

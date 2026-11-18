@@ -1,6 +1,6 @@
 ---
 title: "Clearpath Customer Terms"
-subtitle: "Your AI Ltd and THEL (Midlands) Ltd · draft for discussion · 18 November 2026"
+subtitle: "YourAI Ltd and THEL (Midlands) Ltd · draft for discussion · 18 November 2026"
 ---
 
 These terms are drafted on the basis that Your AI invoices and contracts with Trans Haul directly (option A in the Partner Agreement). If Clearpath invoices instead (option B), Clearpath becomes the supplier and these terms are adjusted to match. This is a working draft, not legal advice: have it reviewed before signing.
@@ -9,7 +9,7 @@ These terms are drafted on the basis that Your AI invoices and contracts with Tr
 
 | | |
 | --- | --- |
-| **Supplier** | Your AI Ltd, company number [ ], registered office [ ] (**Your AI**) |
+| **Supplier** | YourAI Ltd, a company registered in England and Wales, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**) |
 | **Customer** | THEL (Midlands) Ltd, trading as Trans Haul, company number 12359081, registered office 68 Nottingham Road, Eastwood, Nottingham NG16 3NQ (**Trans Haul**) |
 | **Service** | The Clearpath operations platform: dashboard, Health and Safety, Service, Cost, People, Compliance, Records, Links, Actions, comments, the policy library, and the daily and Monday report emails |
 | **Systems connected** | Vigo, Tachomaster, Falcon Tracking, PreDrive, Xero, Microsoft 365 and SharePoint, BrightPay, Bibby, and the warehouse figures |
@@ -175,7 +175,7 @@ Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date
 
 Name: [ ] · Position: Director
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 

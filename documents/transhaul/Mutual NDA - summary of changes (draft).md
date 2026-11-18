@@ -1,6 +1,6 @@
 ---
 title: "Mutual NDA: summary of our proposed changes"
-subtitle: "Clearpath Insights Ltd and Your AI Ltd · 18 November 2026 · draft for discussion"
+subtitle: "Clearpath Insights Ltd and YourAI Ltd · 18 November 2026 · draft for discussion"
 ---
 
 The NDA stays mutual, and everything not listed below is unchanged from Clearpath's draft of 17 November 2026. The changes make ownership even-handed (each Party keeps what it brings), limit the indemnity, set out who provides access to the systems, and add Pritesh as a signatory.

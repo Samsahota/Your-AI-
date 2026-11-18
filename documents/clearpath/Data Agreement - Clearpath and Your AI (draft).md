@@ -1,6 +1,6 @@
 ---
 title: "Data Agreement"
-subtitle: "Clearpath Insights Ltd and Your AI Ltd · draft for discussion · 18 November 2026"
+subtitle: "Clearpath Insights Ltd and YourAI Ltd · draft for discussion · 18 November 2026"
 ---
 
 This agreement sits alongside the Partner Agreement between the same parties. It sets out how both Parties handle customers' personal data in the Clearpath Service. Part A always applies. Part B applies only where Clearpath, rather than Your AI, contracts with and invoices a customer (option B in the Partner Agreement). This is a working draft, not legal advice: have it reviewed before signing.
@@ -8,7 +8,7 @@ This agreement sits alongside the Partner Agreement between the same parties. It
 # Parties
 
 1. **Clearpath Insights Ltd**, company number [ ], registered office [ ] (**Clearpath**).
-2. **Your AI Ltd**, company number [ ], registered office [ ] (**Your AI**).
+2. **YourAI Ltd**, a company registered in England and Wales, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**).
 
 # Part A: How both Parties handle customer data
 
@@ -100,13 +100,13 @@ Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date
 
 Name: Samantha Hardy · Position: Director
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
 Name: Sam Sahota · Position: Director
 
-**Signed for Your AI Ltd**
+**Signed for YourAI Ltd**
 
 Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
 
