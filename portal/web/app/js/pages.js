@@ -1,11 +1,34 @@
 // The area pages: Health and Safety, Service, Cost, People, Compliance, Links and Records.
 // Each page shows the figures behind its dashboard colour, then the records behind the figures.
 import { rpc, select } from './api.js';
-import { esc, pill, fmtValue, money, date, dateTime, time, addDays, daysBetween, table, measureRows, dialog, toast, label, QUAD } from './ui.js';
+import { esc, pill, fmtValue, money, date, dateTime, time, addDays, daysBetween, table, measureRows, dialog, toast, label, icon, iconTile, figureTile, barChart, raiseBtn, QICON, QUAD } from './ui.js';
+import { areaActionsCard } from './actions.js';
 import { ctx, q, level, isManager, loadDashboard } from './app.js';
 
-const head = (title, sub, actions = '') => `<header class="page-head"><div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div><div class="head-actions">${actions}</div></header>`;
-const figures = k => `<section class="card"><div class="qhead"><h2>${ctx.noFigures ? 'Figures: waiting for data' : `Figures for ${date(ctx.day)}`}</h2>${pill(ctx.dash.quadrants[k].status)}</div>${measureRows(ctx.dash.measures.filter(m => m.quadrant === k))}</section>`;
+const PAGE_KEY = { 'Health and Safety': 'hs', Service: 'service', Cost: 'cost', People: 'people', Compliance: 'compliance', Records: 'records', Links: 'links' };
+const PAGE_ICON = { ...QICON, records: 'table', links: 'link' };
+const head = (title, sub, actions = '') => { const k = PAGE_KEY[title];
+  return `<header class="page-head"><div class="title">${k ? iconTile(PAGE_ICON[k], QUAD[k] ? k : '', 'lg') : ''}<div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div></div>
+    <div class="head-actions">${actions}${QUAD[k] ? raiseBtn({ area: k }, 'Raise action', '') : ''}</div></header>`; };
+// An area's figures: a tile per figure with its trend, a chart of one figure (chosen from a drop-down), and the area's open actions.
+const figures = k => {
+  const ms = ctx.dash.measures.filter(m => m.quadrant === k);
+  if (!ms.length) return '';
+  const title = ctx.noFigures ? 'Waiting for data' : `Figures for ${date(ctx.day)}`;
+  return `<div class="sec-title"><h2>${title}</h2><span class="sub">${ctx.noFigures ? 'Each figure fills in as its system is connected.' : 'Each tile shows the last 14 days.'}</span></div>
+    <div class="tiles four">${ms.map(m => figureTile(m, (ctx.trend || {})[m.code], `#/${k}`)).join('')}</div>
+    <div class="grid2 wide-left"><section class="card flush"><div class="card-head"><div class="t">${iconTile('trend', k, 'sm')}<h2>Trend</h2></div>
+        <label class="ctl" for="trend-${k}"><span class="sr">Figure</span><select class="select" id="trend-${k}" data-trend="${k}">${ms.map(m => `<option value="${m.code}">${esc(m.name)}</option>`).join('')}</select></label></div>
+        <div class="card-body" id="chart-${k}">${trendChart(ms[0])}</div></section>
+      ${areaActionsCard(k)}</div>`;
+};
+const trendChart = m => barChart((ctx.trend || {})[m.code] || [], { unit: m.unit, target: m.green_at == null ? null : Number(m.green_at),
+  emptyText: `Daily bars for ${m.name.toLowerCase()} appear here once data arrives.` });
+document.addEventListener('change', e => {
+  const k = e.target?.dataset?.trend; if (!k) return;
+  const m = ctx.dash.measures.find(x => x.code === e.target.value); const box = document.getElementById(`chart-${k}`);
+  if (m && box) box.innerHTML = trendChart(m);
+});
 const card = (title, body, sub = '') => `<section class="card"><h2>${esc(title)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${body}</section>`;
 const byId = rows => Object.fromEntries(rows.map(r => [r.id, r]));
 const KIND = { accident: 'Accident', personal_accident: 'Personal accident', near_miss: 'Near miss' };
@@ -89,6 +112,7 @@ function incidentTable(rows) {
     { label: 'What happened', cell: i => esc(i.description) },
     { label: 'Actions open', num: true, cell: i => i.actions_open },
     { label: 'Status', cell: i => (i.status === 'open' ? pill('amber', 'Open') : pill('green', 'Closed')) + (isManager() ? ` <button class="btn small ghost" data-incident="${i.id}">Update</button>` : '') },
+    { label: '', cell: i => i.status === 'open' ? raiseBtn({ area: 'hs', division: i.division, title: `Follow up ${KIND[i.kind].toLowerCase()} on ${date(i.occurred_at)}`, linkKind: 'incident', linkId: i.id, linkLabel: `${KIND[i.kind]}, ${date(i.occurred_at)}`, priority: i.kind === 'near_miss' ? 'medium' : 'high' }, 'Action') : '' },
   ], 'No incidents recorded in this period.');
 }
 
@@ -188,13 +212,16 @@ async function compliance(main) {
       { label: 'Item', cell: i => esc(ITEM[i.kind] || i.kind) }, { label: 'For', cell: i => esc(i.subject) },
       { label: 'Due', cell: i => date(i.due_date) },
       { label: 'Status', cell: i => { const n = daysBetween(ctx.day, i.due_date); return n < 0 ? pill('red', `${-n} day${n === -1 ? '' : 's'} overdue`) : n <= 14 ? pill('amber', `Due in ${n} day${n === 1 ? '' : 's'}`) : pill('green', `Due in ${n} days`); } },
+      { label: '', cell: i => raiseBtn({ area: 'compliance', division: i.division, title: `${ITEM[i.kind] || i.kind} for ${i.subject}: due ${date(i.due_date)}`, linkKind: 'compliance_item', linkId: i.id, linkLabel: `${ITEM[i.kind] || i.kind}, ${i.subject}`, priority: i.due_date < ctx.day ? 'high' : 'medium' }, 'Action') },
     ], 'Nothing overdue or due in the next 30 days.')) +
     `<div class="grid2">` + card('Infringements: last 30 days', table(infringements, [
       { label: 'Day', cell: i => date(i.occurred_on) }, { label: 'Driver', cell: i => esc(s[i.staff_id] ? ctx.name(i.staff_id, s[i.staff_id].name, 'Driver') : '—') },
-      { label: 'Infringement', cell: i => esc(i.infringement_type) }], 'No infringements recorded.'), 'From Tachomaster.') +
+      { label: 'Infringement', cell: i => esc(i.infringement_type) },
+      { label: '', cell: i => raiseBtn({ area: 'compliance', division: i.division, title: `Debrief driver on ${i.infringement_type.toLowerCase()} (${date(i.occurred_on)})`, linkKind: 'infringement', linkId: i.id, linkLabel: `${i.infringement_type}, ${date(i.occurred_on)}` }, 'Action') }], 'No infringements recorded.'), 'From Tachomaster.') +
     card('Open vehicle defects', table(defects, [
       { label: 'Vehicle', cell: d => esc(v[d.vehicle_id]?.registration || '—') }, { label: 'Reported', cell: d => dateTime(d.reported_at) },
-      { label: 'Defect', cell: d => esc(d.description) }, { label: 'Severity', cell: d => d.severity === 'dangerous' ? pill('red', 'Dangerous') : esc(label(d.severity)) }], 'No open defects.'), 'From PreDrive.') + `</div>` +
+      { label: 'Defect', cell: d => esc(d.description) }, { label: 'Severity', cell: d => d.severity === 'dangerous' ? pill('red', 'Dangerous') : esc(label(d.severity)) },
+      { label: '', cell: d => raiseBtn({ area: 'compliance', division: d.division, title: `Rectify defect on ${v[d.vehicle_id]?.registration || 'vehicle'}: ${d.description}`, linkKind: 'defect', linkId: d.id, linkLabel: `${v[d.vehicle_id]?.registration || 'Vehicle'}, ${d.description}`.slice(0, 120), priority: d.severity === 'dangerous' ? 'high' : 'medium' }, 'Action') }], 'No open defects.'), 'From PreDrive.') + `</div>` +
     `<section class="card" id="docs"><h2>Policy sign-off</h2>${docTable(docs, level('compliance') === 'full')}</section>`;
   bindSign(main.querySelector('#docs'), () => compliance(main));
   await comments(main, 'compliance');

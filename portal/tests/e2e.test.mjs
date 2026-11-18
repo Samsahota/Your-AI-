@@ -100,7 +100,7 @@ test('Director: report an incident, comment, change a target, change access, inv
   await page.click('dialog [type=submit]');
   await page.waitForSelector('.toast >> text=Target saved');
   await go(page, '#/dashboard');
-  assert.match(await text(page), /On time in full\s*80\.0%\s*Green at or above 75\.0%[^\n]*?On target/);   // the tile now shows its target too
+  assert.match(await text(page), /On time in full\s*80\.0%\s*Green at or above 75\.0%[\s\S]{0,80}?On target/);   // the tile now shows its target too
 
   await go(page, '#/settings/access');
   await page.selectOption('select[data-role="transport"][data-area="cost"]', 'own');
@@ -134,7 +134,7 @@ test('Invited user: the email link asks for a password, then two-factor, then ac
   await link.waitForSelector('.shell');
   await link.close();
   const page = await signIn('monica@demo.test');
-  assert.match(await page.textContent('.side'), /Transport Manager/);
+  assert.match(await page.textContent('.topbar'), /Transport Manager/);
   assert.match(await text(page), /Good (morning|afternoon|evening), Monica/);   // lands on her dashboard
   await page.close();
 });
@@ -209,6 +209,36 @@ test('Platform admin: open a company, add a connection, import a file, see the f
   await page.close();
 });
 
+test('Actions: raise from a red figure, see it counted, record progress and complete it', async () => {
+  const page = await signIn('director@demo.test');
+  await go(page, '#/dashboard');
+  // The "Requires attention" list has a button on each red or amber figure.
+  await page.locator('.rows li', { hasText: 'Job cost against plan' }).locator('[data-raise]').click();
+  await page.waitForSelector('dialog.dlg');
+  assert.match(await page.locator('dialog.dlg').innerText(), /Figure: Job cost against plan/);   // linked to the figure
+  await page.fill('#f-title', 'Review subcontract rates on the Leeds run');
+  await page.click('dialog.dlg button[type=submit]');
+  await page.waitForSelector('dialog.dlg', { state: 'detached' });
+  assert.match(await page.textContent('.side'), /Actions\s*1/);                                  // counted in the menu
+  await go(page, '#/actions');
+  assert.match(await text(page), /Review subcontract rates on the Leeds run/);
+  await page.click('[data-open-action]');
+  await page.waitForSelector('dialog.dlg .timeline');
+  await page.fill('#act-note', 'Asked two subcontractors for quotes');
+  await page.click('dialog.dlg [data-x=progress]');
+  await page.waitForSelector('dialog.dlg', { state: 'detached' });
+  await page.click('[data-open-action]');
+  await page.waitForSelector('dialog.dlg .timeline');
+  assert.match(await page.locator('dialog.dlg .timeline').innerText(), /Asked two subcontractors for quotes/);
+  await page.click('dialog.dlg [data-x=completed]');
+  await page.waitForSelector('dialog.dlg', { state: 'detached' });
+  await page.click('.seg [data-f=done]');
+  assert.match(await text(page), /Review subcontract rates on the Leeds run[\s\S]*Completed/);
+  await go(page, '#/cost');                                                                       // also on the area page
+  assert.match(await text(page), /Open actions \(0\)/);
+  await page.close();
+});
+
 test('New company with no figures yet: every page opens and says it is waiting for data', async () => {
   // The platform admin adds a brand-new company (as on day one for a new haulier) and opens it.
   const page = await signIn('admin@example.test');
@@ -232,7 +262,7 @@ test('New company with no figures yet: every page opens and says it is waiting f
 
 test('Sign out: the sign-in screen stays, and nothing from the last person is redrawn', async () => {
   const page = await signIn('director@demo.test');
-  await page.click('#signout');
+  await page.click('#user-dd summary'); await page.click('#signout');   // sign out lives in the account menu
   await page.waitForSelector('#signin');
   await page.waitForTimeout(500);                                  // give any late redraw time to happen
   assert.equal(await page.locator('#signin').count(), 1);

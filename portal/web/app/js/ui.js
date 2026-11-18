@@ -3,8 +3,12 @@ export const esc = s => String(s ?? '').replace(/[&<>"']/g, c => ({ '&': '&amp;'
 
 export const QUAD = { hs: 'Health and Safety', service: 'Service', cost: 'Cost', people: 'People', compliance: 'Compliance' };
 export const STATUS = { green: 'On target', amber: 'Watch', red: 'Action needed', no_data: 'Waiting for data', no_target: 'Target not set', stale: 'Not updated', no_access: 'No access' };
-const COLOR = { green: 'var(--ok)', amber: '#D99A1E', red: 'var(--bad)', no_data: '#BDBBB4', no_target: 'var(--info)', stale: '#BDBBB4', no_access: '#BDBBB4' };
-const FILL = { green: 'var(--ok-soft)', amber: 'var(--warn-soft)', red: 'var(--bad-soft)', no_data: 'var(--none-soft)', no_target: 'var(--info-soft)', stale: 'var(--none-soft)', no_access: '#FAFAF8' };
+// Status colours (charts and the bullseye) and each area's own colour.
+const COLOR = { green: '#16A34A', amber: '#F59E0B', red: '#DC2626', no_data: '#CBD5E1', no_target: '#2F6BFF', stale: '#CBD5E1', no_access: '#E2E8F0' };
+const FILL = { green: '#E7F7EC', amber: '#FEF4E2', red: '#FDECEC', no_data: '#F4F6FA', no_target: '#EAF0FF', stale: '#F4F6FA', no_access: '#FAFBFD' };
+export const HUE = { hs: '#4F46E5', service: '#0891B2', cost: '#7C3AED', people: '#0D9488', compliance: '#2563EB' };
+export const QICON = { hs: 'shield', service: 'truck', cost: 'chart', people: 'people', compliance: 'clipboard' };
+export const statusColour = s => COLOR[s] || COLOR.no_data;
 
 // Line icons (drawn for Clearpath, 24px grid).
 const ICONS = {
@@ -25,6 +29,12 @@ const ICONS = {
   plug: '<path d="M9 3v5M15 3v5"/><path d="M6.5 8h11v3.5a5.5 5.5 0 0 1-11 0V8Z"/><path d="M12 17v4"/>',
   menu: '<path d="M4 7h16M4 12h16M4 17h16"/>',
   chevron: '<path d="m9.5 6 6 6-6 6"/>',
+  flag: '<path d="M5 21V4"/><path d="M5 4h11l-2 4 2 4H5"/>',
+  check: '<circle cx="12" cy="12" r="8.5"/><path d="m8.5 12.2 2.4 2.4 4.6-4.8"/>',
+  list: '<path d="M9 6.5h11M9 12h11M9 17.5h11"/><circle cx="4.5" cy="6.5" r="1"/><circle cx="4.5" cy="12" r="1"/><circle cx="4.5" cy="17.5" r="1"/>',
+  calendar: '<rect x="3.5" y="5" width="17" height="15.5" rx="2"/><path d="M3.5 10h17M8 3v4M16 3v4"/>',
+  trend: '<path d="M3 17 9 11l4 4 8-8"/><path d="M15 7h6v6"/>',
+  pulse: '<path d="M3 12h4l2.5-6 4 12 2.5-6H21"/>',
 };
 export const icon = name => `<svg class="i" viewBox="0 0 24 24" aria-hidden="true">${ICONS[name] || ''}</svg>`;
 
@@ -48,32 +58,121 @@ export function table(rows, cols, empty) {
     <tbody>${rows.map(r => `<tr class="${r._cls || ''}">${cols.map(c => `<td class="${c.num ? 'num' : ''}">${c.cell(r)}</td>`).join('')}</tr>`).join('')}</tbody></table></div>`;
 }
 
-export function measureRows(measures) {
+export function measureRows(measures, { raise = false } = {}) {
   if (!measures.length) return `<p class="empty">No figures you can see here.</p>`;
-  return measures.map(m => `<div class="m"><div class="nm">${esc(m.name)}<small>${esc(target(m))}${m.scope !== 'all' ? ` · ${esc(m.scope)} figures only` : ''}</small></div>
-    <div class="v">${fmtValue(m.value, m.unit)}</div><div>${pill(m.status)}</div></div>`).join('');
+  return measures.map(m => `<div class="m"><div class="nm">${esc(m.name)}<small>${esc(target(m))}${m.scope !== 'all' ? ` · ${esc(m.scope)} figures` : ''}</small></div>
+    <div class="v"><b class="${m.value == null ? 'wait' : ''}">${fmtValue(m.value, m.unit)}</b>${pill(m.status)}</div>${gauge(m)}
+    ${raise && (m.status === 'red' || m.status === 'amber') ? `<div class="acts">${raiseBtn({ area: m.quadrant, title: `${m.name} is ${STATUS[m.status].toLowerCase()} at ${fmtValue(m.value, m.unit)}`, linkKind: 'measure', linkId: m.code, linkLabel: m.name, priority: m.status === 'red' ? 'high' : 'medium' })}</div>` : ''}</div>`).join('');
 }
 
 export function bullseye(q, selected) {
-  const cx = 210, cy = 210, R = 196, r = 84;
+  const cx = 210, cy = 210, R = 194, r = 86;
   const pt = (rad, deg) => [cx + rad * Math.cos(deg * Math.PI / 180), cy + rad * Math.sin(deg * Math.PI / 180)];
   const wedge = (a1, a2, key) => {
-    const s = q[key].status; const [x1, y1] = pt(R, a1 + 2), [x2, y2] = pt(R, a2 - 2), [x3, y3] = pt(r, a2 - 2), [x4, y4] = pt(r, a1 + 2);
-    const [lx, ly] = pt((R + r) / 2, (a1 + a2) / 2);
+    const s = q[key].status; const [x1, y1] = pt(R, a1 + 1.6), [x2, y2] = pt(R, a2 - 1.6), [x3, y3] = pt(r + 6, a2 - 2.4), [x4, y4] = pt(r + 6, a1 + 2.4);
+    const [lx, ly] = pt((R + r) / 2 + 6, (a1 + a2) / 2); const [ix, iy] = pt(R - 4, (a1 + a2) / 2);
     return `<a href="#/${key}" class="wedge" aria-label="${QUAD[key]}: ${STATUS[s]}">
-      <path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r} ${r} 0 0 0 ${x4} ${y4}Z" fill="${FILL[s]}" stroke="${COLOR[s]}" stroke-width="${selected === key ? 3 : 1.5}" ${s === 'no_access' ? 'stroke-dasharray="5 4"' : ''}/>
-      <text x="${lx}" y="${ly - 4}" text-anchor="middle" font-weight="650" font-size="15" fill="var(--text)">${QUAD[key]}</text>
-      <text x="${lx}" y="${ly + 14}" text-anchor="middle" font-size="12" font-weight="500" fill="var(--muted)">${STATUS[s]}${q[key].incomplete && s !== 'no_access' ? ' *' : ''}</text></a>`;
+      <path d="M${x1} ${y1}A${R} ${R} 0 0 1 ${x2} ${y2}L${x3} ${y3}A${r + 6} ${r + 6} 0 0 0 ${x4} ${y4}Z" fill="${FILL[s]}" stroke="${COLOR[s]}" stroke-width="${selected === key ? 3 : 1.6}" ${s === 'no_access' ? 'stroke-dasharray="5 4"' : ''}/>
+      <circle cx="${lx}" cy="${ly - 34}" r="5" fill="${HUE[key]}"/>
+      <text x="${lx}" y="${ly - 6}" text-anchor="middle" font-weight="700" font-size="15.5" fill="#0F172A">${QUAD[key]}</text>
+      <text x="${lx}" y="${ly + 14}" text-anchor="middle" font-size="12" font-weight="600" fill="${s === 'no_data' || s === 'stale' || s === 'no_access' ? '#64748B' : COLOR[s]}">${STATUS[s]}${q[key].incomplete && s !== 'no_access' ? ' *' : ''}</text></a>`;
   };
   const h = q.hs.status;
   return `<svg class="bull" viewBox="0 0 420 420" role="img" aria-label="Health and Safety ${STATUS[h]}; Service ${STATUS[q.service.status]}; Cost ${STATUS[q.cost.status]}; People ${STATUS[q.people.status]}; Compliance ${STATUS[q.compliance.status]}">
+    <circle cx="${cx}" cy="${cy}" r="${R + 10}" fill="none" stroke="#EEF1F6" stroke-width="1.5"/>
     ${wedge(-90, 0, 'service')}${wedge(0, 90, 'compliance')}${wedge(90, 180, 'people')}${wedge(180, 270, 'cost')}
     <a href="#/hs" class="wedge" aria-label="Health and Safety: ${STATUS[h]}">
-      <circle cx="${cx}" cy="${cy}" r="${r - 8}" fill="${FILL[h]}" stroke="${COLOR[h]}" stroke-width="1.75"/>
-      <text x="${cx}" y="${cy - 6}" text-anchor="middle" font-weight="650" font-size="15" fill="var(--text)">Health and</text>
-      <text x="${cx}" y="${cy + 12}" text-anchor="middle" font-weight="650" font-size="15" fill="var(--text)">Safety</text>
-      <text x="${cx}" y="${cy + 32}" text-anchor="middle" font-size="12" font-weight="500" fill="var(--muted)">${STATUS[h]}</text></a></svg>`;
+      <circle cx="${cx}" cy="${cy}" r="${r - 4}" fill="#fff" stroke="${COLOR[h]}" stroke-width="2.5"/>
+      <circle cx="${cx}" cy="${cy}" r="${r - 12}" fill="${FILL[h]}"/>
+      <circle cx="${cx}" cy="${cy - 40}" r="5" fill="${HUE.hs}"/>
+      <text x="${cx}" y="${cy - 10}" text-anchor="middle" font-weight="700" font-size="15.5" fill="#0F172A">Health and</text>
+      <text x="${cx}" y="${cy + 9}" text-anchor="middle" font-weight="700" font-size="15.5" fill="#0F172A">Safety</text>
+      <text x="${cx}" y="${cy + 30}" text-anchor="middle" font-size="12" font-weight="600" fill="${h === 'no_data' || h === 'stale' ? '#64748B' : COLOR[h]}">${STATUS[h]}</text></a></svg>`;
 }
+
+// ---------------------------------------------------------------- brand mark and charts
+/** The Clearpath mark: a road narrowing to the horizon, in a rounded tile. */
+export const logo = () => `<svg class="logo" viewBox="0 0 32 32" aria-hidden="true"><defs><linearGradient id="cpg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#3B7BFF"/><stop offset="1" stop-color="#1F4FD8"/></linearGradient></defs>
+  <rect width="32" height="32" rx="9" fill="url(#cpg)"/><path d="M9 25 14.2 8h3.6L23 25" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/>
+  <path d="M16 22.5v-2.6M16 16.6v-2M16 11.5v-1.3" stroke="#9EF0E6" stroke-width="2" stroke-linecap="round"/></svg>`;
+
+/** A small trend line. points: [{ value, status }], oldest first. */
+export function sparkline(points = [], status = 'no_data') {
+  const pts = points.filter(p => p.value != null);
+  const W = 120, H = 38;
+  if (pts.length < 2) return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="M2 ${H - 6}H${W - 2}" stroke="#CBD5E1" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round"/></svg>`;
+  const vs = pts.map(p => Number(p.value)); const lo = Math.min(...vs), hi = Math.max(...vs); const span = hi - lo || 1;
+  const xy = pts.map((p, i) => [2 + i * (W - 6) / (pts.length - 1), H - 5 - (Number(p.value) - lo) / span * (H - 12)]);
+  const line = xy.map((q, i) => `${i ? 'L' : 'M'}${q[0].toFixed(1)} ${q[1].toFixed(1)}`).join('');
+  const c = statusColour(status === 'no_data' ? pts[pts.length - 1].status : status); const [ex, ey] = xy[xy.length - 1];
+  return `<svg class="spark" viewBox="0 0 ${W} ${H}" aria-hidden="true"><path d="${line}L${ex.toFixed(1)} ${H}L2 ${H}Z" fill="${c}" fill-opacity=".1"/>
+    <path d="${line}" fill="none" stroke="${c}" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"/><circle cx="${ex.toFixed(1)}" cy="${ey.toFixed(1)}" r="3.4" fill="#fff" stroke="${c}" stroke-width="2.2"/></svg>`;
+}
+
+/** A ring made of coloured segments (e.g. how many figures are green, amber, red). */
+export function ring(segments, { label = '', sub = '', size = 64 } = {}) {
+  const r = 26, C = 2 * Math.PI * r; const total = segments.reduce((t, s) => t + s.value, 0);
+  let off = 0;
+  const arcs = total ? segments.filter(s => s.value > 0).map(s => { const len = s.value / total * C; const a = `<circle cx="32" cy="32" r="${r}" fill="none" stroke="${s.colour}" stroke-width="7" stroke-dasharray="${Math.max(len - 2, 0.5).toFixed(2)} ${C.toFixed(2)}" stroke-dashoffset="${(-off).toFixed(2)}" transform="rotate(-90 32 32)" stroke-linecap="butt"/>`; off += len; return a; }).join('') : '';
+  return `<svg class="ring" viewBox="0 0 64 64" width="${size}" height="${size}" aria-hidden="true"><circle cx="32" cy="32" r="${r}" fill="none" stroke="#EEF1F6" stroke-width="7"/>${arcs}
+    <text x="32" y="${sub ? 33 : 37}" text-anchor="middle" font-size="${String(label).length > 4 ? 11 : 14}" font-weight="750" fill="#0F172A">${esc(label)}</text>${sub ? `<text x="32" y="44" text-anchor="middle" font-size="8.5" fill="#64748B">${esc(sub)}</text>` : ''}</svg>`;
+}
+
+/** How a figure sits against its target, as a filled bar (full = at or better than green). */
+export function gauge(m) {
+  const W = 300, H = 6; const v = m.value == null ? null : Number(m.value); const g = m.green_at == null ? null : Number(m.green_at), a = m.amber_at == null ? null : Number(m.amber_at);
+  let f = 0;
+  if (v != null && g != null) {
+    if (m.better === 'higher') f = g > 0 ? v / g : 1;
+    else f = v <= g ? 1 : a != null && a > g ? Math.max(.12, 1 - (v - g) / ((a - g) * 2)) : .25;
+  } else if (v != null) f = .5;
+  f = Math.max(0, Math.min(1, f));
+  return `<svg class="gauge" viewBox="0 0 ${W} ${H}" preserveAspectRatio="none" aria-hidden="true"><rect width="${W}" height="${H}" rx="3" fill="#EEF1F6"/>${f > 0 ? `<rect width="${(f * W).toFixed(1)}" height="${H}" rx="3" fill="${statusColour(m.status)}"/>` : ''}</svg>`;
+}
+
+/** A thin progress bar in SVG (no inline styles: the security policy forbids them). */
+export const meter = (fraction, from = '#2F6BFF', to = '#4FD1C5') => {
+  const f = Math.max(0, Math.min(1, fraction || 0));
+  return `<svg viewBox="0 0 100 6" preserveAspectRatio="none" aria-hidden="true"><defs><linearGradient id="mtr" x1="0" x2="1"><stop offset="0" stop-color="${from}"/><stop offset="1" stop-color="${to}"/></linearGradient></defs>
+    <rect width="100" height="6" rx="3" fill="rgba(255,255,255,.1)"/>${f ? `<rect width="${(f * 100).toFixed(1)}" height="6" rx="3" fill="url(#mtr)"/>` : ''}</svg>`;
+};
+
+/** Daily bars for one figure, with its green target as a dashed line. points: [{ day, value, status }]. */
+export function barChart(points = [], { unit = '', target = null, emptyTitle = 'Waiting for data', emptyText = 'Bars appear here once this figure has a few days of data.' } = {}) {
+  const W = 640, H = 220, L = 46, R = 12, T = 14, B = 30; const iw = W - L - R, ih = H - T - B;
+  const vals = points.filter(p => p.value != null).map(p => Number(p.value));
+  const grid = n => Array.from({ length: n + 1 }, (_, i) => T + ih * i / n);
+  if (!vals.length) {
+    return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="${esc(emptyTitle)}">${grid(4).map(y => `<line x1="${L}" x2="${W - R}" y1="${y}" y2="${y}" stroke="#EEF1F6"/>`).join('')}
+      ${Array.from({ length: 14 }, (_, i) => { const bw = iw / 14 * .56; const x = L + iw / 14 * i + (iw / 14 - bw) / 2; const h = ih * (.25 + .5 * Math.abs(Math.sin(i * 1.7))); return `<rect x="${x.toFixed(1)}" y="${(T + ih - h).toFixed(1)}" width="${bw.toFixed(1)}" height="${h.toFixed(1)}" rx="4" fill="#F1F4F8"/>`; }).join('')}
+      <text x="${L + iw / 2}" y="${T + ih / 2 - 4}" text-anchor="middle" font-size="15" font-weight="650" fill="#334155">${esc(emptyTitle)}</text>
+      <text x="${L + iw / 2}" y="${T + ih / 2 + 16}" text-anchor="middle" font-size="12.5" fill="#64748B">${esc(emptyText)}</text></svg>`;
+  }
+  const hi = Math.max(...vals, target ?? 0) * 1.12 || 1; const lo = Math.min(0, ...vals);
+  const y = v => T + ih - (v - lo) / (hi - lo) * ih; const n = points.length; const slot = iw / n; const bw = Math.min(34, slot * .6);
+  const fmt = v => unit === '%' ? `${Math.round(v)}%` : unit === '£' ? `£${Math.round(v).toLocaleString('en-GB')}` : Math.round(v * 10) / 10;
+  const ticks = [0, .25, .5, .75, 1].map(f => lo + (hi - lo) * f);
+  return `<svg class="chart" viewBox="0 0 ${W} ${H}" role="img" aria-label="Daily values">
+    ${ticks.map(t => `<line x1="${L}" x2="${W - R}" y1="${y(t).toFixed(1)}" y2="${y(t).toFixed(1)}" stroke="#EEF1F6"/><text x="${L - 8}" y="${(y(t) + 4).toFixed(1)}" text-anchor="end" font-size="11" fill="#94A3B8">${fmt(t)}</text>`).join('')}
+    ${points.map((p, i) => { const x = L + slot * i + (slot - bw) / 2; const lbl = new Date(p.day + 'T12:00:00Z').toLocaleDateString('en-GB', { day: 'numeric', month: 'short' });
+      const bar = p.value == null ? '' : `<rect x="${x.toFixed(1)}" y="${y(Math.max(Number(p.value), lo)).toFixed(1)}" width="${bw.toFixed(1)}" height="${Math.max(2, y(lo) - y(Number(p.value))).toFixed(1)}" rx="4" fill="${statusColour(p.status)}"><title>${esc(lbl)}: ${fmt(Number(p.value))}</title></rect>`;
+      return bar + (n <= 16 || i % 2 === 0 ? `<text x="${(x + bw / 2).toFixed(1)}" y="${H - 10}" text-anchor="middle" font-size="10.5" fill="#94A3B8">${esc(lbl)}</text>` : ''); }).join('')}
+    ${target != null ? `<line x1="${L}" x2="${W - R}" y1="${y(target).toFixed(1)}" y2="${y(target).toFixed(1)}" stroke="#16A34A" stroke-width="1.6" stroke-dasharray="5 4"/><text x="${W - R}" y="${(y(target) - 6).toFixed(1)}" text-anchor="end" font-size="11" font-weight="650" fill="#15803D">Target ${fmt(target)}</text>` : ''}
+  </svg>`;
+}
+
+/** An icon in a coloured tile. kind: an area (hs, service...), a status (green, amber, red, none) or 'actions'. */
+export const iconTile = (name, kind = '', size = '') => `<span class="ic ${esc(kind)} ${esc(size)}">${icon(name)}</span>`;
+
+/** A figure as a tile: name, value, target, colour bar, trend line. */
+export function figureTile(m, trend = [], href = `#/${m.quadrant}`) {
+  return `<a class="tile ts-${esc(m.status)}" href="${href}"><div class="top"><span class="l">${esc(m.name)}</span>${iconTile(QICON[m.quadrant], m.quadrant, 'sm')}</div>
+    <span class="n ${m.value == null ? 'wait' : ''}">${fmtValue(m.value, m.unit)}</span><span class="t">${esc(target(m))}</span>
+    <div class="bottom">${pill(m.status)}${sparkline(trend, m.status)}</div></a>`;
+}
+
+/** A "Raise action" button; actions.js picks up the click anywhere on the page. */
+export const raiseBtn = (preset, label = 'Raise action', cls = 'small') => `<button class="btn raise ${cls}" type="button" data-raise="${esc(JSON.stringify(preset))}">${icon('flag')}${esc(label)}</button>`;
 
 // ---------------------------------------------------------------- messages and dialogs
 export function toast(msg, kind = 'ok') {

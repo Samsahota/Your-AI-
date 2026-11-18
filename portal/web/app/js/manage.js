@@ -1,12 +1,12 @@
 // Users and settings (directors) and the admin console (platform admin).
 import { rpc, select, fn } from './api.js';
-import { esc, pill, money, date, dateTime, table, dialog, toast, label, fmtValue } from './ui.js';
-import { ctx, q, roleName, openCompany, loadDashboard } from './app.js';
+import { esc, pill, money, date, dateTime, table, dialog, toast, label, fmtValue, todayUK } from './ui.js';
+import { ctx, q, level, roleName, openCompany, loadDashboard } from './app.js';
 import { processCsv, sha256 } from '/connectors/core.mjs';
 import { CATALOGUE, TEMPLATES } from '/connectors/catalogue.mjs';
 
 const METHOD = { api: 'Supplier API', oauth: 'Approved read-only sign-in', email_report: 'Scheduled emailed report', file: 'File upload' };
-const SCHEDULE = { every_15_min: 'Every 15 minutes', hourly: 'Hourly', nightly: 'Nightly', on_receipt: 'When a file arrives' };
+const SCHEDULE = { every_15_min: 'Every 15 minutes', hourly: 'Hourly', nightly: 'Nightly', weekly: 'Weekly', monthly: 'Monthly', on_receipt: 'When a file arrives' };
 const head = (title, sub, actions = '') => `<header class="page-head"><div><h1>${esc(title)}</h1><p class="sub">${sub}</p></div><div class="head-actions">${actions}</div></header>`;
 const tabs = (base, list, on) => `<nav class="tabs" aria-label="Sections">${list.map(([k, l]) => `<a href="#/${base}/${k}" class="${k === on ? 'on' : ''}">${l}</a>`).join('')}</nav>`;
 const card = (title, body, sub = '') => `<section class="card"><h2>${esc(title)}</h2>${sub ? `<p class="sub">${sub}</p>` : ''}${body}</section>`;
@@ -82,12 +82,36 @@ async function targets(pane) {
     { label: 'Amber at', num: true, cell: m => fmtValue(t[m.code]?.amber_at ?? m.default_amber, m.unit) },
     { label: '', cell: m => (t[m.code] ? '<span class="tag">Your target</span> ' : m.default_green == null ? '<span class="tag">Not set</span> ' : '<span class="tag">Standard</span> ') + (canEdit ? `<button class="btn small ghost" data-measure="${m.code}">Change</button>` : '') },
   ], ''), 'What turns each figure green, amber or red. Anything worse than amber is red.');
+  await revenuePlan(pane);
   pane.querySelectorAll('[data-measure]').forEach(b => b.onclick = () => {
     const m = measures.find(x => x.code === b.dataset.measure);
     dialog({ title: m.name, intro: `${m.better === 'higher' ? 'Higher' : 'Lower'} is better. Green when the figure is ${m.better === 'higher' ? 'at or above' : 'at or below'} the green level; amber down to the amber level; red beyond it.`, submit: 'Save target',
       fields: [{ name: 'green', label: `Green level (${m.unit})`, type: 'number', step: 'any', value: t[m.code]?.green_at ?? m.default_green ?? '', required: true },
         { name: 'amber', label: `Amber level (${m.unit})`, type: 'number', step: 'any', value: t[m.code]?.amber_at ?? m.default_amber ?? '', required: true }],
       onSubmit: async v => { await rpc('set_threshold', { p_measure: m.code, p_green: Number(v.green), p_amber: Number(v.amber), p_company: companyArg() }); await loadDashboard(); toast(`Target saved for ${m.name}`); targets(pane); } });
+  });
+}
+
+// Monthly revenue plan, behind "Revenue against plan". Comes from Xero when kept as a Xero budget; otherwise entered here.
+async function revenuePlan(pane) {
+  if (level('cost') !== 'full') return;
+  const plan = await q('revenue_plan', { order: 'month.asc' });
+  const byMonth = Object.fromEntries(plan.map(p => [p.month, p]));
+  const start = new Date(todayUK().slice(0, 7) + '-01T12:00:00Z');
+  const months = Array.from({ length: 12 }, (_, i) => { const d = new Date(start); d.setUTCMonth(d.getUTCMonth() - 2 + i); return d.toISOString().slice(0, 10); });
+  const canEdit = ctx.isAdmin || ['director', 'consultant'].includes(ctx.profile.role);
+  const box = document.createElement('div'); pane.append(box);
+  box.innerHTML = card('Revenue plan', table(months.map(m => ({ m, p: byMonth[m] })), [
+    { label: 'Month', cell: r => new Date(r.m + 'T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' }) },
+    { label: 'Planned revenue', num: true, cell: r => r.p ? money(r.p.amount) : '<span class="note">Not set</span>' },
+    { label: '', cell: r => canEdit ? `<button class="btn small" type="button" data-plan="${r.m}">${r.p ? 'Change' : 'Set'}</button>` : '' },
+  ], ''), 'Behind "Revenue against plan". If Trans Haul keeps its budget in Xero it arrives through that connection; otherwise set it here.');
+  box.querySelectorAll('[data-plan]').forEach(b => b.onclick = () => {
+    const m = b.dataset.plan, cur = byMonth[m];
+    dialog({ title: `Revenue plan for ${new Date(m + 'T12:00:00Z').toLocaleDateString('en-GB', { month: 'long', year: 'numeric' })}`, submit: 'Save',
+      intro: 'The total revenue planned for the month. Leave it empty to remove the plan for this month.',
+      fields: [{ name: 'amount', label: 'Planned revenue (£)', type: 'number', step: '0.01', value: cur?.amount ?? '' }],
+      onSubmit: async v => { await rpc('set_revenue_plan', { p_month: m, p_amount: v.amount === '' ? null : Number(v.amount), p_company: companyArg() }); toast('Revenue plan saved'); pane.innerHTML = ''; await targets(pane); } });
   });
 }
 
@@ -115,7 +139,7 @@ async function connections(pane, adminView = false) {
     fields: [
       ...(c ? [] : [{ name: 'system', label: 'System', type: 'select', options: Object.entries(CATALOGUE).map(([k, v]) => [k, v.name]), required: true }, { name: 'label', label: 'Name (e.g. "Accident log")', required: true }]),
       { name: 'method', label: 'How data arrives', type: 'select', options: [['api', 'API (key in the vault)'], ['oauth', 'Allow button (Xero, Microsoft)'], ['email_report', 'Emailed report'], ['file', 'File upload']], value: c?.method || 'file', required: true },
-      { name: 'schedule', label: 'How often', type: 'select', options: [['nightly', 'Nightly'], ['hourly', 'Hourly'], ['every_15_min', 'Every 15 minutes'], ['on_receipt', 'When a file or report arrives']], value: c?.schedule || 'nightly' },
+      { name: 'schedule', label: 'How often', type: 'select', options: [['nightly', 'Nightly'], ['hourly', 'Hourly'], ['every_15_min', 'Every 15 minutes'], ['weekly', 'Weekly'], ['monthly', 'Monthly (e.g. payroll export)'], ['on_receipt', 'When a file or report arrives']], value: c?.schedule || 'nightly' },
       { name: 'secret_name', label: 'Vault secret name (API connections only)', value: c?.secret_name || '', hint: 'The name only, e.g. VIGO_KEY_TRANSHAUL. Never paste a key here.' },
       { name: 'status', label: 'Status', type: 'select', options: [['waiting_access', 'Waiting for access'], ['configured', 'Set up, not yet run'], ['paused', 'Paused']], value: c && ['waiting_access', 'configured', 'paused'].includes(c.status) ? c.status : 'waiting_access' },
     ],
@@ -195,7 +219,7 @@ async function companies(pane) {
 
 async function importFile(pane) {
   const conns = (await q('connections', { order: 'label.asc' })).filter(c => c.feeds.some(f => TARGETS[f]));
-  pane.innerHTML = card('Import a file', !conns.length ? '<p class="empty">Add a connection that fills incidents, staff, absence, compliance dates or warehouse figures first.</p>' : `
+  pane.innerHTML = card('Import a file', !conns.length ? '<p class="empty">Add a connection first: each file is imported through the connection it belongs to.</p>' : `
     <form id="imp" class="imp" novalidate>
       <label class="fld" for="iconn"><span>Connection</span><select id="iconn">${conns.map(c => `<option value="${c.id}">${esc(c.label)}</option>`).join('')}</select></label>
       <label class="fld" for="itarget"><span>What the file contains</span><select id="itarget"></select></label>
@@ -203,7 +227,7 @@ async function importFile(pane) {
       <div class="grid2"><label class="fld" for="irows"><span>Rows the source says it has (optional)</span><input id="irows" type="number"></label>
       <label class="fld" for="ifile"><span>CSV file</span><input id="ifile" type="file" accept=".csv,text/csv"></label></div>
       <button class="btn primary" type="submit">Check the file</button></form><div id="result"></div>`,
-    'Reads the file, checks every row and the totals, and only then writes. Nothing is written if any check fails.');
+    'Reads the file, checks every row and the totals, and only then writes. Nothing is written if any check fails. An untouched copy of every file is kept with its fingerprint.');
   if (!conns.length) return;
   const f = pane.querySelector('#imp'), sel = f.querySelector('#itarget'), map = f.querySelector('#imap');
   const fillTargets = () => { const c = conns.find(x => x.id === f.querySelector('#iconn').value); sel.innerHTML = c.feeds.filter(t => TARGETS[t]).map(t => `<option value="${t}">${TARGETS[t].label}</option>`).join(''); fillMap(); };
@@ -223,7 +247,10 @@ async function importFile(pane) {
     out.querySelector('#write').onclick = async ev => {
       ev.target.disabled = true;
       try {
-        const res = await rpc('import_records', { p_connection: f.querySelector('#iconn').value, p_target: sel.value, p_records: r.records, p_checks: r.checks, p_rows_in: r.rowsIn, p_raw_sha: sha });
+        // Keep an untouched copy of the file first, so every figure can be traced back to exactly what was received.
+        const kept = await rpc('store_source_file', { p_connection: f.querySelector('#iconn').value, p_file_name: file.name, p_content: text });
+        if (!kept.endsWith('#' + sha)) throw new Error('The stored copy does not match the file. Nothing was written; try again.');
+        const res = await rpc('import_records', { p_connection: f.querySelector('#iconn').value, p_target: sel.value, p_records: r.records, p_checks: r.checks, p_rows_in: r.rowsIn, p_raw_sha: kept });
         if (res.status === 'ok' && ctx.day) { await rpc('compute_measures', { p_company: ctx.company, p_day: ctx.day }); await loadDashboard(); }
         toast(res.status === 'ok' ? `${res.written} records written and figures recalculated` : 'Failed run recorded: the connection is marked failing', res.status === 'ok' ? 'ok' : 'error');
         out.innerHTML = '';
@@ -237,17 +264,26 @@ const TARGETS = {
   staff: { label: 'Staff list', mapping: TEMPLATES.staff },
   compliance_items: { label: 'Compliance due dates', mapping: TEMPLATES.compliance },
   warehouse_daily: { label: 'Warehouse daily figures', mapping: TEMPLATES.warehouse },
+  customers: { label: 'Customer list', mapping: TEMPLATES.customers },
+  vehicles: { label: 'Fleet list', mapping: TEMPLATES.vehicles },
+  jobs: { label: 'Jobs', mapping: TEMPLATES.jobs },
+  job_costs: { label: 'Job revenue and costs', mapping: TEMPLATES.job_costs },
+  defects: { label: 'Vehicle defects', mapping: TEMPLATES.defects },
+  infringements: { label: 'Drivers\' hours infringements', mapping: TEMPLATES.infringements },
+  cost_daily: { label: 'Daily costs', mapping: TEMPLATES.daily_costs },
+  pnl_lines: { label: 'Profit and loss by month', mapping: TEMPLATES.pnl },
+  payroll_periods: { label: 'Payroll totals', mapping: TEMPLATES.payroll },
+  revenue_plan: { label: 'Revenue plan by month', mapping: TEMPLATES.revenue_plan },
 };
 
 async function health(pane) {
-  const [conns, cos] = await Promise.all([select('connections', { order: 'company_id.asc' }), select('companies', {})]);
-  const name = Object.fromEntries(cos.map(c => [c.id, c.name]));
-  const bad = conns.filter(c => c.status === 'failing' || (c.status === 'connected' && c.last_success_at && Date.now() - new Date(c.last_success_at) > 36 * 3600e3));
-  const waiting = conns.filter(c => c.status === 'waiting_access');
-  pane.innerHTML = card(`Needs attention (${bad.length})`, table(bad, [{ label: 'Company', cell: c => esc(name[c.company_id]) }, { label: 'Connection', cell: c => esc(c.label) },
-    { label: 'Status', cell: c => connPill(c.status) }, { label: 'Problem', cell: c => esc(c.last_error || 'No successful update in 36 hours') }, { label: 'Last good update', cell: c => c.last_success_at ? dateTime(c.last_success_at) : 'Never' }],
-    'Everything connected is up to date.'), 'Failing or overdue connections across every company. Once hosted, this list is emailed to you at 6:30 each morning.') +
-    card(`Waiting for access (${waiting.length})`, table(waiting, [{ label: 'Company', cell: c => esc(name[c.company_id]) }, { label: 'Connection', cell: c => esc(c.label) }, { label: 'Set up', cell: c => date(c.created_at) }], 'Nothing waiting.'));
+  // The database decides what's overdue, with the same rule that greys out figures (by schedule).
+  const rows = await rpc('connection_health');
+  const bad = rows.filter(c => c.needs_attention), waiting = rows.filter(c => c.status === 'waiting_access');
+  pane.innerHTML = card(`Needs attention (${bad.length})`, table(bad, [{ label: 'Company', cell: c => esc(c.company) }, { label: 'Connection', cell: c => esc(c.label) },
+    { label: 'Status', cell: c => connPill(c.status) }, { label: 'Problem', cell: c => esc(c.last_error || `No successful update within ${c.allowed_age}`) }, { label: 'Last good update', cell: c => c.last_success_at ? dateTime(c.last_success_at) : 'Never' }],
+    'Everything connected is up to date.'), 'Failing or overdue connections across every company. Each is judged against its own schedule. Once hosted, this list is emailed to you at 6:30 each morning.') +
+    card(`Waiting for access (${waiting.length})`, table(waiting, [{ label: 'Company', cell: c => esc(c.company) }, { label: 'Connection', cell: c => esc(c.label) }, { label: 'How often', cell: c => esc(SCHEDULE[c.schedule] || c.schedule) }], 'Nothing waiting.'));
 }
 
 export const MANAGE = { settings, admin };

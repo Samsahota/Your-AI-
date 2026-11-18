@@ -295,3 +295,97 @@ test('Signed-in users cannot write to or empty any table directly; everything go
   await rejects(as(U.admin, `truncate audit_log`), /permission denied/);
   await rejects(as(U.director, `select add_profile_for_invite($1, $1, $2, 'transport', 'X', 'x@x.test', null, 'transport', false)`, [U.director, A]), /permission denied/);
 });
+
+test('Actions: raised against a figure, owned by someone who can see it, updated only by the right people', async () => {
+  const due = '2099-01-31';
+  const [{ r }] = await as(U.director, `select raise_action('hs', 'Re-brief night shift on yard speed', $1, $2, 'high', 'After two near misses', 'measure', 'hs.near_misses_open', 'Open near misses') r`, [U.transport, due]);
+  assert.match(r.ref, /^A-\d{4}$/);
+  // Owners must be able to see the area (and division) of the action.
+  await rejects(as(U.director, `select raise_action('payroll', 'Check overtime coding', $1, $2)`, [U.transport, due]), /cannot own/);
+  await rejects(as(U.director, `select raise_action('service', 'Warehouse picks', $1, $2, 'medium', null, 'none', null, null, 'warehouse')`, [U.transport, due]), /cannot own/);
+  await rejects(as(U.transport, `select raise_action('payroll', 'x x x', $1, $2)`, [U.transport, due]), /do not have access/);
+  await rejects(as(U.director, `select raise_action('hs', 'Past date', $1, '2020-01-01')`, [U.transport]), /past/);
+  const owners = (await as(U.director, `select name from action_owners('payroll')`)).map(o => o.name);
+  assert.ok(!owners.includes('Toni Transport'));
+  // Who sees it: the area's users and the owner; never another company, never without two-factor.
+  assert.equal(await count(U.transport, 'actions'), 1);
+  assert.equal(await count(U.warehouse, 'actions'), 1);              // warehouse has full Health and Safety access
+  assert.equal(await count(U.second, 'actions'), 0);
+  assert.equal(await count(U.director, 'actions', 'aal1'), 0);
+  // Who updates it: owner, raiser or a manager.
+  await as(U.transport, `select update_action($1, 'progress', 'Briefing booked for Thursday')`, [r.id]);
+  await rejects(as(U.warehouse, `select update_action($1, 'progress', 'Not mine')`, [r.id]), /Only the owner/);
+  await rejects(as(U.transport, `select update_action($1, 'progress', '')`, [r.id]), /Say what has happened/);
+  await as(U.transport, `select update_action($1, 'completed', 'Done')`, [r.id]);
+  await rejects(as(U.transport, `select update_action($1, 'progress', 'More')`, [r.id]), /Reopen/);
+  await as(U.director, `select update_action($1, 'reopened', 'Speed still an issue')`, [r.id]);
+  await rejects(as(U.director, `select update_action($1, 'reassigned', null, $2)`, [r.id, U.ops]), /cannot own/);   // suspended earlier
+  await as(U.director, `select update_action($1, 'reassigned', null, $2, '2099-02-28')`, [r.id, U.consultant]);
+  const [a] = await as(U.director, `select status, owner_name, due_date::text from actions where id = $1`, [r.id]);
+  assert.deepEqual([a.status, a.owner_name, a.due_date], ['open', 'Connor Consultant', '2099-02-28']);
+  const kinds = (await as(U.director, `select kind from action_updates where action_id = $1 order by at, kind`, [r.id])).map(x => x.kind);
+  assert.deepEqual(kinds.sort(), ['completed', 'progress', 'raised', 'reassigned', 'reopened'].sort());
+  // Direct writes are refused.
+  await rejects(as(U.director, `update actions set status = 'done'`), /permission denied/);
+});
+
+test('Freshness: monthly feeds stay trusted all month; nightly feeds go stale after 36 hours; health list agrees', async () => {
+  const [{ m }] = await as(U.admin, `select save_connection($1, 'brightpay', 'Payroll export', 'file', '{payroll_periods}', 'monthly', '{}'::jsonb, null, 'connected') m`, [A]);
+  const [{ n }] = await as(U.admin, `select save_connection($1, 'tachomaster', 'Infringements', 'api', '{infringements}', 'nightly', '{}'::jsonb, null, 'connected') n`, [A]);
+  await raw(`update connections set last_success_at = now() - interval '10 days' where id = $1`, [m]);
+  await raw(`update connections set last_success_at = now() - interval '2 days' where id = $1`, [n]);
+  const [{ s }] = await raw(`select app.stale_tables($1) s`, [A]);
+  assert.ok(s.includes('infringements') && !s.includes('payroll_periods'));
+  const h = await as(U.admin, `select connection_id, needs_attention, allowed_age from connection_health()`);
+  assert.equal(h.find(x => x.connection_id === m).needs_attention, false);
+  assert.equal(h.find(x => x.connection_id === m).allowed_age, '35 days');
+  assert.equal(h.find(x => x.connection_id === n).needs_attention, true);
+  assert.equal((await as(U.director, `select count(*)::int c from connection_health()`))[0].c, 0);
+});
+
+test('Source files: an untouched copy is kept, fingerprinted by the database, readable by the platform admin only', async () => {
+  const { createHash } = await import('node:crypto');
+  const [{ id }] = await as(U.admin, `select save_connection($1, 'warehouse', 'Daily sheet', 'file', '{warehouse_daily}', 'nightly', '{}'::jsonb, null, 'configured') id`, [A]);
+  const text = 'Date,Cases,Labour hours\n17/11/2026,1200,96\n';
+  const sha = createHash('sha256').update(text, 'utf8').digest('hex');
+  await rejects(as(U.director, `select store_source_file($1, 'sheet.csv', $2)`, [id, text]), /Only the platform/);
+  const [{ p }] = await as(U.admin, `select store_source_file($1, 'sheet.csv', $2) p`, [id, text]);
+  assert.match(p, new RegExp(`^source_files/[0-9a-f-]{36}#${sha}$`));
+  const [{ p: again }] = await as(U.admin, `select store_source_file($1, 'sheet (copy).csv', $2) p`, [id, text]);
+  assert.equal(again, p);                                              // same file twice is kept once
+  assert.equal(await count(U.director, 'source_files'), 0);
+  assert.equal((await as(U.admin, `select count(*)::int n from source_files where connection_id = $1`, [id]))[0].n, 1);
+});
+
+test('File import: jobs, job costs and customers from a Vigo export; the revenue plan from directors only', async () => {
+  const [{ id }] = await as(U.admin, `select save_connection($1, 'vigo', 'Daily jobs export', 'email_report', '{customers,jobs,job_costs}', 'nightly', '{}'::jsonb, null, 'configured') id`, [A]);
+  const ok = '[{"name":"rows readable","passed":true}]';
+  await as(U.admin, `select import_records($1, 'customers', $2, $3, 1)`, [id, JSON.stringify([{ account_code: 'NFF01', name: 'Northfield Fresh Foods' }]), ok]);
+  const jobs = [{ job_ref: 'J-900', customer: 'NFF01', job_date: '2026-11-17', status: 'Delivered', in_full: true, pod_received: false, division: 'Transport' }];
+  const r = (await as(U.admin, `select import_records($1, 'jobs', $2, $3, 1) r`, [id, JSON.stringify(jobs), ok]))[0].r;
+  assert.deepEqual([r.status, r.written], ['ok', 1]);
+  await as(U.admin, `select import_records($1, 'job_costs', $2, $3, 1)`, [id, JSON.stringify([{ job_ref: 'J-900', revenue: 850, planned_cost: 600, actual_cost: 640 }]), ok]);
+  await rejects(as(U.admin, `select import_records($1, 'job_costs', $2, $3, 1)`, [id, JSON.stringify([{ job_ref: 'J-999', revenue: 1 }]), ok]), /not in the jobs list/);
+  const [j] = await as(U.director, `select j.status, c.name, jc.actual_cost from jobs j join customers c on c.id = j.customer_id join job_costs jc on jc.job_id = j.id where j.job_ref = 'J-900'`);
+  assert.deepEqual([j.status, j.name, Number(j.actual_cost)], ['delivered', 'Northfield Fresh Foods', 640]);
+  await as(U.director, `select set_revenue_plan('2026-12-15', 21000)`);
+  await rejects(as(U.transport, `select set_revenue_plan('2026-12-01', 1)`), /Only a director/);
+  assert.equal(Number((await as(U.director, `select amount from revenue_plan where month = '2026-12-01'`))[0].amount), 21000);
+});
+
+test('Dashboard views: full-access users can switch to one division; others keep their own; trends follow the same rules', async () => {
+  const w = (await as(U.director, `select dashboard($1, null, 'warehouse') d`, [DAY]))[0].d;
+  assert.equal(w.scope, 'warehouse');
+  assert.ok(w.measures.every(m => m.scope === 'warehouse'));
+  assert.equal(w.measures.find(m => m.code === 'cost.revenue_vs_plan'), undefined);     // company-wide figures hidden in a division view
+  assert.equal(w.can_switch_scope, true);
+  const t = (await as(U.transport, `select dashboard($1, null, 'warehouse') d`, [DAY]))[0].d;
+  assert.ok(t.measures.filter(m => m.quadrant !== 'hs').every(m => m.scope === 'transport'));   // own-area figures can't switch to another division
+  assert.ok(t.measures.filter(m => m.quadrant === 'hs').every(m => m.scope === 'warehouse'));     // full Health and Safety access can
+  const tr = (await as(U.director, `select measure_trend(14) t`))[0].t;
+  assert.ok(Array.isArray(tr['service.otif']) && tr['service.otif'].length >= 1);
+  assert.ok(tr['service.otif'].every(p => p.day && 'status' in p));
+  const ttr = (await as(U.transport, `select measure_trend(14) t`))[0].t;
+  assert.equal(ttr['cost.revenue_vs_plan'], undefined);
+  assert.deepEqual((await as(U.director, `select measure_trend(14) t`, [], 'aal1'))[0].t, {});
+});

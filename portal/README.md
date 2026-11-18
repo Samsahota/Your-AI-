@@ -34,10 +34,15 @@ Enforced by the database itself, not by hiding screens:
 | Users and settings (directors): users and invitations, access levels, targets, connections, documents, activity | Built, tested in a browser |
 | Admin console: companies, connections, file import with checks, master library, health | Built, tested in a browser |
 | Invitation edge function | Deployed to clearpath-production; switched off until APP_URL is set (refuses to send until then) |
+| Actions: raise against any red or amber figure, incident, compliance item, defect or infringement; owner, priority, follow-up date, progress timeline, complete and reopen; counted in the menu | Built, tested in a browser |
+| Feed freshness follows each connection's schedule (2 hours to 35 days); admin health list uses the same rule | Built, tested |
+| File import for every record table, with an untouched, fingerprinted copy of each file kept | Built, tested |
+| Revenue plan: entered in Targets, imported from a file, or from a Xero budget | Built, tested |
+| Design: Clearpath's own look, statistic tiles, trend lines, charts, view and date drop-downs, account menu | Built, tested in a browser |
 | Real connectors for each supplier | Waiting for access and sample files (file import works now for spreadsheets and exports) |
 | Other edge functions (report inbox, nightly schedule, daily and weekly emails, Xero, Microsoft) | Not started (November versions to adapt) |
 | Uploading document files (PDFs) to the library | Switched on with hosting (storage) |
-| Supabase project `clearpath-production` (London, Your AI Ltd Pro organisation) | Set up 17 Nov 2026: all 7 migrations applied, security checker clear apart from the intended signed-in functions (each checks access itself). Trans Haul added 17 Nov (founding deal, nine connections waiting for access); no users yet |
+| Supabase project `clearpath-production` (London, Your AI Ltd Pro organisation) | Set up 17 Nov 2026: all 9 migrations applied (18 Nov), security checker clear apart from the intended signed-in functions (each checks access itself). Trans Haul added 17 Nov (founding deal, nine connections waiting for access; BrightPay monthly, Xero also brings the revenue plan); no users yet |
 | Web hosting and email | Not set up |
 
 Connectors marked `verified: false` in `connectors/catalogue.mjs` are based on public information only. None goes live until a real sample from Trans Haul has been mapped and checked.

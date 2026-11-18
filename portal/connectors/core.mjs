@@ -134,9 +134,10 @@ export function runChecks({ records, errors, key, control = {} }) {
     message: errors.length ? `${errors.length} row${errors.length > 1 ? 's' : ''} could not be read, first: row ${errors[0].row}, ${errors[0].column}: ${errors[0].problem}` : null });
   if (key) {
     const seen = new Set(); const dups = new Set();
-    for (const r of records) { const k = r[key]; if (seen.has(k)) dups.add(k); seen.add(k); }
+    const keyOf = r => Array.isArray(key) ? key.map(k => r[k]).join(' / ') : r[key];   // a key can be several columns
+    for (const r of records) { const k = keyOf(r); if (seen.has(k)) dups.add(k); seen.add(k); }
     checks.push({ name: 'no duplicates', expected: 0, actual: dups.size, passed: dups.size === 0,
-      message: dups.size ? `Duplicate ${key}: ${[...dups].slice(0, 5).join(', ')}` : null });
+      message: dups.size ? `Duplicate ${[].concat(key).join(' + ')}: ${[...dups].slice(0, 5).join(', ')}` : null });
   }
   if (control.rowCount != null) {
     checks.push({ name: 'row count matches source', expected: control.rowCount, actual: records.length, passed: records.length === control.rowCount,

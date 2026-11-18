@@ -27,8 +27,8 @@ insert into connections (company_id, system, label, method, status, feeds, sched
   ('20000000-0000-4000-8000-00000000000a', 'tachomaster', 'Drivers'' hours and infringements', 'api', 'waiting_access', '{infringements,people_events}', 'nightly', 'Waiting for access from Road Tech'),
   ('20000000-0000-4000-8000-00000000000a', 'falcon', 'Vehicle tracking (delivery times)', 'api', 'waiting_access', '{jobs}', 'hourly', 'Waiting for access from Road Tech'),
   ('20000000-0000-4000-8000-00000000000a', 'predrive', 'Walkaround checks and defects', 'api', 'waiting_access', '{defects,compliance_items}', 'hourly', 'Waiting for access from Road Tech'),
-  ('20000000-0000-4000-8000-00000000000a', 'xero', 'Accounts', 'oauth', 'waiting_access', '{pnl_lines,cost_daily}', 'nightly', 'Trans Haul approves the read-only connection'),
+  ('20000000-0000-4000-8000-00000000000a', 'xero', 'Accounts', 'oauth', 'waiting_access', '{pnl_lines,cost_daily,revenue_plan}', 'nightly', 'Trans Haul approves the read-only connection. Brings the revenue plan too if it is kept as a Xero budget'),
   ('20000000-0000-4000-8000-00000000000a', 'sharepoint', 'HR, incident and compliance files', 'oauth', 'waiting_access', '{staff,people_events,incidents,compliance_items,hr_cases}', 'nightly', 'Trans Haul''s Microsoft 365 admin approves the read-only connection'),
-  ('20000000-0000-4000-8000-00000000000a', 'brightpay', 'Payroll', 'file', 'waiting_access', '{payroll_periods,people_events}', 'on_receipt', 'Waiting for the payroll export'),
+  ('20000000-0000-4000-8000-00000000000a', 'brightpay', 'Payroll', 'file', 'waiting_access', '{payroll_periods,people_events}', 'monthly', 'Monthly payroll export; figures stay trusted for 35 days between exports'),
   ('20000000-0000-4000-8000-00000000000a', 'bibby', 'Invoice finance', 'file', 'waiting_access', '{}', 'on_receipt', 'Waiting for the report format'),
   ('20000000-0000-4000-8000-00000000000a', 'warehouse', 'Warehouse daily figures', 'file', 'waiting_access', '{warehouse_daily,cost_daily}', 'nightly', 'Source to confirm with the Warehouse Manager');

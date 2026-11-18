@@ -1,7 +1,7 @@
 // PREVIEW ONLY. Stands in for Supabase so the real Clearpath screens run in a browser with no server.
-// Every answer is a recording of what the real database returned to that role for Trans Haul as it stands
-// before its systems are connected (no figures yet),
-// made by scripts/record-preview.mjs. Changes are refused politely: nothing is saved anywhere.
+// Every answer is a recording of what the real database returned to that role (scripts/record-preview.mjs),
+// for one of two datasets: Trans Haul as it stands today (no systems connected yet, so no figures), or
+// made-up sample figures that show the design with data in it. Changes are refused: nothing is saved.
 (function () {
   const BASE = 'https://preview.clearpath.invalid';
   const ROLES = {
@@ -16,8 +16,8 @@
   const SAVED_MSG = 'This is a preview, so changes aren\'t saved. In the live portal this would be saved and logged.';
   const WRITES = ['add_comment', 'acknowledge_document', 'log_incident', 'update_incident', 'set_user_status', 'set_access_override',
     'set_threshold', 'save_connection', 'create_document', 'publish_document_version', 'set_subscription', 'create_company',
-    'set_company_status', 'compute_measures', 'import_records', 'record_run'];
-  const REC = window.__CLEARPATH_REC || {};
+    'set_company_status', 'compute_measures', 'import_records', 'record_run', 'raise_action', 'update_action', 'set_revenue_plan', 'store_source_file'];
+  const DATASETS = { transhaul: 'Trans Haul today', sample: 'Sample figures (made up)' };
 
   // Some embedded browsers block storage: fall back to memory so the app still runs.
   try { sessionStorage.setItem('__t', '1'); sessionStorage.removeItem('__t'); }
@@ -30,23 +30,25 @@
   const b64 = s => btoa(s).replace(/\+/g, '-').replace(/\//g, '_').replace(/=+$/, '');
   const token = (sub, aal) => `${b64('{"alg":"none"}')}.${b64(JSON.stringify({ sub, role: 'authenticated', aal, exp: 4102444800 }))}.preview`;
   const sessionFor = (r, aal) => ({ access_token: token(ROLES[r].sub, aal), token_type: 'bearer', expires_in: 3600, refresh_token: `r.${aal}.${r}`,
-    user: { id: ROLES[r].sub, email: ROLES[r].email }, preview_role: r });
+    user: { id: ROLES[r].sub, email: ROLES[r].email }, preview_role: r, preview_dataset: dataset });
   const roleFromAuth = h => {
     try { const sub = JSON.parse(atob(h.replace(/^Bearer /, '').split('.')[1].replace(/-/g, '+').replace(/_/g, '/'))).sub; return Object.keys(ROLES).find(k => ROLES[k].sub === sub) || null; }
     catch (e) { return null; }
   };
 
-  // Which role to open as: remembered in window.name, which survives a reload.
-  const m = /^clearpath-preview:(\w+)$/.exec(window.name || '');
+  // Which role and dataset to open: remembered in window.name, which survives a reload.
+  const m = /^clearpath-preview:(\w+)(?::(\w+))?$/.exec(window.name || '');
   const role = m && ROLES[m[1]] ? m[1] : 'director';
-  function seed(r) {
-    window.name = 'clearpath-preview:' + r;
+  let dataset = m && DATASETS[m[2]] ? m[2] : 'transhaul';
+  const REC = (window.__CLEARPATH_REC || {})[dataset] || {};
+  function seed(r, ds = dataset) {
+    window.name = `clearpath-preview:${r}:${ds}`;
     sessionStorage.setItem('portal.session', JSON.stringify(sessionFor(r, 'aal2')));
     if (r === 'admin') sessionStorage.setItem('portal.company', COMPANY_A); else sessionStorage.removeItem('portal.company');
   }
   try {
     const cur = JSON.parse(sessionStorage.getItem('portal.session') || 'null');
-    if (!cur || cur.preview_role !== role) seed(role);
+    if (!cur || cur.preview_role !== role || cur.preview_dataset !== dataset) seed(role);
   } catch (e) { seed(role); }
 
   window.PORTAL_CONFIG = { url: BASE, anonKey: 'preview' };
@@ -69,9 +71,9 @@
     // ---------------------------------------------------------------- sign-in (any password; any six-digit code)
     if (p === '/auth/v1/token' && url.searchParams.get('grant_type') === 'password') {
       const email = String(json().email || '').toLowerCase();
-      const r = Object.keys(ROLES).find(k => ROLES[k].email === email);
+      const r = Object.keys(ROLES).find(k => ROLES[k].email.split('@')[0] === email.split('@')[0]);
       if (!r) return reply(400, { error_description: 'Invalid login credentials' });
-      window.name = 'clearpath-preview:' + r;
+      window.name = `clearpath-preview:${r}:${dataset}`;
       if (r === 'admin') sessionStorage.removeItem('portal.company');
       return reply(200, sessionFor(r, 'aal1'));
     }
@@ -98,6 +100,11 @@
     const fn = p.startsWith('/rest/v1/rpc/') ? p.split('/').pop() : null;
     if (fn === 'set_demo_view' || fn === 'accept_invitation') return reply(200, 'null');
     if (fn && WRITES.includes(fn)) return reply(400, { message: SAVED_MSG });
+    if (fn === 'action_owners') {       // the owner list: the person viewing (raising is refused in the preview anyway)
+      let name = ROLES[who]?.label || 'You';
+      try { name = JSON.parse((REC[who] || {})['POST /rest/v1/rpc/my_profile {}'].body).name || name; } catch (e) { /* keep the label */ }
+      return reply(200, who ? [{ user_id: ROLES[who].sub, name, role: who }] : []);
+    }
     const rec = (REC[who] || {})[`${method} ${p}${url.search} ${body}`];
     if (rec) return reply(rec.status, rec.body);
     if (method === 'GET') return reply(200, '[]');
@@ -108,10 +115,14 @@
   function bar() {
     const el = document.createElement('div');
     el.className = 'pv-bar';
-    el.innerHTML = `<span class="pv-tag">Preview</span><span class="pv-text">Trans Haul's portal as it stands today: figures appear as each system is connected. Changes aren't saved in this preview.</span>
+    el.innerHTML = `<span class="pv-tag">Preview</span><span class="pv-text">${dataset === 'transhaul'
+        ? 'Trans Haul as it stands today: figures appear as each system is connected.'
+        : 'Made-up figures for a fictional haulier, to show the design with data. Not Trans Haul\'s figures.'} Changes aren't saved.</span>
+      <label class="pv-pick"><span>Data</span><select id="pv-data">${Object.keys(DATASETS).map(k => `<option value="${k}" ${k === dataset ? 'selected' : ''}>${DATASETS[k]}</option>`).join('')}</select></label>
       <label class="pv-pick"><span>View as</span><select id="pv-role">${Object.keys(ROLES).map(k => `<option value="${k}" ${k === role ? 'selected' : ''}>${ROLES[k].label}</option>`).join('')}</select></label>`;
     document.body.prepend(el);
     el.querySelector('#pv-role').onchange = e => { seed(e.target.value); location.hash = ''; location.reload(); };
+    el.querySelector('#pv-data').onchange = e => { dataset = e.target.value; seed(role, dataset); location.hash = ''; location.reload(); };
   }
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', bar); else bar();
 })();
