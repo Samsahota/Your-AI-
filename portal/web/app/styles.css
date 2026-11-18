@@ -296,6 +296,7 @@ table.matrix select.changed{border-color:var(--warn-line);background:var(--warn-
 .checks{list-style:none;padding:0;margin:0 0 12px;display:grid;gap:6px}
 .chk-inline{font-size:12.5px;white-space:nowrap}
 .switch{display:flex;gap:10px;align-items:center;cursor:pointer}
+.stack-sm{display:grid;gap:10px;margin-top:4px}
 .comment-form{display:flex;gap:10px;align-items:flex-end;margin-bottom:14px}.comment-form .fld{flex:1}
 .comments{list-style:none;padding:0;margin:0;display:grid}.comments li{padding:12px 0;border-top:1px solid var(--line-2)}.comments p{margin:3px 0 0;color:var(--text-2)}
 .links{list-style:none;padding:0;margin:0;display:grid}.links li{display:grid;padding:10px 0;border-top:1px solid var(--line-2)}.links li:first-child{border-top:none}

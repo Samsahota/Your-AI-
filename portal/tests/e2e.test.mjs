@@ -171,6 +171,18 @@ test('Demo view: staff names are hidden on screen', async () => {
   await page.close();
 });
 
+test('My account: report emails can be turned off and back on', async () => {
+  const page = await signIn('ops@demo.test');
+  await go(page, '#/me');
+  assert.ok(await page.isChecked('#email-daily'));
+  await page.uncheck('#email-daily');
+  await page.waitForSelector('.toast >> text=Daily email off');
+  await go(page, '#/dashboard'); await go(page, '#/me');
+  await page.check('#email-daily');
+  await page.waitForSelector('.toast >> text=Daily email on');
+  await page.close();
+});
+
 test('Platform admin: open a company, add a connection, import a file, see the figures update', async () => {
   const page = await signIn('admin@example.test');
   assert.match(await text(page), /Admin console/);

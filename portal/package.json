@@ -8,6 +8,9 @@
     "test:unit": "node --test tests/connectors.test.mjs",
     "test:sharepoint": "node --test --test-concurrency=1 tests/sharepoint-folder.test.mjs",
     "serve": "node scripts/serve-local.mjs",
+    "test:reports": "node --test --test-concurrency=1 tests/reports.test.mjs",
+    "test:site": "node --test tests/site.test.mjs",
+    "build:site": "node scripts/build-site.mjs",
     "test:e2e": "node --test --test-concurrency=1 tests/e2e.test.mjs"
   },
   "devDependencies": {

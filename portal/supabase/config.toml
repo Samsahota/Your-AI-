@@ -41,3 +41,9 @@ verify_jwt = true
 #  - Database > Settings > "Enforce SSL": ON
 #  - Database > Network restrictions: allow only Your AI's IP addresses for direct database connections
 #  - Authentication > SMTP: Resend, sending from a Clearpath or Your AI domain (not Supabase's test mailer)
+
+# Called by the database's scheduler with the cron secret (checked inside each function), not a user's sign-in.
+[functions.report-emails]
+verify_jwt = false
+[functions.sharepoint-folder]
+verify_jwt = false

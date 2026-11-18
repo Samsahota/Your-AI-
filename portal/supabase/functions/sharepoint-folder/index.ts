@@ -1,5 +1,5 @@
 // Runs the SharePoint folder pick-up for every connection set up that way (connectors/sharepoint-folder.mjs).
-// Called on a schedule (hourly) by the platform itself with the service key; refuses anyone else.
+// Called on a schedule (hourly) by the database's scheduler with the cron secret (or the service key); refuses anyone else.
 // Secrets (vault): MS_TENANT_ID, MS_CLIENT_ID, MS_CLIENT_SECRET for Trans Haul's approved Microsoft app.
 // Supabase provides SUPABASE_URL and SUPABASE_SERVICE_ROLE_KEY.
 // Deploy with the connectors folder alongside (the import below), once Microsoft access is approved.
@@ -11,7 +11,9 @@ const reply = (status: number, body: unknown) => new Response(JSON.stringify(bod
 
 Deno.serve(async (req) => {
   if (req.method !== 'POST') return reply(405, { error: 'Use POST' });
-  if ((req.headers.get('Authorization') || '') !== `Bearer ${SERVICE}`) return reply(401, { error: 'Platform only' });
+  const CRON = Deno.env.get('CRON_SECRET');
+  const authorised = (req.headers.get('Authorization') || '') === `Bearer ${SERVICE}` || (!!CRON && req.headers.get('x-cron-secret') === CRON);
+  if (!authorised) return reply(401, { error: 'Platform only' });
   const tenant = Deno.env.get('MS_TENANT_ID'), clientId = Deno.env.get('MS_CLIENT_ID'), clientSecret = Deno.env.get('MS_CLIENT_SECRET');
   if (!tenant || !clientId || !clientSecret) return reply(503, { error: 'Microsoft access is not set up yet.' });
   const sb = createClient(Deno.env.get('SUPABASE_URL')!, SERVICE, { auth: { persistSession: false } });

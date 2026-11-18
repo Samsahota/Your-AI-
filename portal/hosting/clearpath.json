@@ -1,0 +1,6 @@
+{
+  "_note": "Public settings for the live portal. The publishable key is meant to be public (the database's access rules protect the data). The service key must never appear here.",
+  "appUrl": "https://portal.clearpathinsights.co.uk",
+  "supabaseUrl": "https://vpsqrwjqrunpxcoxsixl.supabase.co",
+  "publishableKey": "sb_publishable_UykGKsz1epzj2BFqKJv9yw_nlHabVtB"
+}

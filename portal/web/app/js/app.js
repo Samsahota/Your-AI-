@@ -308,9 +308,21 @@ function myAccount() {
     <section class="card"><dl class="facts"><dt>Name</dt><dd>${esc(p.name)}</dd><dt>Email</dt><dd>${esc(p.email)}</dd><dt>Role</dt><dd>${esc(roleName(p.role))}${p.division ? ` (${esc(p.division)})` : ''}</dd>
       <dt>Company</dt><dd>${esc(p.company || 'All companies')}</dd><dt>Two-factor sign-in</dt><dd>On</dd></dl></section>
     <section class="card"><h2>Demo view</h2><p class="sub">Hides staff names on your screens (people show as "Employee 1", "Driver 2" and so on), for showing the platform to other hauliers. It only changes your own view.</p>
-      <label class="switch" for="demo"><input type="checkbox" id="demo" ${p.demo_view ? 'checked' : ''}> <span>Hide staff names on my screens</span></label></section>`;
+      <label class="switch" for="demo"><input type="checkbox" id="demo" ${p.demo_view ? 'checked' : ''}> <span>Hide staff names on my screens</span></label></section>
+    ${p.company_id ? `<section class="card"><h2>Report emails</h2><p class="sub">A short email each morning with the figures your login can see, what's red or amber, and your actions that are due. On Mondays, a summary of the week.</p>
+      <div class="stack-sm"><label class="switch" for="email-daily"><input type="checkbox" id="email-daily" ${p.email_daily !== false ? 'checked' : ''}> <span>Daily email</span></label>
+      <label class="switch" for="email-weekly"><input type="checkbox" id="email-weekly" ${p.email_weekly !== false ? 'checked' : ''}> <span>Monday weekly email</span></label></div></section>` : ''}`;
 }
 function bindMyAccount() {
+  for (const [id, field] of [['email-daily', 'email_daily'], ['email-weekly', 'email_weekly']]) {
+    const el = $('#' + id); if (!el) continue;
+    el.onchange = async () => {
+      try {
+        await rpc('set_report_emails', { p_daily: id === 'email-daily' ? el.checked : null, p_weekly: id === 'email-weekly' ? el.checked : null });
+        ctx.profile[field] = el.checked; toast(`${id === 'email-daily' ? 'Daily' : 'Monday'} email ${el.checked ? 'on' : 'off'}`);
+      } catch (x) { toast(x.message, 'error'); el.checked = !el.checked; }
+    };
+  }
   const box = $('#demo'); if (!box) return;
   box.onchange = async () => {
     try { await rpc('set_demo_view', { p_on: box.checked }); ctx.profile.demo_view = box.checked; ctx.name = namer(box.checked); toast(box.checked ? 'Demo view on: staff names hidden' : 'Demo view off'); layout('me'); route(); }
