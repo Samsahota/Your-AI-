@@ -5,7 +5,7 @@ date: "18 November 2026 · draft for Sam to review, not sent"
 
 **From:** sam@yourailtd.co.uk
 **To:** paul@clearpathinsights.co.uk; sam@clearpathinsights.co.uk
-**Attach:** Mutual NDA - Clearpath and Your AI (amended draft).pdf · Mutual NDA - summary of changes (draft).pdf · Trans Haul data request.xlsx
+**Attach:** Mutual NDA - Clearpath and Your AI (amended draft).pdf · Mutual NDA - summary of changes (draft).pdf · Clearpath and Your AI - Partner Agreement (draft).pdf · Trans Haul data request.xlsx
 **Subject:** Clearpath: information needed, NDA and next steps
 
 Hi Paul, Samantha,
@@ -48,23 +48,32 @@ Please don't email any passwords, keys or login details. I'll send a secure way 
   - **Signatures:** Pritesh added for Your AI, and Samantha's notice address changed to her Clearpath email.
 
   Have a read and let me know if you're happy, and we can all sign electronically.
-- **Agreement between Clearpath and Your AI:** I'll send a short agreement, two or three pages in plain English, covering:
+- **Agreement between Clearpath and Your AI:** a short draft is attached, in plain English. It covers:
   - who does what;
-  - ownership;
-  - the revenue split we agreed;
-  - invoicing;
-  - data protection;
-  - a cap on liability.
+  - ownership (each of us keeps what we bring);
+  - the prices and splits we agreed, for Trans Haul and for other hauliers;
+  - invoicing (see below);
+  - customers paying for access to their own systems;
+  - data protection, a cap on liability, and what happens if we ever part ways, so no customer is left without a system.
 
-  We can each have a solicitor look over it.
+  A few blanks are for us to agree, such as the exclusivity minimum and the day rate. We can each have a solicitor look over it.
+- **Company details:** could you send Clearpath Insights Ltd's company number and registered office address for the NDA and the agreement?
 - **Insurance:** Your AI will have professional indemnity and cyber cover in place before go-live.
 
-**4. Invoice**
+**4. Invoicing**
 
-As agreed, the £3,000 setup fee is invoiced 50% now and 50% on go-live, and the £300 monthly fee starts from go-live. I'm ready to issue the first invoice to THEL (Midlands) Ltd for £1,500. Could you confirm:
+One thing we didn't settle on Monday: who invoices Trans Haul. There are two ways to do it:
 
-- THEL's billing address and who should receive invoices;
-- whether a purchase order number is needed.
+- **Option A:** Your AI invoices Trans Haul directly for the setup and monthly fees. Clearpath then invoices Your AI for its share once Trans Haul has paid.
+- **Option B:** Clearpath invoices Trans Haul, then pays Your AI its share once Trans Haul has paid.
+
+My suggestion is option A. Your AI hosts the platform and pays its running costs, and it holds the data processing agreement with Trans Haul, so billing directly keeps that simple. Clearpath would get a monthly statement showing what has been invoiced and paid. But I'm happy to go with whichever you prefer.
+
+Either way, the £3,000 setup fee is invoiced 50% now and 50% on go-live, and the £300 monthly fee starts from go-live. Once we've agreed who invoices, the first invoice is £1,500 to THEL (Midlands) Ltd. Could you confirm:
+
+- which option you'd like;
+- who at Trans Haul should receive invoices, and whether invoices go to THEL's registered office (68 Nottingham Road, Eastwood, Nottingham NG16 3NQ) or another address;
+- whether Trans Haul needs a purchase order number.
 
 **5. Next steps**
 
