@@ -128,6 +128,8 @@ b. For every other customer, Your AI pays the running costs out of its share.
 
 7.5 Each Party keeps its own registration with the Information Commissioner's Office.
 
+7.6 The Data Agreement between the Parties sets out how both Parties handle customer data. If Clearpath contracts with a customer (option B in clause 5.2), Your AI acts as Clearpath's sub-processor under Part B of that agreement.
+
 # 8. Liability
 
 8.1 Each Party's total liability to the other under this agreement in any 12 months is limited to the greater of £10,000 and the amount it received under this agreement in the previous 12 months.
