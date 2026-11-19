@@ -6,8 +6,8 @@ This Agreement is dated 17 November 2026 and protects the confidential informati
 
 # Parties
 
-1. **Clearpath Insights Ltd** (**Clearpath**).
-2. **YourAI Ltd** (company number 16874666) (**Your AI**).
+1. **Clearpath Insights Ltd** (company number 16173265), whose registered office is at 6 Riverstone Way, Hunsbury Meadows, Northampton, Northamptonshire, England, NN4 9QH (**Clearpath**).
+2. **YourAI Ltd** (company number 16874666), whose registered office is at 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**).
 
 Each a **Party** and together the **Parties**. Each Party may be a Disclosing Party or a Receiving Party.
 
@@ -169,8 +169,8 @@ These restrictions last from the date of this Agreement until 24 months after th
 
 # Signatures
 
-Signed by an authorised director of each Party on the date below. Email addresses are for notices under clause 10.8.
+Signed by an authorised signatory of each Party on the date below. Email addresses are for notices under clause 10.8.
 
-<div class="sig-grid"><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Paul Dyer</b>, Director<br>paul@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Samantha Hardy</b>, Director<br>samantha@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Sam Sahota</b>, Director<br>sam@yourailtd.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Pritesh Patel</b>, Co-founder<br>pritesh@yourailtd.co.uk</div></div></div>
+<div class="sig-grid"><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Paul Dyer</b>, Director<br>paul@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Samantha Hardy</b>, Director<br>samantha@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Sam Sahota</b>, Co-founder<br>sam@yourailtd.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Pritesh Patel</b>, Co-founder<br>pritesh@yourailtd.co.uk</div></div></div>
 
 </div>

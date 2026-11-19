@@ -7,7 +7,9 @@ This document confirms what we agreed at our meeting on 17 November 2026, our ch
 
 ## 1. The parties
 
-**Clearpath Insights Ltd** (Clearpath) and **YourAI Ltd**, company number 16874666 (YourAI).
+**Clearpath Insights Ltd**, company number 16173265, registered office 6 Riverstone Way, Hunsbury Meadows, Northampton, Northamptonshire, England, NN4 9QH (Clearpath).
+
+**YourAI Ltd**, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (YourAI).
 
 ## 2. What we're doing together
 
@@ -27,7 +29,7 @@ Each customer owns its own data.
 
 | | Trans Haul (founding customer) | Other hauliers |
 |---|---|---|
-| Setup fee | £3,000 (half on starting, half at go-live) | £5,000 |
+| Setup fee | £3,000 (half before the build starts, half at go-live) | £5,000 |
 | Setup split (YourAI / Clearpath) | £1,500 / £1,500 | £3,000 / £2,000 |
 | Monthly fee | £300, from go-live | £500 |
 | Monthly split (YourAI / Clearpath) | £100 running costs to YourAI, then £100 / £100 | £250 / £250 |
@@ -37,6 +39,8 @@ Prices exclude VAT. Add-ons, such as a driver app or customer portal, will be pr
 ## 5. Invoicing (to confirm)
 
 Either YourAI invoices the customer and pays Clearpath its share, or Clearpath invoices the customer and pays YourAI its share. Either way, each share is paid within 14 days of the customer's payment arriving.
+
+**The build starts once YourAI has received its £750 share of the first setup payment** (50% of the first £1,500 instalment).
 
 ## 6. Working together
 
@@ -48,12 +52,12 @@ Either YourAI invoices the customer and pays Clearpath its share, or Clearpath i
 
 We've returned your NDA with six small changes. Everything else, including clause 6.1, is as you drafted it.
 
-1. **Parties:** YourAI Ltd's registered name and company number added.
+1. **Parties:** both companies' registered names, numbers and registered offices added.
 2. **Clause 5.3:** software YourAI builds stays YourAI's; Clearpath's brand, content, policies and customer relationships stay Clearpath's.
 3. **Clause 5.5:** does not apply to that software. The Clearpath Concept stays protected by clauses 5.2 and 6.1.
 4. **Clause 9.2:** the indemnity covers direct losses, up to £25,000, the same for both of us. There is no limit for fraud or deliberate disclosure.
 5. **New clause 10.11:** Clearpath arranges read-only access to the systems needed, and any supplier licence or API cost is paid by Clearpath or its Affiliate (for example, Trans Haul).
-6. **Signatures:** Pritesh Patel added for YourAI; Samantha's notice email updated to samantha@clearpathinsights.co.uk.
+6. **Signatures:** signed by an authorised signatory of each party; Pritesh Patel added for YourAI; Samantha's notice email updated to samantha@clearpathinsights.co.uk.
 
 ## 8. What we need to continue the build
 
@@ -74,14 +78,15 @@ We've returned your NDA with six small changes. Everything else, including claus
 ## 9. Next steps
 
 1. Sign the Mutual NDA.
-2. Access and documents as in section 8.
-3. YourAI connects each system and checks the figures against Trans Haul's own reports, then takes Paul and Samantha through it.
-4. Full agreement signed before the second customer, or within 3 months, whichever is sooner.
+2. The first setup invoice (£1,500) is paid, and YourAI receives its £750 share. The build then starts.
+3. Access and documents as in section 8.
+4. YourAI connects each system and checks the figures against Trans Haul's own reports, then takes Paul and Samantha through it.
+5. Full agreement signed before the second customer, or within 3 months, whichever is sooner.
 
 <div class="sign">
 
 ## Agreed
 
-<div class="sig-grid"><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Paul Dyer</b>, Director</div></div><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Samantha Hardy</b>, Director</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Sam Sahota</b>, Director</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Pritesh Patel</b>, Co-founder</div></div></div>
+<div class="sig-grid"><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Paul Dyer</b>, Director</div></div><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Samantha Hardy</b>, Director</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Sam Sahota</b>, Co-founder</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Pritesh Patel</b>, Co-founder</div></div></div>
 
 </div>
