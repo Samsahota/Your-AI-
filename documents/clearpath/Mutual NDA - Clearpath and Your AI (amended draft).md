@@ -13,10 +13,13 @@ Each a **Party** and together the **Parties**. Each Party may be a Disclosing Pa
 
 # Background
 
-- (A) Clearpath has identified a gap in the UK haulage market and developed a concept, business model and operational know-how for an operating platform for hauliers, including an existing operational portal, workflows and associated HR and health and safety policies and processes (the **Clearpath Concept**).
-- (B) Your AI has software development capability, technology, methods and tools that may be used to build and operate a platform delivering the Clearpath Concept.
-- (C) The Parties wish to meet, starting on 17 November 2026, to discuss a business development plan and strategy for a possible collaboration (the **Purpose**). Each Party will disclose Confidential Information to the other for the Purpose.
-- (D) The Parties have agreed to protect that Confidential Information and each other's intellectual property on the terms of this Agreement.
+\(A\) Clearpath has identified a gap in the UK haulage market and developed a concept, business model and operational know-how for an operating platform for hauliers, including an existing operational portal, workflows and associated HR and health and safety policies and processes (the **Clearpath Concept**).
+
+\(B\) Your AI has software development capability, technology, methods and tools that may be used to build and operate a platform delivering the Clearpath Concept.
+
+\(C\) The Parties wish to meet, starting on 17 November 2026, to discuss a business development plan and strategy for a possible collaboration (the **Purpose**). Each Party will disclose Confidential Information to the other for the Purpose.
+
+\(D\) The Parties have agreed to protect that Confidential Information and each other's intellectual property on the terms of this Agreement.
 
 # 1. Definitions
 
@@ -162,18 +165,12 @@ These restrictions last from the date of this Agreement until 24 months after th
 
 10.11 **Access to systems:** where the Purpose needs access to systems used by Clearpath or its Affiliates (for example, Trans Haul's operating, telematics, finance and HR systems), Clearpath shall arrange read-only access for Your AI and, where a supplier charges for a licence, user or API access, Clearpath or its Affiliate shall buy it. Your AI shall use that access only for the Purpose.
 
-```{=openxml}
-<w:p><w:r><w:br w:type="page"/></w:r></w:p>
-```
+<div class="sign newpage">
 
 # Signatures
 
-Signed by an authorised director of each Party on the date below.
+Signed by an authorised director of each Party on the date below. Email addresses are for notices under clause 10.8.
 
-| | Clearpath Insights Ltd | Clearpath Insights Ltd | YourAI Ltd | YourAI Ltd |
-| --- | --- | --- | --- | --- |
-| Signature | | | | |
-| Name | Paul Dyer | Samantha Hardy | Sam Sahota | Pritesh Patel |
-| Position | Director | Director | Director | Co-founder |
-| Email for notices | paul@clearpathinsights.co.uk | sam@clearpathinsights.co.uk | sam@yourailtd.co.uk | pritesh@yourailtd.co.uk |
-| Date | | | | |
+<div class="sig-grid"><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Paul Dyer</b>, Director<br>paul@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For Clearpath Insights Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Samantha Hardy</b>, Director<br>samantha@clearpathinsights.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Sam Sahota</b>, Director<br>sam@yourailtd.co.uk</div></div><div class="sig"><div class="sig-party">For YourAI Ltd</div><div class="sig-line">Signature</div><div class="sig-line">Date</div><div class="sig-meta"><b>Pritesh Patel</b>, Co-founder<br>pritesh@yourailtd.co.uk</div></div></div>
+
+</div>

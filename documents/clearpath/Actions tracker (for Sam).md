@@ -1,8 +1,8 @@
 # Checklist: phase 1 email (send today)
 
-1. [ ] Read the NDA alongside the one-page change list (6 changes; everything else is Clearpath's wording)
-2. [ ] Read the heads of terms (prices, split, who brings what)
-3. [ ] Read the email draft and send it from sam@yourailtd.co.uk
-4. [ ] Then wait for: NDA agreed, system access, spreadsheets and morning report, website login, invoicing answer
+1. [ ] Read the NDA (6 pages; the changes are listed in section 7 of the terms document)
+2. [ ] Read Agreed Terms and Next Steps (3 pages)
+3. [ ] Check the Gmail draft and send it
+4. [ ] Then wait for: NDA signed, system access, website access, documents, invoicing answer
 
-Parked until phase 2: the full partner agreement, the data agreement, the data request spreadsheet, invoices, the Trans Haul customer terms
+Parked until phase 2: full partner agreement, data agreement, data request spreadsheet, invoices, Trans Haul customer terms
