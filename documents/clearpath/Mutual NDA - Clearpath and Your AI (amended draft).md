@@ -1,26 +1,22 @@
 ---
 title: "Mutual Non-Disclosure Agreement"
-subtitle: "Amended draft for discussion · 18 November 2026 · based on Clearpath's draft of 17 November 2026"
 ---
 
-This Agreement is dated [date of signature] and protects the confidential information and intellectual property each party shares when discussing a haulage operating platform.
+This Agreement is dated 17 November 2026 and protects the confidential information and intellectual property each party shares when discussing a haulage operating platform.
 
 # Parties
 
 1. **Clearpath Insights Ltd** (**Clearpath**).
-2. **YourAI Ltd**, a company registered in England and Wales, company number 16874666, registered office 58 Skelton Drive, Leicester, England, LE2 6JP (**Your AI**).
+2. **YourAI Ltd** (company number 16874666) (**Your AI**).
 
 Each a **Party** and together the **Parties**. Each Party may be a Disclosing Party or a Receiving Party.
 
 # Background
 
-(A) Clearpath has identified a gap in the UK haulage market and developed a concept, business model and operational know-how for an operating platform for hauliers, including an existing operational portal, workflows and associated HR and health and safety policies and processes (the **Clearpath Concept**).
-
-(B) Your AI has developed software, technology, methods and tools, including its own haulage operating platform, that may be used to deliver services to hauliers, including services delivering the Clearpath Concept.
-
-(C) The Parties wish to meet, starting on 17 November 2026, to discuss a business development plan and strategy for a possible collaboration (the **Purpose**). Each Party will disclose Confidential Information to the other for the Purpose.
-
-(D) The Parties have agreed to protect that Confidential Information and each other's intellectual property on the terms of this Agreement. Each Party keeps what it brings: Clearpath its concept, brand, content and customer relationships, and Your AI its platform, software and technology.
+- (A) Clearpath has identified a gap in the UK haulage market and developed a concept, business model and operational know-how for an operating platform for hauliers, including an existing operational portal, workflows and associated HR and health and safety policies and processes (the **Clearpath Concept**).
+- (B) Your AI has software development capability, technology, methods and tools that may be used to build and operate a platform delivering the Clearpath Concept.
+- (C) The Parties wish to meet, starting on 17 November 2026, to discuss a business development plan and strategy for a possible collaboration (the **Purpose**). Each Party will disclose Confidential Information to the other for the Purpose.
+- (D) The Parties have agreed to protect that Confidential Information and each other's intellectual property on the terms of this Agreement.
 
 # 1. Definitions
 
@@ -30,7 +26,7 @@ Each a **Party** and together the **Parties**. Each Party may be a Disclosing Pa
 
 a. for Clearpath: the Clearpath Concept, the identified market gap, business model, pricing and commercial strategy, target customer lists, the existing portal and its screens, workflows, data structures and functionality, HR and health and safety policies, processes and templates, and operational data of Clearpath and its Affiliates;
 
-b. for Your AI: its source code, software architecture, platform, connectors, AI models and prompts, tools, development methods, product roadmaps, pricing and technical know-how;
+b. for Your AI: its source code, software architecture, AI models and prompts, tools, development methods, product roadmaps, pricing and technical know-how;
 
 c. for both: business plans, financial information, customer and supplier information, and the existence and content of the Parties' discussions;
 
@@ -42,13 +38,9 @@ d. any notes, analyses, compilations or other material prepared by the Receiving
 
 1.5 **Intellectual Property Rights:** patents, rights in inventions, copyright and related rights, rights in software, trade marks, business and domain names, goodwill, rights in designs, database rights, rights in confidential information (including know-how and trade secrets), and all similar rights anywhere in the world, whether registered or not.
 
-1.6 **Background IP:** Intellectual Property Rights owned by or licensed to a Party before the date of this Agreement, or developed independently of the Purpose and without use of the other Party's Confidential Information. It includes:
+1.6 **Background IP:** Intellectual Property Rights owned by or licensed to a Party before the date of this Agreement, or developed independently of the Purpose and without use of the other Party's Confidential Information.
 
-a. for Clearpath: the Clearpath Concept as disclosed by Clearpath, the Clearpath name and brand, its HR and health and safety policies, processes and templates, its existing portal, and its customer relationships;
-
-b. for Your AI: its software, source code, platform (including the haulage operating platform and demonstration portal developed by Your AI before the date of this Agreement), connectors, designs, data models, AI tools, models and prompts, and development methods.
-
-1.7 **Representatives:** a Party's directors, officers, employees, professional advisers and (with the Disclosing Party's prior written consent) contractors, in each case who need to know the Confidential Information for the Purpose. A Party's Service Providers under clause 2.3 are not contractors for this purpose.
+1.7 **Representatives:** a Party's directors, officers, employees, professional advisers and (with the Disclosing Party's prior written consent) contractors, in each case who need to know the Confidential Information for the Purpose.
 
 Headings do not affect interpretation. Words such as "including" are illustrative and do not limit the words before them.
 
@@ -66,23 +58,11 @@ d. protect it with at least the same care it uses for its own confidential infor
 
 e. not copy, reproduce, decompile, reverse engineer or record it, except as strictly needed for the Purpose;
 
-f. not input it into any AI model, large language model or machine-learning tool that is accessible to third parties or that retains or trains on inputs, without the Disclosing Party's prior written consent. Business AI and hosting services used under clause 2.3 are permitted; and
+f. not input it into any AI model, large language model or machine-learning tool that is accessible to third parties or that retains or trains on inputs, without the Disclosing Party's prior written consent; and
 
 g. notify the Disclosing Party promptly on becoming aware of any unauthorised use or disclosure, and help to limit its effects.
 
-2.2 The Receiving Party is responsible for any act or omission of its Representatives and Service Providers that would breach this Agreement if done by the Receiving Party.
-
-2.3 **Service Providers.** Either Party may store and process Confidential Information using reputable hosting, cloud, database, email and AI service providers (**Service Providers**), as long as each one is bound by written terms that keep the information confidential, do not allow it to be used to train AI models, and do not allow it to be shared with anyone else. Each Party shall tell the other, on request, which Service Providers it uses.
-
-2.4 **Systems and access.** Each Party is responsible, at its own cost, for obtaining and keeping in place the licences, subscriptions and user accounts for its own systems, and Clearpath shall procure the same for its Affiliates (including THEL (Midlands) Limited). Where the Purpose needs Your AI to read data from a Clearpath or Affiliate system (for example Vigo, Tachomaster, Falcon Tracking, PreDrive, Xero, Microsoft 365 and SharePoint, BrightPay or Bibby), Clearpath shall procure (or, for any Affiliate it does not control, use all reasonable endeavours to procure) that the relevant Party:
-
-a. purchases or enables any API, integration module or additional user licence that the system's supplier charges for;
-
-b. authorises the supplier in writing to give Your AI read-only access; and
-
-c. provides the access details securely, and never by email.
-
-Your AI shall use any such access read-only, only for the Purpose, and shall treat all data obtained through it as the Disclosing Party's Confidential Information.
+2.2 The Receiving Party is responsible for any act or omission of its Representatives that would breach this Agreement if done by the Receiving Party.
 
 # 3. Exclusions
 
@@ -108,25 +88,17 @@ d. was independently developed by the Receiving Party without access to or use o
 
 5.1 Each Party keeps all rights in its own Confidential Information and Background IP. Nothing in this Agreement transfers, assigns or licenses any Intellectual Property Rights, except the limited right to use Confidential Information for the Purpose.
 
-5.2 Your AI acknowledges that the Clearpath Concept, including the identified market gap, the business model and the commercial approach to the haulage market, as disclosed by Clearpath, originates with Clearpath and is Clearpath's Confidential Information. This does not extend to general knowledge, skills and experience of the haulage sector, or of dashboards, reporting, software and system integration, or to information within clause 3.1.
+5.2 Your AI acknowledges that the Clearpath Concept, including the identified market gap, the business model and the commercial approach to the haulage market, originates with Clearpath and is Clearpath's Confidential Information.
 
-5.3 Clearpath acknowledges that Your AI's software, code, platform (including the haulage operating platform and demonstration portal developed by Your AI before the date of this Agreement), connectors, designs, AI tools, models and development methods are Your AI's Background IP and Your AI's Confidential Information.
+5.3 Clearpath acknowledges that Your AI's pre-existing software, code, AI tools, models and development methods are Your AI's Background IP, and that any software, code or platform Your AI writes or builds for the Purpose belongs to Your AI. Clearpath's brand, content, policies and customer relationships remain Clearpath's.
 
-5.4 Any ideas, feedback, designs or materials created jointly by the Parties during discussions under this Agreement (**Discussion Output**) shall be treated as Confidential Information of both Parties. Neither Party may use or exploit Discussion Output, other than for the Purpose, until ownership and use are agreed in a signed definitive agreement. This does not limit either Party's use of its own Background IP.
+5.4 Any ideas, feedback, designs or materials created jointly by the Parties during discussions under this Agreement (**Discussion Output**) shall be treated as Confidential Information of both Parties. Neither Party may use or exploit Discussion Output, other than for the Purpose, until ownership and use are agreed in a signed definitive agreement.
 
-5.5 Any improvement, adaptation or derivative of a Party's Confidential Information, made by the other Party, belongs to the Party whose Confidential Information it derives from. The Party making it shall assign it on request and at its own cost. This clause is subject to clause 5.8.
+5.5 Any improvement, adaptation or derivative of a Party's Confidential Information, made by the other Party, belongs to the Party whose Confidential Information it derives from. The Party making it shall assign it on request and at its own cost. This clause does not apply to Your AI's software, code or platform described in clause 5.3.
 
 5.6 Confidential Information is provided "as is". No warranty is given as to its accuracy or completeness, or that its use will not infringe third-party rights.
 
 5.7 Neither Party may file any patent, trade mark, domain name or other registration that contains, is based on or would conflict with the other Party's Confidential Information.
-
-5.8 **Each Party keeps what it brings.** For the avoidance of doubt, and equally for both Parties:
-
-a. Your AI's software, code, platform, connectors and designs, and any improvements to them made by Your AI, remain Your AI's, whatever data, content or Confidential Information they process, display or are configured with. They do not become Clearpath's under clause 5.5;
-
-b. Clearpath's concept, brand, policies, processes and templates, content and customer relationships remain Clearpath's, whatever platform they are loaded into or delivered through. They do not become Your AI's under clause 5.5; and
-
-c. data belonging to Clearpath's Affiliates or customers remains theirs.
 
 # 6. Non-circumvention and non-solicitation
 
@@ -164,7 +136,7 @@ These restrictions last from the date of this Agreement until 24 months after th
 
 9.1 Each Party acknowledges that damages alone may not be an adequate remedy for breach of this Agreement. The Disclosing Party is entitled to seek an injunction, specific performance or other equitable relief without proof of special damage, in addition to any other remedy.
 
-9.2 The Party in breach shall indemnify the other against direct losses, costs and reasonable legal fees arising from any breach of clauses 2, 5 or 6, up to a total of £25,000 for all claims under this Agreement. This limit does not apply to fraud or to deliberate disclosure of Confidential Information. Neither Party is liable under this Agreement for indirect or consequential loss, or for loss of profit.
+9.2 The Party in breach shall indemnify the other against reasonable direct losses, costs and legal fees arising from any breach of clauses 2, 5 or 6, up to a total of £25,000. This limit does not apply to fraud or to deliberate disclosure of Confidential Information.
 
 # 10. General
 
@@ -188,35 +160,20 @@ These restrictions last from the date of this Agreement until 24 months after th
 
 10.10 **Governing law and jurisdiction:** this Agreement and any dispute arising from it, including non-contractual disputes, are governed by the law of England and Wales. The courts of England and Wales have exclusive jurisdiction, except that either Party may seek injunctive relief in any court.
 
+10.11 **Access to systems:** where the Purpose needs access to systems used by Clearpath or its Affiliates (for example, Trans Haul's operating, telematics, finance and HR systems), Clearpath shall arrange read-only access for Your AI and, where a supplier charges for a licence, user or API access, Clearpath or its Affiliate shall buy it. Your AI shall use that access only for the Purpose.
+
 ```{=openxml}
 <w:p><w:r><w:br w:type="page"/></w:r></w:p>
 ```
 
 # Signatures
 
-Signed by an authorised director or signatory of each Party on the date shown.
+Signed by an authorised director of each Party on the date below.
 
-**Signed for Clearpath Insights Ltd**
-
-Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
-
-Name: Paul Dyer · Position: Director · Email for notices: paul@clearpathinsights.co.uk
-
-**Signed for Clearpath Insights Ltd**
-
-Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
-
-Name: Samantha Hardy · Position: Director · Email for notices: sam@clearpathinsights.co.uk
-
-**Signed for YourAI Ltd**
-
-Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
-
-Name: Sam Sahota · Position: Director · Email for notices: sam@yourailtd.co.uk
-
-**Signed for YourAI Ltd**
-
-Signature: \_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_\_ Date: \_\_\_\_\_\_\_\_\_\_\_\_\_\_
-
-Name: Pritesh Patel · Position: Co-founder · Email for notices: pritesh@yourailtd.co.uk
-
+| | Clearpath Insights Ltd | Clearpath Insights Ltd | YourAI Ltd | YourAI Ltd |
+| --- | --- | --- | --- | --- |
+| Signature | | | | |
+| Name | Paul Dyer | Samantha Hardy | Sam Sahota | Pritesh Patel |
+| Position | Director | Director | Director | Co-founder |
+| Email for notices | paul@clearpathinsights.co.uk | sam@clearpathinsights.co.uk | sam@yourailtd.co.uk | pritesh@yourailtd.co.uk |
+| Date | | | | |
